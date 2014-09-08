@@ -1,0 +1,42 @@
+September 7, 2014
+- Gutted the entire script system
+
+September 2, 2014
+- Moved Camera controls to the individual ship controls. Deleted CameraFollow.
+- Separated all ship controls into proper folders. Now all ship control inherits from <ShipControl> to make it easier to find.
+- Separated PlayerManager into PlayersManager and PlayerTerminal
+- <Stats> now carry an extra field indicating which type of ship this is
+- Player Focus split into Focus and Role. Folded into a struct.
+- Fixed Observation camera rotation. Can no longer rotate around Z axis. Y axis rotation constrained around the ship's (and not player's) Y axis.
+	- Bug: This still allows upside-down rotation.
+
+TODO
+- Should probably fold <Stats> into a struct too
+- Camera transistion between focuses needs to be dealt with somewhere. Haven't figured out where.
+
+
+August 26, 2014
+- Added (in theory) network functionality to PlayerManager
+
+
+August 25, 2014
+- Reorganized Prefabs. Centralized stats into the Stats script
+- Added attitude control code
+- Added preliminary cursor lock and unlock code
+- Started PlayerManager code
+	- Will now spawn a Fighter for the player upon entering the scene
+	- Will lock cursor upon entering the scene
+- Started function to change focus of the player. Will need to add AI script cohesion later
+- Moved input functions over to Unity's input manager
+	- Might have to implement my own input manager later
+- Six axis of thrust vectors implemented
+- Yaw, Pitch and Roll implemented (though roll could probably use some more work)
+
+TODO
+- Fire Control
+- Rudimentary Multi-player
+
+
+August 23, 2014
+
+- Moved movement code to FixedUpdate for better physics control.
