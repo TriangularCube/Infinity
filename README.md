@@ -3,9 +3,14 @@ Co-Operative Ace Combat. In space.
 
 # README #
 
-This is a game created using Unity 4.5.3
+Requires Unity 4.5.3 or later
 
 Currently still missing most features.
+
+### Dependencies ###
+
+* NGUI
+* TNet
 
 ### Who do I talk to? ###
 
