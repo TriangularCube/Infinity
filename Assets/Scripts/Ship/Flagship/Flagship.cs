@@ -8,6 +8,7 @@ using NetPlayer = TNet.Player;
 public class Flagship : Ship {
 
 	public FlagshipObservation flagshipObservation;
+	public Transform dock;
 
 	private Dictionary<NetPlayer, string> playerRoles = new Dictionary<NetPlayer, string>();
 	public override bool ContainsFocusedPlayer (NetPlayer check)
@@ -21,16 +22,32 @@ public class Flagship : Ship {
 	}
 
 	public void Dock( GameObject terminal ){
-		tno.Send (2, Target.Host, terminal.GetComponent<TNObject> ().uid);
 
-		//The default role is Observation, so we automatically assign this person to observation
-		//HACK TODO Fix this!!!!!
-		tno.Send (1, Target.Host, null );
+		if (terminal.GetComponent<Terminal> () == null) {
+			throw new UnityException ("Dock is called on a non-terminal object");
+			return;
+		}
+
+		//The default role is Observation, so we automatically assign the pilot to observation
+		tno.Send (1, Target.Host, terminal.GetComponent<Terminal>().pilot );
+
+		//Dock the incoming terminal
+		tno.Send (2, Target.Host, terminal.GetComponent<TNObject> ().uid);
 	}
 
 	[RFC(2)]
-	void DockTerminal( uint terminal ){
+	void DockTerminal( uint terminalID ){
 		//TODO Actually dock the terminal
+		GameObject terminal = TNObject.Find (terminalID).gameObject;
+		ShipControl control = terminal.GetComponent<ShipControl>();
+
+		//HACK This may have problems
+		control.CleanUp ();
+
+		//TODO This needs more work
+		terminal.SetActive (false);
+		terminal.transform.parent = dock;
+		terminal.transform.position = dock.position;
 	}
 
 	[RFC(1)]
