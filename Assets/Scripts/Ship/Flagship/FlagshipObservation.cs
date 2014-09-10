@@ -24,12 +24,6 @@ public class FlagshipObservation : ShipControl {
 
 	}
 
-	void OnDisable(){
-		if( playerCamera != null ){
-			playerCamera.transform.parent = null;
 
-			playerCamera = null;
-		} else Debug.Log( "A little weird that Flagship Observation got disabled without a camera being set first." );
-	}
 }
 
