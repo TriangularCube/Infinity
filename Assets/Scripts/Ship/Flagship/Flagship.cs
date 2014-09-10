@@ -5,11 +5,15 @@ using System.Collections.Generic;
 using TNet;
 using NetPlayer = TNet.Player;
 
-public class Flagship : TNBehaviour {
+public class Flagship : Ship {
 
 	public FlagshipObservation flagshipObservation;
 
 	private Dictionary<NetPlayer, string> playerRoles = new Dictionary<NetPlayer, string>();
+	public override bool ContainsFocusedPlayer (NetPlayer check)
+	{
+		throw new System.NotImplementedException ();
+	}
 
 	//DEBUG
 	void Start(){

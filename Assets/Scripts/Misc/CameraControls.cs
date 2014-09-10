@@ -1,10 +1,10 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class CameraControls : MonoBehaviour {
 
 	private ShipControl target;
-	private Transform targetCameraPoint{ get{ return target.CameraPoint; } }
+	private Transform targetCameraPoint{ get{ return target.cameraPoint; } }
 
 	public float camTransferSpeed = 600f;
 
