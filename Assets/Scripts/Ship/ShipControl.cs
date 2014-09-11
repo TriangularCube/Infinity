@@ -12,7 +12,7 @@ public abstract class ShipControl : MonoBehaviour {
 
 	public abstract void TransferControl( GameObject cam );
 
-	//Do this to clean up the object in preperation for deactivation or destruction
+	//Do this to clean up the object in preparation for deactivation or destruction
 	public void CleanUp(){
 		Debug.Log ("Yo!");
 
