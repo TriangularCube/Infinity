@@ -25,29 +25,15 @@ public class Flagship : Carrier {
 
 		if (terminal.GetComponent<Terminal> () == null) {
 			throw new UnityException ("Dock is called on a non-terminal object");
-			return;
 		}
 
-		//The default role is Observation, so we automatically assign the pilot to observation
-		tno.Send (1, Target.Host, terminal.GetComponent<Terminal>().pilot );
+		NetPlayer pilot = terminal.GetComponent<Terminal> ().pilot;
 
 		//Dock the incoming terminal
 		tno.Send (2, Target.Host, terminal.GetComponent<TNObject> ().uid);
-	}
 
-	[RFC(2)]
-	void DockTerminal( uint terminalID ){
-		//TODO Actually dock the terminal
-		GameObject terminal = TNObject.Find (terminalID).gameObject;
-		ShipControl control = terminal.GetComponent<ShipControl>();
-
-		//HACK This may have problems
-		control.CleanUp ();
-
-		//TODO This needs more work
-		terminal.SetActive (false);
-		terminal.transform.parent = dock;
-		terminal.transform.position = dock.position;
+		//The default role is Observation, so we automatically assign the pilot to observation
+		tno.Send (1, Target.Host, pilot );
 	}
 
 	[RFC(1)]
@@ -76,9 +62,36 @@ public class Flagship : Carrier {
 
 		//Add the player to the list
 		playerRoles[player] = "Observation";
-
 		
 		Debug.Log ("Assigned Observation");
+	}
+
+	[RFC(2)]
+	void DockTerminal( uint terminalID ){
+		
+		if (TNManager.isHosting) {
+			tno.Send( 2, Target.Others, terminalID );
+		}
+		
+		//TODO Actually dock the terminal
+		GameObject terminal = TNObject.Find (terminalID).gameObject;
+		
+		//If this is us
+		if (GetComponent<Terminal> ().pilot == TNManager.player) {
+			ShipControl control = terminal.GetComponent<ShipControl>();
+			
+			//Do cleanup operations
+			control.CleanUp ();
+		}
+
+		//Unseat the pilot
+		terminal.GetComponent<Terminal> ().pilot = null;
+		
+		//TODO This probably needs more work
+		terminal.SetActive (false);
+		terminal.transform.parent = dock;
+		terminal.transform.position = dock.position;
+		dockedTerminals.Add (terminal);
 	}
 
 	void ResetControls(){
