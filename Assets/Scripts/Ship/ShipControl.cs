@@ -17,7 +17,6 @@ public abstract class ShipControl : MonoBehaviour {
 		Debug.Log ("Yo!");
 
 		if( playerCamera != null ){
-			//TODO Cannot change object hierarchy while its parent is being deactivated. This means if I deactivate the ship this camera's on, I can't deparent it here.
 			playerCamera.transform.parent = null;
 			
 			playerCamera = null;

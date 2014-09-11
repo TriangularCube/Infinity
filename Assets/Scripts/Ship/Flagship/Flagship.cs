@@ -11,7 +11,7 @@ public class Flagship : Ship {
 	public Transform dock;
 
 	private Dictionary<NetPlayer, string> playerRoles = new Dictionary<NetPlayer, string>();
-	public override bool ContainsFocusedPlayer (NetPlayer check)
+	public override bool ContainsPlayer (NetPlayer check)
 	{
 		throw new System.NotImplementedException ();
 	}
