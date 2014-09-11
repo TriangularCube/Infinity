@@ -10,14 +10,19 @@ public class Flagship : Carrier {
 	public FlagshipObservation flagshipObservation;
 	public Transform dock;
 
+	private CameraControl playerCameraControl;
 	private Dictionary<NetPlayer, string> playerRoles = new Dictionary<NetPlayer, string>();
 	public override bool ContainsPlayer (NetPlayer check)
 	{
 		throw new System.NotImplementedException ();
 	}
+	
 
-	//DEBUG
+	
 	void Start(){
+		playerCameraControl = PlayersManager.Instance.playerCam.GetComponent<CameraControls>();
+	
+		//DEBUG
 		AssignObservation (TNManager.player);
 	}
 
@@ -57,7 +62,7 @@ public class Flagship : Carrier {
 			//TODO Turn on the Observation Controls
 			flagshipObservation.enabled = true;
 
-			PlayersManager.Instance.playerCam.GetComponent<CameraControls>().SetTarget( transform, flagshipObservation );
+			playerCameraControl.SetTarget( transform, flagshipObservation );
 		}
 
 		//Add the player to the list
