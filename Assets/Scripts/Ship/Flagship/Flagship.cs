@@ -30,10 +30,10 @@ public class Flagship : Carrier {
 		NetPlayer pilot = terminal.GetComponent<Terminal> ().pilot;
 
 		//Dock the incoming terminal
-		tno.Send (2, Target.Host, terminal.GetComponent<TNObject> ().uid);
+		DockTerminal( terminal.GetComponent<TNObject> ().uid );
 
 		//The default role is Observation, so we automatically assign the pilot to observation
-		tno.Send (1, Target.Host, pilot );
+		AssignObservation( pilot );
 	}
 
 	[RFC(1)]
