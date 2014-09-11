@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using TNet;
 using NetPlayer = TNet.Player;
 
-public class Flagship : Ship {
+public class Flagship : Carrier {
 
 	public FlagshipObservation flagshipObservation;
 	public Transform dock;
