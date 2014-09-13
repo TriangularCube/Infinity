@@ -10,13 +10,12 @@ public class Flagship : Carrier {
 	public FlagshipObservation flagshipObservation;
 	public Transform dock;
 
-	private CameraControl playerCameraControl;
+	private CameraControls playerCameraControl;
 	private Dictionary<NetPlayer, string> playerRoles = new Dictionary<NetPlayer, string>();
 	public override bool ContainsPlayer (NetPlayer check)
 	{
 		throw new System.NotImplementedException ();
 	}
-	
 
 	
 	void Start(){
