@@ -34,14 +34,19 @@ public class Flagship : Carrier {
 		DockTerminal( terminal.GetComponent<TNObject> ().uid );
 
 		//The default role is Observation, so we automatically assign the pilot to observation
-		AssignObservation( pilot );
+		AssignDefault (pilot);
 	}
 
-	[RFC(1)]
+	public override void AssignDefault ( NetPlayer pilot )
+	{
+		AssignObservation (pilot);
+	}
+
+	[RFC]
 	void AssignObservation( NetPlayer player ){
 
 		if (TNManager.isHosting) {
-			tno.Send (1, Target.Others, player);
+			tno.Send ("AssignObservation", Target.Others, player);
 
 			//TODO Request Focus change from PlayerManager
 			PlayersManager.Instance.ApplyFocusChange ( TNManager.player, tno.uid, "Observation" );
@@ -67,11 +72,11 @@ public class Flagship : Carrier {
 		Debug.Log ("Assigned Observation");
 	}
 
-	[RFC(2)]
+	[RFC]
 	void DockTerminal( uint terminalID ){
 		
 		if (TNManager.isHosting) {
-			tno.Send( 2, Target.Others, terminalID );
+			tno.Send( "DockTerminal", Target.Others, terminalID );
 		}
 		
 		//TODO Actually dock the terminal

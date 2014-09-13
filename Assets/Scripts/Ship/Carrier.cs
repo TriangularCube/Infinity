@@ -14,4 +14,6 @@ public abstract class Carrier : Ship {
 			dockedTerminals.Add( child.gameObject );
 		}
 	}
+
+	public abstract void AssignDefault ( TNet.Player pilot );
 }
