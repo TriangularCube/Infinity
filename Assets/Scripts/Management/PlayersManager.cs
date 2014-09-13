@@ -55,6 +55,11 @@ public class PlayersManager : TNBehaviour {
 		}
 	}
 
+	void Start(){
+		//DEBUG
+		Flagship.GetComponent<Flagship> ().AssignDefault (TNManager.player);
+	}
+
 	void Update(){
 		if( Input.GetKeyUp( KeyCode.LeftControl ) ){
 			Screen.lockCursor = !Screen.lockCursor;

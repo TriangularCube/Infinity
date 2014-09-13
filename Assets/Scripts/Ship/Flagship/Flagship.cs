@@ -21,9 +21,6 @@ public class Flagship : Carrier {
 	
 	void Start(){
 		playerCameraControl = PlayersManager.Instance.playerCam.GetComponent<CameraControls>();
-	
-		//DEBUG
-		AssignObservation (TNManager.player);
 	}
 
 	public void Dock( GameObject terminal ){
