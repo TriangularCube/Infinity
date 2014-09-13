@@ -9,8 +9,17 @@ public abstract class ShipControl : MonoBehaviour {
 	public Transform cameraPoint;
 	public GameObject playerCamera;
 	
-
-	public abstract void TransferControl( GameObject cam );
+	//This method is accessed when whatever else is controlling the camera relinquishes control, transferring control here
+	public virtual void TransferControl( GameObject cam ){
+		playerCamera = cam;
+		
+		playerCamera.transform.position = cameraPoint.position;
+		playerCamera.transform.rotation = cameraPoint.rotation;
+		
+		playerCamera.transform.parent = transform;
+		
+		enabled = true;
+	}
 
 	//Do this to clean up the object in preparation for deactivation or destruction
 	public void CleanUp(){
