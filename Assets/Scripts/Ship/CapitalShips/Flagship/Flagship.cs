@@ -48,7 +48,7 @@ public class Flagship : Carrier {
 			tno.Send ("AssignObservation", Target.Others, player);
 
 			//TODO Request Focus change from PlayerManager
-			PlayersManager.Instance.ApplyFocusChange ( player, tno.uid, "Observation" );
+			PlayersManager.Instance.UpdateFocusChange ( player, tno.uid, "Observation" );
 		}
 
 		//Do this stuff only if it pertains to us
@@ -89,7 +89,7 @@ public class Flagship : Carrier {
 		//Call cleanup on the terminal
 		terminal.GetComponent<Terminal> ().CleanUp ();
 		
-		//TODO This probably needs more work
+		//Physically dock the ship
 		terminal.transform.parent = dock;
 		terminal.transform.position = dock.position;
 		dockedTerminals.Add (terminal);

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using TNet;
 
 public abstract class Terminal : Ship {
 
@@ -12,12 +13,13 @@ public abstract class Terminal : Ship {
 	}
 
 	//TODO
+	[RFC]
 	public override void AssignDefault (TNet.Player pilot)
 	{
 		if (TNManager.isHosting) {
 			tno.Send( "AssignDefault", TNet.Target.Others, pilot );
 
-			PlayersManager.Instance.ApplyFocusChange ( pilot, tno.uid, "Pilot" );
+			PlayersManager.Instance.UpdateFocusChange ( pilot, tno.uid, "Pilot" );
 		}
 
 		if (pilot == TNManager.player) {

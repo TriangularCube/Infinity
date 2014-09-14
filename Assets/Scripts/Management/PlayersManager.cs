@@ -69,14 +69,8 @@ public class PlayersManager : TNBehaviour {
 		}
 	}
 
-	//TODO May not need this anymore
-	//Applyig for docking across the network
-	public void ApplyFocusChange( NetPlayer player, uint target, string role ){
-		tno.Send( 1, Target.Host, player, target, role );
-	}
-
 	[RFC(1)]
-	void UpdateFocusChange( NetPlayer player, uint target, string role ){
+	public void UpdateFocusChange( NetPlayer player, uint target, string role ){
 		
 		if( TNManager.isHosting ){
 			tno.Send( 1, Target.Others, player, target, role );
