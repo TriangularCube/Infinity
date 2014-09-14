@@ -60,7 +60,7 @@ public class PlayersManager : TNBehaviour {
 
 	void Start(){
 		//DEBUG
-		Flagship.GetComponent<Flagship> ().AssignDefault (TNManager.player);
+		startingObject.GetComponent<Ship> ().AssignDefault (TNManager.player);
 	}
 
 	void Update(){
