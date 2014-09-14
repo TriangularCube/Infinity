@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using TNet;
 using NetPlayer = TNet.Player;
 
+[RequireComponent( typeof( FlagshipObservation ) )]
+
 public class Flagship : Carrier {
 
 	public FlagshipObservation flagshipObservation;
@@ -22,7 +24,7 @@ public class Flagship : Carrier {
 		playerCameraControl = PlayersManager.Instance.playerCam.GetComponent<CameraControls>();
 	}
 
-	public void Dock( GameObject terminal ){
+	public override void Dock( GameObject terminal ){
 
 		if (terminal.GetComponent<Terminal> () == null) {
 			throw new UnityException ("Dock is called on a non-terminal object");
