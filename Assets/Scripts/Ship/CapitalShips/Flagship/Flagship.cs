@@ -46,7 +46,7 @@ public class Flagship : Carrier {
 			tno.Send ("AssignObservation", Target.Others, player);
 
 			//TODO Request Focus change from PlayerManager
-			PlayersManager.Instance.ApplyFocusChange ( TNManager.player, tno.uid, "Observation" );
+			PlayersManager.Instance.ApplyFocusChange ( player, tno.uid, "Observation" );
 		}
 
 		//Do this stuff only if it pertains to us
@@ -80,7 +80,7 @@ public class Flagship : Carrier {
 		GameObject terminal = TNObject.Find (terminalID).gameObject;
 		
 		//If this is us
-		if (GetComponent<Terminal> ().pilot == TNManager.player) {
+		if (terminal.GetComponent<Terminal> ().pilot == TNManager.player) {
 			ShipControl control = terminal.GetComponent<ShipControl>();
 			
 			//Do cleanup operations
