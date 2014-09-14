@@ -14,7 +14,7 @@ public class MechStationAndAttitudeControl : MonoBehaviour {
 	//should be in local coordinates
 	private Vector3 accelVector;
 
-	/*
+	
 	protected override void DoStart () {
 		//If this is the server
 		if ( Network.isServer || Network.peerType == NetworkPeerType.Disconnected ) {
@@ -110,5 +110,5 @@ public class MechStationAndAttitudeControl : MonoBehaviour {
 
 		#endregion
 	}
-		*/
+
 }
