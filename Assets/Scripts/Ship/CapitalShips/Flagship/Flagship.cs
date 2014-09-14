@@ -47,7 +47,7 @@ public class Flagship : Carrier {
 		if (TNManager.isHosting) {
 			tno.Send ("AssignObservation", Target.Others, player);
 
-			//TODO Request Focus change from PlayerManager
+			//Request Focus change from PlayerManager
 			PlayersManager.Instance.UpdateFocusChange ( player, tno.uid, "Observation" );
 		}
 
@@ -74,8 +74,8 @@ public class Flagship : Carrier {
 		if (TNManager.isHosting) {
 			tno.Send( "DockTerminal", Target.Others, terminalID );
 		}
-		
-		//TODO Actually dock the terminal
+
+		//Find our GameObject
 		GameObject terminal = TNObject.Find (terminalID).gameObject;
 		
 		//If this is us

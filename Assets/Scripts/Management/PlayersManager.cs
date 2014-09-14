@@ -71,7 +71,7 @@ public class PlayersManager : TNBehaviour {
 
 	[RFC(1)]
 	public void UpdateFocusChange( NetPlayer player, uint target, string role ){
-		
+
 		if( TNManager.isHosting ){
 			tno.Send( 1, Target.Others, player, target, role );
 		}
