@@ -8,4 +8,6 @@ public class Stats : MonoBehaviour {
 	public float breakSmooth;
 	public bool isCarrier;
 
+	public float maxSpeedSqr{ get { return maxSpeed * maxSpeed; } }
+
 }
