@@ -57,9 +57,6 @@ public class Flagship : Carrier {
 				ResetControls();
 			}
 			
-			//TODO Turn on the Observation Controls
-			flagshipObservation.enabled = true;
-
 			playerCameraControl.SetTarget( transform, flagshipObservation );
 		}
 
