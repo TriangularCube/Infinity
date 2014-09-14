@@ -15,7 +15,5 @@ public abstract class Carrier : Ship {
 		}
 	}
 
-	public abstract void AssignDefault ( TNet.Player pilot );
-
 	public abstract void Dock (GameObject terminal);
 }

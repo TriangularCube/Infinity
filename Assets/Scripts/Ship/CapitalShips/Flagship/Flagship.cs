@@ -12,19 +12,16 @@ public class Flagship : Carrier {
 	public FlagshipObservation flagshipObservation;
 	public Transform dock;
 
-	private CameraControls playerCameraControl;
+
 	private Dictionary<NetPlayer, string> playerRoles = new Dictionary<NetPlayer, string>();
 	public override bool ContainsPlayer (NetPlayer check)
 	{
 		throw new System.NotImplementedException ();
 	}
 
-	
-	void Start(){
-		playerCameraControl = PlayersManager.Instance.playerCam.GetComponent<CameraControls>();
-	}
-
 	public override void Dock( GameObject terminal ){
+
+		Debug.Log ("Requested Docking");
 
 		if (terminal.GetComponent<Terminal> () == null) {
 			throw new UnityException ("Dock is called on a non-terminal object");
@@ -51,7 +48,7 @@ public class Flagship : Carrier {
 			tno.Send ("AssignObservation", Target.Others, player);
 
 			//TODO Request Focus change from PlayerManager
-			PlayersManager.Instance.ApplyFocusChange ( TNManager.player, tno.uid, "Observation" );
+			PlayersManager.Instance.ApplyFocusChange ( player, tno.uid, "Observation" );
 		}
 
 		//Do this stuff only if it pertains to us
@@ -62,9 +59,6 @@ public class Flagship : Carrier {
 				ResetControls();
 			}
 			
-			//TODO Turn on the Observation Controls
-			flagshipObservation.enabled = true;
-
 			playerCameraControl.SetTarget( transform, flagshipObservation );
 		}
 
@@ -85,7 +79,7 @@ public class Flagship : Carrier {
 		GameObject terminal = TNObject.Find (terminalID).gameObject;
 		
 		//If this is us
-		if (GetComponent<Terminal> ().pilot == TNManager.player) {
+		if (terminal.GetComponent<Terminal> ().pilot == TNManager.player) {
 			ShipControl control = terminal.GetComponent<ShipControl>();
 			
 			//Do cleanup operations
