@@ -27,4 +27,10 @@ public abstract class Terminal : Ship {
 		this.pilot = pilot;
 	}
 
+	public void CleanUp(){
+		pilot = null;
+
+		gameObject.SetActive( false );
+	}
+
 }

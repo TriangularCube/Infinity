@@ -86,11 +86,10 @@ public class Flagship : Carrier {
 			control.CleanUp ();
 		}
 
-		//Unseat the pilot
-		terminal.GetComponent<Terminal> ().pilot = null;
+		//Call cleanup on the terminal
+		terminal.GetComponent<Terminal> ().CleanUp ();
 		
 		//TODO This probably needs more work
-		terminal.SetActive (false);
 		terminal.transform.parent = dock;
 		terminal.transform.position = dock.position;
 		dockedTerminals.Add (terminal);
