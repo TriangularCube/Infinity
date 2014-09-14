@@ -38,7 +38,10 @@ public class PlayersManager : TNBehaviour {
 	public GameObject Flagship;
 
 	//Our players camera
-	public Camera playerCam;
+	public CameraControls playerCamControl;
+
+	//DEBUG Our starting object
+	public GameObject startingObject;
 
 	void Awake(){
 		if (managerInstance) {
