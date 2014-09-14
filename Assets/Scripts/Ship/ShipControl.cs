@@ -30,6 +30,8 @@ public abstract class ShipControl : MonoBehaviour {
 			
 			playerCamera = null;
 		}
+
+		enabled = false;
 	}
 
 }
