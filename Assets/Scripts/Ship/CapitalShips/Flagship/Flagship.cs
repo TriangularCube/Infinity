@@ -12,16 +12,11 @@ public class Flagship : Carrier {
 	public FlagshipObservation flagshipObservation;
 	public Transform dock;
 
-	private CameraControls playerCameraControl;
+
 	private Dictionary<NetPlayer, string> playerRoles = new Dictionary<NetPlayer, string>();
 	public override bool ContainsPlayer (NetPlayer check)
 	{
 		throw new System.NotImplementedException ();
-	}
-
-	
-	void Start(){
-		playerCameraControl = PlayersManager.Instance.playerCam.GetComponent<CameraControls>();
 	}
 
 	public override void Dock( GameObject terminal ){
