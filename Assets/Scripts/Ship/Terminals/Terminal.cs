@@ -21,7 +21,7 @@ public abstract class Terminal : Ship {
 		}
 
 		if (pilot == TNManager.player) {
-			playerCameraControl.SetTarget( transform, control );
+			PlayersManager.Instance.playerCamControl.SetTarget( transform, control );
 		}
 
 		this.pilot = pilot;

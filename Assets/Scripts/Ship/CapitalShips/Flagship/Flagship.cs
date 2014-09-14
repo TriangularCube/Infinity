@@ -59,7 +59,7 @@ public class Flagship : Carrier {
 				ResetControls();
 			}
 			
-			playerCameraControl.SetTarget( transform, flagshipObservation );
+			PlayersManager.Instance.playerCamControl.SetTarget( transform, flagshipObservation );
 		}
 
 		//Add the player to the list
