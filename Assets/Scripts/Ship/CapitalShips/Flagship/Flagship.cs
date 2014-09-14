@@ -21,6 +21,8 @@ public class Flagship : Carrier {
 
 	public override void Dock( GameObject terminal ){
 
+		Debug.Log ("Requested Docking");
+
 		if (terminal.GetComponent<Terminal> () == null) {
 			throw new UnityException ("Dock is called on a non-terminal object");
 		}
