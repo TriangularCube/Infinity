@@ -44,9 +44,9 @@ public class PlayersManager : TNBehaviour {
 	public GameObject startingObject;
 
 	void Awake(){
-		if (managerInstance) {
-			Debug.LogError( "OK, this is the second instance of PlayerManager. Something is seriously wrong." );
-		}
+		if (managerInstance)
+			throw new UnityException( "OK, this is the second instance of PlayerManager. Something is seriously wrong." );
+		
 
 		//Register ourselves with the instance
 		managerInstance = this;
@@ -63,7 +63,9 @@ public class PlayersManager : TNBehaviour {
 		startingObject.GetComponent<Ship> ().AssignDefault (TNManager.player);
 	}
 
+
 	void Update(){
+		//DEBUG
 		if( Input.GetKeyUp( KeyCode.LeftControl ) ){
 			Screen.lockCursor = !Screen.lockCursor;
 		}
