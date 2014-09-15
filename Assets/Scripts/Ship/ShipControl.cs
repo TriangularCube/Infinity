@@ -7,8 +7,9 @@ using NetPlayer = TNet.Player;
 public abstract class ShipControl : MonoBehaviour {
 
 	public Transform cameraPoint;
-	public GameObject playerCamera;
-	
+
+	protected GameObject playerCamera;
+
 	//This method is accessed when whatever else is controlling the camera relinquishes control, transferring control here
 	public virtual void TransferControl( GameObject cam ){
 		playerCamera = cam;
