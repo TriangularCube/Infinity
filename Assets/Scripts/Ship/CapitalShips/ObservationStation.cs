@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class FlagshipObservation : ShipControl {
+public class ObservationStation : ShipControl {
 
 	void Update(){
 		if ( playerCamera != null && Screen.lockCursor == true) {
