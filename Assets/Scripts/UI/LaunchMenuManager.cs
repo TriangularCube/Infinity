@@ -31,6 +31,9 @@ public class LaunchMenuManager : MonoBehaviour {
 	//That's { Button, Terminal }
 	private Dictionary< GameObject, GameObject > dockedTerminals;
 
+	//A reference to the carrier we're in
+	public Carrier carrier{ get; private set; }
+
 	void Awake(){
 		dockedTerminals = new Dictionary<GameObject, GameObject>(1);
 	}
@@ -59,11 +62,25 @@ public class LaunchMenuManager : MonoBehaviour {
 		dockedTerminals.Add (NGUITools.AddChild (grid.gameObject, shipSelectButton), terminal);
 		grid.Reposition ();
 
+	//Called if we're docked into a carrier
+	public void Docked( Carrier dockedInto ){
+		//Set our carrier reference
+		carrier = dockedInto;
+		//Populate our menu
+		PopulateList ();
 	}
 
 	public void TerminalLaunched( GameObject terminal ){
+	//Called if we're launched in a terminal from a carrier
+	public void Launched(){
+		//Reset our references
+		carrier = null;
+		dockedTerminals.Clear ();
 
 		//HACK This probably won't happen...?
+		//Disable the menu
+		LaunchMenu.SetActive (false);
+	}
 
 		//If there's no values in the list of terminals
 		if (dockedTerminals == null || dockedTerminals.Count == 0) {
