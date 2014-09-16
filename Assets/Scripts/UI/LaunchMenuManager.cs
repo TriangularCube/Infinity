@@ -5,22 +5,34 @@ using System.Collections.Generic;
 
 public class LaunchMenuManager : MonoBehaviour {
 
+	//Here is a private reference only this class can access
+	private static LaunchMenuManager _instance;
+	
+	//This is the public reference that other classes will use
+	public static LaunchMenuManager instance
+	{
+		get
+		{
+			//If _instance hasn't been set yet, we grab it from the scene!
+			//This will only happen the first time this reference is used.
+			if(_instance == null)
+				_instance = GameObject.FindObjectOfType<LaunchMenuManager>();
+			return _instance;
+		}
+	}
+
 	//Editor references
 	public GameObject shipSelectButton;
+	public GameObject LaunchMenu;
 	public UIGrid grid;
 	public GameObject NoShipsDocked;
 
 	//Our list of docked Terminals
+	//That's { Button, Terminal }
 	private Dictionary< GameObject, GameObject > dockedTerminals;
 
 	void Awake(){
 		dockedTerminals = new Dictionary<GameObject, GameObject>(1);
-	}
-
-	//When we change ships
-	public void Reset(){
-		dockedTerminals.Clear ();
-		NoShipsDocked.SetActive (true);
 	}
 
 	public void PopulateList( Carrier carrier ){
