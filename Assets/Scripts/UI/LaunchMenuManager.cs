@@ -73,6 +73,13 @@ public class LaunchMenuManager : MonoBehaviour {
 		LaunchMenu.SetActive (false);
 	}
 
+	void Update(){
+		//Call up the menu and stuff
+		if (Input.GetKeyUp (KeyCode.L)) {
+			if( carrier ){
+				LaunchMenu.SetActive( !LaunchMenu.activeSelf );
+				Screen.lockCursor = !LaunchMenu.activeSelf;
+			}
 		}
 	}
 
