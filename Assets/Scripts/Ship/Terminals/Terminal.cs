@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using TNet;
 
@@ -19,11 +19,11 @@ public abstract class Terminal : Ship {
 		if (TNManager.isHosting) {
 			tno.Send( "AssignDefault", TNet.Target.Others, pilot );
 
-			PlayersManager.Instance.UpdateFocusChange ( pilot, tno.uid, "Pilot" );
+			PlayersManager.instance.UpdateFocusChange ( pilot, tno.uid, "Pilot" );
 		}
 
 		if (pilot == TNManager.player) {
-			PlayersManager.Instance.playerCamControl.SetTarget( transform, control );
+			PlayersManager.instance.playerCamControl.SetTarget( transform, control );
 		}
 
 		this.pilot = pilot;
