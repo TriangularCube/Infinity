@@ -21,7 +21,7 @@ public class PlayersManager : TNBehaviour {
 
 	private static PlayersManager managerInstance;
 
-	public static PlayersManager Instance{
+	public static PlayersManager instance{
 		get{
 			if (managerInstance == null) {
 				managerInstance = GameObject.FindObjectOfType<PlayersManager> ();
