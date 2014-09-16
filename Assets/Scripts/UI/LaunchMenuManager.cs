@@ -38,15 +38,15 @@ public class LaunchMenuManager : MonoBehaviour {
 		dockedTerminals = new Dictionary<GameObject, GameObject>(1);
 	}
 
-	public void PopulateList( Carrier carrier ){
+	//Called when the state of the carried ships has changed
+	public void PopulateList(){
 
-		//What should be a redundent check
-		if (dockedTerminals.Count > 0)
-						throw new UnityException ("Launch Menu's list is being populated while it's still filled");
+		dockedTerminals.Clear ();
 
 		if (carrier.dockedTerminals.Count > 0) {
 		//Fill the grid with a button for each Terminal in the carrier
 			foreach (GameObject terminal in carrier.dockedTerminals) {
+				NoShipsDocked.SetActive( false );
 				dockedTerminals.Add (NGUITools.AddChild (grid.gameObject, shipSelectButton), terminal);
 			}
 			grid.Reposition ();
@@ -54,13 +54,6 @@ public class LaunchMenuManager : MonoBehaviour {
 			NoShipsDocked.SetActive( true );
 		}
 	}
-
-	public void TerminalDocked( GameObject terminal ){
-
-		NoShipsDocked.SetActive (false);
-
-		dockedTerminals.Add (NGUITools.AddChild (grid.gameObject, shipSelectButton), terminal);
-		grid.Reposition ();
 
 	//Called if we're docked into a carrier
 	public void Docked( Carrier dockedInto ){
@@ -70,24 +63,16 @@ public class LaunchMenuManager : MonoBehaviour {
 		PopulateList ();
 	}
 
-	public void TerminalLaunched( GameObject terminal ){
 	//Called if we're launched in a terminal from a carrier
 	public void Launched(){
 		//Reset our references
 		carrier = null;
 		dockedTerminals.Clear ();
 
-		//HACK This probably won't happen...?
 		//Disable the menu
 		LaunchMenu.SetActive (false);
 	}
 
-		//If there's no values in the list of terminals
-		if (dockedTerminals == null || dockedTerminals.Count == 0) {
-			//Turn the label that says "No Terminals docked"
-			NoShipsDocked.SetActive (true);
-		} else {
-			NoShipsDocked.SetActive (false);
 		}
 	}
 
