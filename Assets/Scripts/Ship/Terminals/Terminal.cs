@@ -17,6 +17,13 @@ public abstract class Terminal : Ship {
 	public override void AssignDefault (TNet.Player pilot)
 	{
 		if (TNManager.isHosting) {
+			//What should be a redundent check
+			if( !gameObject.activeSelf ){
+				Debug.Log( "Whoa there, trying to seat a pilot onto an inactive Terminal" );
+
+				throw new UnityException( "Seating a pilot onto an inactive Terminal" );
+			}
+
 			tno.Send( "AssignDefault", TNet.Target.Others, pilot );
 
 			PlayersManager.instance.UpdateFocusChange ( pilot, tno.uid, "Pilot" );
