@@ -103,6 +103,39 @@ public abstract class Carrier : Ship {
 		
 		Debug.Log ("Assigned Observation");
 	}
+	
+	//TODO Launch a terminal
+	public void ApplyForLaunch( NetPlayer pilot, GameObject terminal ){
+		tno.Send ("LaunchTerminal", Target.Host, pilot, terminal.GetComponent<TNObject> ().uid);
+	}
+
+	[RFC]
+	protected void LaunchTerminal( NetPlayer pilot, uint terminalID ){
+		if (TNManager.isHosting) {
+			tno.Send( "LaunchTerminal", Target.Others, pilot, terminalID );
+		}
+
+		//Find the Terminal
+		GameObject terminal = TNObject.Find (terminalID).gameObject;
+
+		if (pilot == TNManager.player) {
+			//Reset all controls
+			ResetControls();
+		}
+
+		//Remove the pilot from the carrier
+		playerRoles.Remove (pilot);
+
+		//TODO Activate the Terminal
+		terminal.SetActive (true);
+		terminal.transform.parent = null;
+		terminal.rigidbody.AddRelativeForce (Vector3.forward * 20);
+
+		//Seat the pilot onto the Terminal
+		terminal.GetComponent<Terminal> ().AssignDefault (pilot);
+
+		LaunchMenuManager.instance.Launched ();
+	}
 
 	public override void AssignDefault ( NetPlayer pilot )
 	{
