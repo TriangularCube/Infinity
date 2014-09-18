@@ -13,8 +13,6 @@ public class Flagship : Carrier {
 		base.ResetControls ();
 	}
 
-	//TODO Launch a terminal
-
 	public void OnDestroy(){
 		//TODO Figure out what to do when the thing we're on is destroyed.
 	}

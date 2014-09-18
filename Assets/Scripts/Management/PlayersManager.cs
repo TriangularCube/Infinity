@@ -19,15 +19,15 @@ public struct PlayerFocus{
 
 public class PlayersManager : TNBehaviour {
 
-	private static PlayersManager managerInstance;
+	private static PlayersManager _instance;
 
 	public static PlayersManager instance{
 		get{
-			if (managerInstance == null) {
-				managerInstance = GameObject.FindObjectOfType<PlayersManager> ();
+			if (_instance == null) {
+				_instance = GameObject.FindObjectOfType<PlayersManager> ();
 			}
 
-			return managerInstance;
+			return _instance;
 		}
 	}
 
@@ -44,12 +44,12 @@ public class PlayersManager : TNBehaviour {
 	public GameObject startingObject;
 
 	void Awake(){
-		if (managerInstance)
+		if (_instance)
 			throw new UnityException( "OK, this is the second instance of PlayerManager. Something is seriously wrong." );
 		
 
 		//Register ourselves with the instance
-		managerInstance = this;
+		_instance = this;
 
 		if (!Screen.lockCursor) {
 			Debug.Log( "Locking Cursor" );

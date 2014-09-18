@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class Dock : MonoBehaviour {
@@ -9,7 +9,7 @@ public class Dock : MonoBehaviour {
 		if (other.transform.root.gameObject.GetComponent<Terminal> () != null) {
 
 			Debug.Log ("Docking ship is, in fact, a Terminal");
-			carrier.Dock( other.transform.root.gameObject);
+			carrier.ApplyDock( other.transform.root.gameObject);
 		}
 	}
 }

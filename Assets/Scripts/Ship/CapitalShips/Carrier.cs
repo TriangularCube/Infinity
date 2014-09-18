@@ -28,7 +28,7 @@ public abstract class Carrier : Ship {
 		}
 	}
 
-	public virtual void Dock (GameObject terminal){
+	public virtual void ApplyDock (GameObject terminal){
 		Debug.Log ("Requested Docking");
 		
 		if (terminal.GetComponent<Terminal> () == null) {
