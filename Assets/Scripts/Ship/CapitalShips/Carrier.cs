@@ -16,7 +16,11 @@ public abstract class Carrier : Ship {
 	//Check if this player in on this ship
 	public override bool ContainsPlayer (NetPlayer check)
 	{
-		throw new System.NotImplementedException ();
+		if (playerRoles.ContainsKey (check)) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	void Awake(){
