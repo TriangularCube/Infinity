@@ -63,6 +63,10 @@ public abstract class Carrier : Ship {
 
 			LaunchMenuManager.instance.Docked( this );
 		}
+
+		if (LaunchMenuManager.instance.carrier == this) {
+			LaunchMenuManager.instance.PopulateList();
+		}
 		
 		//Call cleanup on the terminal
 		terminal.GetComponent<Terminal> ().CleanUp ();

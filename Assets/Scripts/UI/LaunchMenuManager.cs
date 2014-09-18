@@ -59,8 +59,6 @@ public class LaunchMenuManager : MonoBehaviour {
 	public void Docked( Carrier dockedInto ){
 		//Set our carrier reference
 		carrier = dockedInto;
-		//Populate our menu
-		PopulateList ();
 	}
 
 	//Called if we're launched in a terminal from a carrier
