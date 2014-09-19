@@ -132,9 +132,16 @@ public abstract class Carrier : Ship {
 		//Remove the pilot from the carrier
 		playerRoles.Remove (pilot);
 
+		//Remove the Terminal
+		dockedTerminals.Remove (terminal);
+
 		//TODO Activate the Terminal
 		terminal.SetActive (true);
 		terminal.transform.parent = null;
+
+		//Debug
+		terminal.transform.Translate (Vector3.forward * 40);
+
 		terminal.rigidbody.AddRelativeForce (Vector3.forward * 20);
 
 		//Seat the pilot onto the Terminal

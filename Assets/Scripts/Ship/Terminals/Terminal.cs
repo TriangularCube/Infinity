@@ -39,6 +39,7 @@ public abstract class Terminal : Ship {
 	public void CleanUp(){
 		pilot = null;
 
+		rigidbody.velocity = Vector3.zero;
 		gameObject.SetActive( false );
 	}
 
