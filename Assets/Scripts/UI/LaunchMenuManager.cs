@@ -41,7 +41,7 @@ public class LaunchMenuManager : MonoBehaviour {
 	//Called when the state of the carried ships has changed
 	public void PopulateList(){
 
-		dockedTerminals.Clear ();
+		ClearMenu ();
 
 		if (carrier.dockedTerminals.size > 0) {
 		//Fill the grid with a button for each Terminal in the carrier
@@ -69,7 +69,7 @@ public class LaunchMenuManager : MonoBehaviour {
 	public void Launched(){
 		//Reset our references
 		carrier = null;
-		dockedTerminals.Clear ();
+		ClearMenu ();
 
 		//Disable the menu
 		LaunchMenu.SetActive (false);
@@ -83,6 +83,14 @@ public class LaunchMenuManager : MonoBehaviour {
 				Screen.lockCursor = !LaunchMenu.activeSelf;
 			}
 		}
+	}
+
+	void ClearMenu(){
+		foreach (GameObject button in dockedTerminals.Keys) {
+			Debug.Log( "Destroying " + button );
+			Destroy( button );
+		}
+		dockedTerminals.Clear ();
 	}
 
 	//HACK
