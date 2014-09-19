@@ -43,11 +43,13 @@ public class LaunchMenuManager : MonoBehaviour {
 
 		dockedTerminals.Clear ();
 
-		if (carrier.dockedTerminals.Count > 0) {
+		if (carrier.dockedTerminals.size > 0) {
 		//Fill the grid with a button for each Terminal in the carrier
+//			Debug.Log( carrier.dockedTerminals.size );
 			foreach (GameObject terminal in carrier.dockedTerminals) {
 				NoShipsDocked.SetActive( false );
 				GameObject button = NGUITools.AddChild (grid.gameObject, shipSelectButton);
+				Debug.Log( terminal );
 				button.GetComponent<ShipSelectButton>().terminal = terminal;
 				dockedTerminals.Add ( button, terminal);
 			}
