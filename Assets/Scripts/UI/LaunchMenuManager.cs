@@ -47,7 +47,9 @@ public class LaunchMenuManager : MonoBehaviour {
 		//Fill the grid with a button for each Terminal in the carrier
 			foreach (GameObject terminal in carrier.dockedTerminals) {
 				NoShipsDocked.SetActive( false );
-				dockedTerminals.Add (NGUITools.AddChild (grid.gameObject, shipSelectButton), terminal);
+				GameObject button = NGUITools.AddChild (grid.gameObject, shipSelectButton);
+				button.GetComponent<ShipSelectButton>().terminal = terminal;
+				dockedTerminals.Add ( button, terminal);
 			}
 			grid.Reposition ();
 		} else {
