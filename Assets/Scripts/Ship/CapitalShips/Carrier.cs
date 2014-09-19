@@ -69,10 +69,6 @@ public abstract class Carrier : Ship {
 			LaunchMenuManager.instance.Docked( this );
 		}
 
-		if (LaunchMenuManager.instance.carrier == this) {
-			LaunchMenuManager.instance.PopulateList();
-		}
-		
 		//Call cleanup on the terminal
 		terminal.GetComponent<Terminal> ().CleanUp ();
 		
@@ -81,6 +77,10 @@ public abstract class Carrier : Ship {
 		terminal.transform.position = dock.position;
 		terminal.transform.rotation = dock.rotation;
 		dockedTerminals.Add (terminal);
+
+		if (LaunchMenuManager.instance.carrier == this) {
+			LaunchMenuManager.instance.PopulateList();
+		}
 	}
 
 	[RFC]
