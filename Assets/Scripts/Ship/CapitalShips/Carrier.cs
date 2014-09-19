@@ -78,6 +78,7 @@ public abstract class Carrier : Ship {
 		//Physically dock the ship
 		terminal.transform.parent = dock;
 		terminal.transform.position = dock.position;
+		terminal.transform.rotation = dock.rotation;
 		dockedTerminals.Add (terminal);
 	}
 
@@ -138,7 +139,9 @@ public abstract class Carrier : Ship {
 		//Seat the pilot onto the Terminal
 		terminal.GetComponent<Terminal> ().AssignDefault (pilot);
 
-		LaunchMenuManager.instance.Launched ();
+		if (pilot == TNManager.player) {
+			LaunchMenuManager.instance.Launched ();
+		}
 	}
 
 	public override void AssignDefault ( NetPlayer pilot )
