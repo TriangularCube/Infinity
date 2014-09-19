@@ -50,12 +50,6 @@ public class PlayersManager : TNBehaviour {
 
 		//Register ourselves with the instance
 		_instance = this;
-
-		if (!Screen.lockCursor) {
-			Debug.Log( "Locking Cursor" );
-
-			Screen.lockCursor = true;
-		}
 	}
 
 	void Start(){
@@ -81,7 +75,7 @@ public class PlayersManager : TNBehaviour {
 		//Update the player's focus
 		ListOfPlayerFocus [player] = new PlayerFocus (TNObject.Find (target).gameObject, role);
 
-		Debug.Log (ListOfPlayerFocus [player].Role);
+//		Debug.Log (ListOfPlayerFocus [player].Role);
 	}
 
 	//TODO Resolve stuff if someone dies in a non-flagship

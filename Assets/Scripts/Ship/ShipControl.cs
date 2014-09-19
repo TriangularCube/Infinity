@@ -18,6 +18,8 @@ public abstract class ShipControl : MonoBehaviour {
 		playerCamera.transform.rotation = cameraPoint.rotation;
 		
 		playerCamera.transform.parent = transform;
+
+		Screen.lockCursor = true;
 		
 		enabled = true;
 	}
