@@ -27,13 +27,13 @@ public abstract class Carrier : Ship {
 		dockedTerminals = new TNet.List<GameObject> ();
 
 		//Iterate through each of the children of the "Dock", and add it to the list of "Docked Ships"
-		foreach (Transform child in transform.FindChild( "Dock" )) {
+		foreach (Transform child in transform.GetChild( 2 )) {
 			dockedTerminals.Add( child.gameObject );
 		}
 	}
 
 	public virtual void ApplyDock (GameObject terminal){
-		Debug.Log ("Requested Docking");
+//		Debug.Log ("Requested Docking");
 		
 		if (terminal.GetComponent<Terminal> () == null) {
 			throw new UnityException ("Dock is called on a non-terminal object");
@@ -57,6 +57,7 @@ public abstract class Carrier : Ship {
 		
 		//Find our GameObject
 		GameObject terminal = TNObject.Find (terminalID).gameObject;
+//		Debug.Log ("Found Terminal " + terminalID + " in DockTerminal - " + terminal);
 		
 		//If this is us
 		if (terminal.GetComponent<Terminal> ().pilot == TNManager.player) {
@@ -106,7 +107,7 @@ public abstract class Carrier : Ship {
 		//Add the player to the list
 		playerRoles[player] = "Observation";
 		
-		Debug.Log ("Assigned Observation");
+//		Debug.Log ("Assigned Observation");
 	}
 	
 	//TODO Launch a terminal

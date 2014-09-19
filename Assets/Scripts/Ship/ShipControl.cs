@@ -26,7 +26,7 @@ public abstract class ShipControl : MonoBehaviour {
 
 	//Do this to clean up the object in preparation for deactivation or destruction
 	public void CleanUp(){
-		Debug.Log ("Yo!");
+//		Debug.Log ("Cleanup on ShipControl!");
 
 		if( playerCamera != null ){
 			playerCamera.transform.parent = null;
