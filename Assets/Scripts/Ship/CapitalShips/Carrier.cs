@@ -138,6 +138,7 @@ public abstract class Carrier : Ship {
 		//TODO Activate the Terminal
 		terminal.SetActive (true);
 		terminal.transform.parent = null;
+		terminal.transform.localScale = Vector3.one;
 
 		//Debug
 		terminal.transform.Translate (Vector3.forward * 40);
