@@ -1,6 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent( typeof ( Rigidbody ) )]
+[RequireComponent( typeof ( Stats ) )]
+
 public abstract class Ship : TNBehaviour {
 
 	public abstract bool ContainsPlayer( TNet.Player check );

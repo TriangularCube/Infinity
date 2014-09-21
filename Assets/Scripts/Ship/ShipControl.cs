@@ -9,6 +9,11 @@ public abstract class ShipControl : MonoBehaviour {
 	public Transform cameraPoint;
 
 	protected GameObject playerCamera;
+	protected Stats stats;
+
+	protected virtual void Awake(){
+		stats = GetComponent<Stats> ();
+	}
 
 	//This method is accessed when whatever else is controlling the camera relinquishes control, transferring control here
 	public virtual void TransferControl( GameObject cam ){
@@ -26,8 +31,6 @@ public abstract class ShipControl : MonoBehaviour {
 
 	//Do this to clean up the object in preparation for deactivation or destruction
 	public void CleanUp(){
-//		Debug.Log ("Cleanup on ShipControl!");
-
 		if( playerCamera != null ){
 			playerCamera.transform.parent = null;
 			

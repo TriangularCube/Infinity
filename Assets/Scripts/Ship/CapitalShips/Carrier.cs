@@ -27,7 +27,7 @@ public abstract class Carrier : Ship {
 		dockedTerminals = new TNet.List<GameObject> ();
 
 		//Iterate through each of the children of the "Dock", and add it to the list of "Docked Ships"
-		foreach (Transform child in transform.GetChild( 2 )) {
+		foreach (Transform child in transform.GetChild( 1 )) {
 			dockedTerminals.Add( child.gameObject );
 		}
 	}
@@ -107,7 +107,7 @@ public abstract class Carrier : Ship {
 		//Add the player to the list
 		playerRoles[player] = "Observation";
 		
-//		Debug.Log ("Assigned Observation");
+		Debug.Log ("Assigned Observation");
 	}
 	
 	//TODO Launch a terminal

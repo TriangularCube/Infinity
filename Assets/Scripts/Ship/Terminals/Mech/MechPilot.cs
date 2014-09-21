@@ -3,14 +3,8 @@ using System.Collections;
 
 public class MechPilot : ShipControl {
 
-	private Stats stats;
-
 	//should be in local coordinates
 	private Vector3 accelVector;
-
-	void Awake(){
-		stats = GetComponent<Stats> ();
-	}
 
 	void FixedUpdate(){
 
