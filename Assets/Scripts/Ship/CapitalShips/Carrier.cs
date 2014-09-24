@@ -8,6 +8,8 @@ using NetPlayer = TNet.Player;
 public abstract class Carrier : Ship {
 	
 	public ObservationStation observationStation;
+	public ShipControl navigation;
+
 	public Transform dock;
 	public TNet.List<GameObject> dockedTerminals{ get; set; }
 
@@ -116,6 +118,32 @@ public abstract class Carrier : Ship {
 	}
 
 	[RFC]
+	private void AssignNavigation( NetPlayer player ){
+		if (TNManager.isHosting) {
+			tno.Send ("AssignNavigation", Target.Others, player);
+			
+			//Request Focus change from PlayerManager
+			PlayersManager.instance.UpdateFocusChange ( player, tno.uid, "Navigation" );
+		}
+		
+		//Do this stuff only if it pertains to us
+		if (player == TNManager.player) {
+			//If the player is already on the ship, meaning he is just changing roles
+			if (playerRoles.ContainsKey (player)) {
+				//Reset all controls
+				ResetControls();
+			}
+			
+			PlayersManager.instance.playerCamControl.SetTarget( transform, navigation );
+		}
+		
+		//Add the player to the list
+		playerRoles[player] = "Navigation";
+		
+		Debug.Log ("Assigned Navigation");
+	}
+
+	[RFC]
 	protected void LaunchTerminal( NetPlayer pilot, uint terminalID ){
 		if (TNManager.isHosting) {
 			tno.Send( "LaunchTerminal", Target.Others, pilot, terminalID );
@@ -160,5 +188,6 @@ public abstract class Carrier : Ship {
 
 	protected virtual void ResetControls(){
 		observationStation.enabled = false;
+		navigation.enabled = false;
 	}
 }
