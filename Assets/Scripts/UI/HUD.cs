@@ -4,7 +4,11 @@ using System.Collections.Generic;
 
 public class HUD : MonoBehaviour {
 
-	public GameObject panel;
+	[SerializeField]
+	GameObject panel;
+
+	[SerializeField]
+	GameObject targetingPrefab;
 
 	//That's {Target Ship, UI Element}
 	private Dictionary<GameObject, GameObject> targetDisplayList = new Dictionary<GameObject, GameObject>();
@@ -16,6 +20,10 @@ public class HUD : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
-		
+		Paint ();
+	}
+
+	void Paint(){
+
 	}
 }

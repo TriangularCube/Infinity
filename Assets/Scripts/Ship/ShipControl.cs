@@ -7,24 +7,24 @@ using NetPlayer = TNet.Player;
 public abstract class ShipControl : MonoBehaviour {
 
 	public Transform cameraPoint;
+	[SerializeField]
 	protected Stats stats;
 
-	protected virtual void Awake(){
-		stats = GetComponent<Stats> ();
-	}
+	protected GameObject playerCamera;
 
 	//This method is accessed when whatever else is controlling the camera relinquishes control, transferring control here
 	public virtual void TransferControl( GameObject cam ){
 		playerCamera = cam;
-		
+
 		playerCamera.transform.position = cameraPoint.position;
 		playerCamera.transform.rotation = cameraPoint.rotation;
-		
+
 		playerCamera.transform.parent = transform;
 
 		Screen.lockCursor = true;
-		
+
 		enabled = true;
+
 	}
 
 	//Do this to clean up the object in preparation for deactivation or destruction
