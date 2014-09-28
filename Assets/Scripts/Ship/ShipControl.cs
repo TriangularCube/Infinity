@@ -7,8 +7,6 @@ using NetPlayer = TNet.Player;
 public abstract class ShipControl : MonoBehaviour {
 
 	public Transform cameraPoint;
-
-	protected GameObject playerCamera;
 	protected Stats stats;
 
 	protected virtual void Awake(){
