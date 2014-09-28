@@ -25,7 +25,8 @@ public abstract class Carrier : Ship {
 		}
 	}
 
-	void Awake(){
+	protected override void Awake(){
+		base.Awake ();
 		dockedTerminals = new TNet.List<GameObject> ();
 
 		//Iterate through each of the children of the "Dock", and add it to the list of "Docked Ships"
