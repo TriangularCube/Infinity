@@ -9,9 +9,7 @@ using NetPlayer = TNet.Player;
 [RequireComponent( typeof( FlagshipNavigation ) )]
 
 public class Flagship : Carrier {
-
-
-
+	
 	public void OnDestroy(){
 		//TODO Figure out what to do when the thing we're on is destroyed.
 	}

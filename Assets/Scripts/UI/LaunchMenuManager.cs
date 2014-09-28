@@ -46,7 +46,7 @@ public class LaunchMenuManager : MonoBehaviour {
 		if (carrier.dockedTerminals.size > 0) {
 			//Fill the grid with a button for each Terminal in the carrier
 			foreach (GameObject terminal in carrier.dockedTerminals) {
-				NoShipsDocked.SetActive( false );
+//				NoShipsDocked.SetActive( false );
 				GameObject button = NGUITools.AddChild (grid.gameObject, shipSelectButton);
 				button.GetComponent<ShipSelectButton>().terminal = terminal;
 				dockedTerminals.Add ( button, terminal);
@@ -75,7 +75,7 @@ public class LaunchMenuManager : MonoBehaviour {
 
 	void Update(){
 		//Call up the menu and stuff
-		if (Input.GetKeyUp (KeyCode.L)) {
+		if (Input.GetKeyDown (KeyCode.L)) {
 			if( carrier ){
 				LaunchMenu.SetActive( !LaunchMenu.activeSelf );
 				Screen.lockCursor = !LaunchMenu.activeSelf;
