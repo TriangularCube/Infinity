@@ -6,14 +6,17 @@ using TNet;
 using NetPlayer = TNet.Player;
 
 public abstract class Carrier : Ship {
-	
-	public ObservationStation observationStation;
-	public ShipControl navigation;
 
-	public Transform dock;
+	[SerializeField]
+	private ObservationStation observationStation;
+	[SerializeField]
+	private ShipControl navigation;
+	[SerializeField]
+	private Transform dock;
+
 	public TNet.List<GameObject> dockedTerminals{ get; set; }
 
-	protected Dictionary<NetPlayer, string> playerRoles = new Dictionary<NetPlayer, string>();
+	private Dictionary<NetPlayer, string> playerRoles = new Dictionary<NetPlayer, string>();
 
 	//Check if this player in on this ship
 	public override bool ContainsPlayer (NetPlayer check)
