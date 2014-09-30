@@ -30,7 +30,7 @@ public abstract class Terminal : Ship {
 		}
 
 		if (pilot == TNManager.player) {
-			PlayersManager.instance.playerCamControl.SetTarget( transform, control );
+			CameraControls.instance.SetTarget( transform, control );
 		}
 
 		this.pilot = pilot;

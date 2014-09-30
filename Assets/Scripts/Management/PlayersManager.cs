@@ -38,8 +38,6 @@ public class PlayersManager : Singlton<PlayersManager> {
 	//Our constant reference to our Flagship
 	public GameObject Flagship;
 
-	//Our players camera
-	public CameraControls playerCamControl;
 	//DEBUG Our starting object
 	public GameObject startingObject;
 
