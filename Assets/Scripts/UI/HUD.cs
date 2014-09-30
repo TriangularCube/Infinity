@@ -88,9 +88,6 @@ public class HUD : Singleton<HUD> {
 			//Set the indicator to Box
 			indicator.SetBox ();
 
-			//Zero out the Z
-			viewportPoint.z = 0f;
-
 			//Set the position and rotation of the indicator
 			indicator.transform.rotation = Quaternion.identity;
 
@@ -104,12 +101,13 @@ public class HUD : Singleton<HUD> {
 			if( viewportPoint.z < 0f ) viewportPoint *= -1;
 
 			//Find the wide angle
-			float rotationAngle = Quaternion.LookRotation( new Vector3( viewportPoint.x, 0f, viewportPoint.y ) ).eulerAngles.y;
+			float rotationAngle = Vector3.Angle( Vector3.up, new Vector3( viewportPoint.x, viewportPoint.y, 0f ) );
+			if( viewportPoint.x > 0f ){
+				rotationAngle *= -1;
+			}
 
 			//Set our rotation
-			indicator.transform.rotation = Quaternion.Euler( 0f, 0f, -rotationAngle );
-
-//			Vector3 ray = new Vector3( Mathf.Sin( look * Mathf.Deg2Rad ), Mathf.Cos( look * Mathf.Deg2Rad ) );
+			indicator.transform.rotation = Quaternion.Euler( 0f, 0f, rotationAngle );
 
 			float sin = Mathf.Sin( rotationAngle * Mathf.Deg2Rad );
 			float cos = Mathf.Cos( rotationAngle * Mathf.Deg2Rad );
@@ -122,28 +120,32 @@ public class HUD : Singleton<HUD> {
 				if( cos > 0f ){
 					//If we're on the top half of screen
 					viewportPoint.y = screenPadding;
-					viewportPoint.x = tan * screenPadding;
+					viewportPoint.x = - ( tan * screenPadding );
 				} else {
 					//If we're on the bottom half of the screen
 					viewportPoint.y = -screenPadding;
-					viewportPoint.x = -( tan * screenPadding );
+					viewportPoint.x = tan * screenPadding;
 				}
 
 			} else {
 				//We're touching a horizontal bound
 
-				if( sin > 0f ){
+				if( sin < 0f ){
 					//If we're on the right side
 					viewportPoint.x = screenPadding;
-					viewportPoint.y = screenPadding / tan;
+					viewportPoint.y = - ( screenPadding / tan );
 				} else {
 					//If we're on the left side
 					viewportPoint.x = -screenPadding;
-					viewportPoint.y = - ( screenPadding / tan );
+					viewportPoint.y = screenPadding / tan;
 				}
 			}
+
 		}
 
+		//Zero out the Z
+		viewportPoint.z = 0f;
+		
 		viewportPoint.x *= Screen.width;
 		viewportPoint.y *= Screen.height;
 
