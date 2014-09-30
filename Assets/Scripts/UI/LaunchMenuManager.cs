@@ -3,23 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-public class LaunchMenuManager : MonoBehaviour {
-
-	//Here is a private reference only this class can access
-	private static LaunchMenuManager _instance;
-	
-	//This is the public reference that other classes will use
-	public static LaunchMenuManager instance
-	{
-		get
-		{
-			//If _instance hasn't been set yet, we grab it from the scene!
-			//This will only happen the first time this reference is used.
-			if(_instance == null)
-				_instance = GameObject.FindObjectOfType<LaunchMenuManager>();
-			return _instance;
-		}
-	}
+public class LaunchMenuManager : Singlton<LaunchMenuManager> {
 
 	//Editor references
 	public GameObject shipSelectButton;
@@ -34,7 +18,8 @@ public class LaunchMenuManager : MonoBehaviour {
 	//A reference to the carrier we're in
 	public Carrier carrier{ get; private set; }
 
-	void Awake(){
+	protected override void Awake(){
+		base.Awake ();
 		dockedTerminals = new Dictionary<GameObject, GameObject>(1);
 	}
 

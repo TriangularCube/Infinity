@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class HUD : MonoBehaviour {
+public class HUD : Singlton<HUD> {
 
 	[SerializeField]
 	GameObject panel;

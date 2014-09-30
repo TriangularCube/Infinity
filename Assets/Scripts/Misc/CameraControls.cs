@@ -1,13 +1,15 @@
 using UnityEngine;
 using System.Collections;
 
-public class CameraControls : MonoBehaviour {
+public class CameraControls : Singlton<CameraControls> {
 
 	private ShipControl target;
 	private Transform targetCameraPoint{ get{ return target.cameraPoint; } }
 
 	public float camTransferSpeed = 600f;
 	public float camTransferRotation = 40f;
+
+
 
 	public void SetTarget( Transform parent, ShipControl controller ){
 		transform.parent = parent;
@@ -34,4 +36,5 @@ public class CameraControls : MonoBehaviour {
 			enabled = false;
 		}
 	}
+	
 }

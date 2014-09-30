@@ -17,19 +17,20 @@ public struct PlayerFocus{
 	}
 }
 
-public class PlayersManager : TNBehaviour {
+public class PlayersManager : Singlton<PlayersManager> {
 
-	private static PlayersManager _instance;
-
-	public static PlayersManager instance{
-		get{
-			if (_instance == null) {
-				_instance = GameObject.FindObjectOfType<PlayersManager> ();
-			}
-
-			return _instance;
+	#region Simulating TNBehaviour
+	TNObject mTNO;
+	
+	public TNObject tno
+	{
+		get
+		{
+			if (mTNO == null) mTNO = GetComponent<TNObject>();
+			return mTNO;
 		}
 	}
+	#endregion
 
 	//A list of the focuses of all players
 	private Dictionary< NetPlayer, PlayerFocus > ListOfPlayerFocus = new Dictionary< NetPlayer, PlayerFocus >();
@@ -39,18 +40,8 @@ public class PlayersManager : TNBehaviour {
 
 	//Our players camera
 	public CameraControls playerCamControl;
-
 	//DEBUG Our starting object
 	public GameObject startingObject;
-
-	void Awake(){
-		if (_instance)
-			throw new UnityException( "OK, this is the second instance of PlayerManager. Something is seriously wrong." );
-		
-
-		//Register ourselves with the instance
-		_instance = this;
-	}
 
 	void Start(){
 		//DEBUG

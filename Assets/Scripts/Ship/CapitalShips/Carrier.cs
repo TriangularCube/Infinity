@@ -104,7 +104,7 @@ public abstract class Carrier : Ship {
 				ResetControls();
 			}
 			
-			PlayersManager.instance.playerCamControl.SetTarget( transform, observationStation );
+			CameraControls.instance.SetTarget( transform, observationStation );
 		}
 		
 		//Add the player to the list
@@ -135,7 +135,7 @@ public abstract class Carrier : Ship {
 				ResetControls();
 			}
 			
-			PlayersManager.instance.playerCamControl.SetTarget( transform, navigation );
+			CameraControls.instance.SetTarget( transform, navigation );
 		}
 		
 		//Add the player to the list
