@@ -145,7 +145,7 @@ public abstract class Carrier : Ship {
 	}
 
 	[RFC]
-	protected void LaunchTerminal( NetPlayer pilot, uint terminalID ){
+	protected virtual void LaunchTerminal( NetPlayer pilot, uint terminalID ){
 		if (TNManager.isHosting) {
 			tno.Send( "LaunchTerminal", Target.Others, pilot, terminalID );
 		}
