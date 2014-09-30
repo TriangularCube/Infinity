@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -17,20 +17,7 @@ public struct PlayerFocus{
 	}
 }
 
-public class PlayersManager : Singlton<PlayersManager> {
-
-	#region Simulating TNBehaviour
-	TNObject mTNO;
-	
-	public TNObject tno
-	{
-		get
-		{
-			if (mTNO == null) mTNO = GetComponent<TNObject>();
-			return mTNO;
-		}
-	}
-	#endregion
+public class PlayersManager : TNSingleton<PlayersManager> {
 
 	//A list of the focuses of all players
 	private Dictionary< NetPlayer, PlayerFocus > ListOfPlayerFocus = new Dictionary< NetPlayer, PlayerFocus >();

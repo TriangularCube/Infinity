@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class CameraControls : Singlton<CameraControls> {
+public class CameraControls : Singleton<CameraControls> {
 
 	private ShipControl target;
 	private Transform targetCameraPoint{ get{ return target.cameraPoint; } }

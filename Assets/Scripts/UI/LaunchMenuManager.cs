@@ -1,9 +1,9 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
 
-public class LaunchMenuManager : Singlton<LaunchMenuManager> {
+public class LaunchMenuManager : Singleton<LaunchMenuManager> {
 
 	//Editor references
 	public GameObject shipSelectButton;

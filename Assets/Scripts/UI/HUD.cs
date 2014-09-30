@@ -1,8 +1,8 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class HUD : Singlton<HUD> {
+public class HUD : Singleton<HUD> {
 
 	[SerializeField]
 	private GameObject panel;
