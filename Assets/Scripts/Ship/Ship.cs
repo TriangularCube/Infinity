@@ -6,9 +6,6 @@ using System.Collections;
 
 public abstract class Ship : TNBehaviour {
 
-	//Cached reference to our transform
-	protected Transform thisTransform;
-
 	//Madatory check for if a player is on this ship
 	public abstract bool ContainsPlayer( TNet.Player check );
 
@@ -17,6 +14,9 @@ public abstract class Ship : TNBehaviour {
 
 	//A convinience method, for the future if the game wants to directly assign a player to a ship
 	public abstract void AssignDefault( TNet.Player player );
+
+	#region Cache Transform
+	protected Transform thisTransform;
 
 	protected virtual void Awake(){
 		thisTransform = base.transform;
@@ -27,4 +27,5 @@ public abstract class Ship : TNBehaviour {
 			return thisTransform;
 		}
 	}
+	#endregion
 }
