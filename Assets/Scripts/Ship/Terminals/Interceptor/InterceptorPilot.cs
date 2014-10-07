@@ -6,14 +6,23 @@ public class InterceptorPilot : ShipControl {
 	//should be in local coordinates
 	private Vector3 accelVector;
 
+	//Our Looking point
+	private Vector3 lookVector;
+
 	void Update(){
-		//DEBUG
-		if (Input.GetKeyDown (KeyCode.J)) {
-			Debug.Log( playerCamera.camera.WorldToViewportPoint( PlayersManager.instance.Flagship.transform.position ) );
+		if ( playerCamera != null && Screen.lockCursor == true ) {
+			//This is observation, so we're just going to let the player move the camera around
+			
+			playerCamera.transform.RotateAround( transform.position, transform.TransformDirection( Vector3.up ), Input.GetAxis( "Yaw" ) );
+			playerCamera.transform.RotateAround( transform.position, playerCamera.transform.TransformDirection( Vector3.left ), Input.GetAxis( "Pitch" ) );
 		}
 	}
 	
 	void FixedUpdate(){
+
+		//Find the look vector
+		lookVector = transform.TransformDirection (playerCamera.transform.forward);
+
 		
 		#region Applying Velocity
 		
@@ -53,11 +62,9 @@ public class InterceptorPilot : ShipControl {
 		
 		#region Applying Attitude Control
 		
-		//TODO This is pretty basic. Do some fancy attitude controls later.
-		if( Screen.lockCursor ){
-			rigidbody.rotation = rigidbody.rotation * Quaternion.Euler( -Input.GetAxis( "Pitch" ), Input.GetAxis( "Yaw" ), Input.GetAxis( "Roll" ) );
-		}
+		//TODO Do some fancy attitude controls later.
 		
+
 		#endregion
 	}
 }
