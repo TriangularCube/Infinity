@@ -3,26 +3,20 @@ using System.Collections;
 
 public class InterceptorPilot : ShipControl {
 
-	//should be in local coordinates
-	private Vector3 accelVector;
-
 	//Our Looking point
-	private Vector3 lookVector;
+	private Quaternion lookVector = Quaternion.identity;
 
 	void Update(){
 		if ( playerCamera != null && Screen.lockCursor == true ) {
-			//This is observation, so we're just going to let the player move the camera around
-			
-			playerCamera.transform.RotateAround( transform.position, transform.TransformDirection( Vector3.up ), Input.GetAxis( "Yaw" ) );
-			playerCamera.transform.RotateAround( transform.position, playerCamera.transform.TransformDirection( Vector3.left ), Input.GetAxis( "Pitch" ) );
+			lookVector *= Quaternion.Euler( new Vector3( -Input.GetAxis( "Pitch" ), Input.GetAxis( "Yaw" ), Input.GetAxis( "Roll" ) ) );
 		}
 	}
 	
 	void FixedUpdate(){
 
 		//Find the look vector
-		lookVector = transform.TransformDirection (playerCamera.transform.forward);
-
+		Quaternion oldLookVector = lookVector;
+		Vector3 accelVector = Vector3.zero;
 		
 		#region Applying Velocity
 		
@@ -63,7 +57,10 @@ public class InterceptorPilot : ShipControl {
 		#region Applying Attitude Control
 		
 		//TODO Do some fancy attitude controls later.
-		
+		transform.rotation = Quaternion.RotateTowards( transform.rotation, lookVector, 5f );
+		playerCamera.transform.rotation = oldLookVector;
+
+		playerCamera.transform.position = (oldLookVector * (cameraPoint.localPosition - transform.InverseTransformDirection( rigidbody.velocity * 0.05f ) ) ) + transform.position;
 
 		#endregion
 	}
