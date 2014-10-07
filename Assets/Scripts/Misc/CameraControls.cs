@@ -3,6 +3,19 @@ using System.Collections;
 
 public class CameraControls : Singleton<CameraControls> {
 
+	private Transform thisTransform;
+	public new Transform transform{
+		get{
+			return thisTransform;
+		}
+	}
+
+	protected override void Awake ()
+	{
+		base.Awake ();
+		thisTransform = base.transform;
+	}
+
 	private ShipControl target;
 	private Transform targetCameraPoint{ get{ return target.cameraPoint; } }
 
@@ -26,11 +39,12 @@ public class CameraControls : Singleton<CameraControls> {
 			return;
 		}
 
+		//We can actually do a fancy Lerp here
 		transform.position = Vector3.MoveTowards (transform.position, targetCameraPoint.position, camTransferSpeed * Time.deltaTime);
 		transform.rotation = Quaternion.RotateTowards( transform.rotation, targetCameraPoint.rotation, camTransferRotation * Time.deltaTime);
 
 		if (Vector3.Distance (transform.position, targetCameraPoint.position) < 1f) {
-			target.TransferControl (gameObject);
+			target.TransferControl (this);
 
 			target = null;
 			enabled = false;
