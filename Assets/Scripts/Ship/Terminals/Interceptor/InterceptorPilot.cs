@@ -60,7 +60,10 @@ public class InterceptorPilot : ShipControl {
 		transform.rotation = Quaternion.RotateTowards( transform.rotation, lookVector, 5f );
 		playerCamera.transform.rotation = oldLookVector;
 
-		playerCamera.transform.position = (oldLookVector * (cameraPoint.localPosition - transform.InverseTransformDirection( rigidbody.velocity * 0.05f ) ) ) + transform.position;
+		//The offset in the direction of travel. This is not working out currently. Should not need when I implement Movement indicators.
+//		Vector3 offset = transform.InverseTransformDirection( rigidbody.velocity * 0.05f );
+
+		playerCamera.transform.position = (oldLookVector * (cameraPoint.localPosition /* - offset */ ) ) + transform.position;
 
 		#endregion
 	}
