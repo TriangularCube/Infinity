@@ -4,7 +4,7 @@ using System.Collections;
 public class InterceptorAutoCannonRound : MonoBehaviour {
 
 	[SerializeField]
-	float speed = 10f;
+	float speed = 150f;
 
 	void Awake(){
 		Invoke ("Expired", 3f);

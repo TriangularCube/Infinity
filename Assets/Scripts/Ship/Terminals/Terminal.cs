@@ -5,26 +5,24 @@ using TNet;
 public abstract class Terminal : Ship {
 
 	public ShipControl control;
-	public TNet.Player pilot{ get; set; }
+	public Player pilot{ get; set; }
 
-	public override bool ContainsPlayer (TNet.Player check)
+	public override bool ContainsPlayer (Player check)
 	{
 		return pilot == check;
 	}
 
 	//TODO
 	[RFC]
-	public override void AssignDefault (TNet.Player pilot)
+	public override void AssignDefault (Player pilot)
 	{
 		if (TNManager.isHosting) {
 			//What should be a redundent check
 			if( !gameObject.activeSelf ){
-				Debug.Log( "Whoa there, trying to seat a pilot onto an inactive Terminal" );
-
-				throw new UnityException( "Seating a pilot onto an inactive Terminal" );
+				Debug.LogException( new UnityException( "Seating a pilot onto an inactive Terminal" ) );
 			}
 
-			tno.Send( "AssignDefault", TNet.Target.Others, pilot );
+			tno.Send( "AssignDefault", Target.Others, pilot );
 
 			PlayersManager.instance.UpdateFocusChange ( pilot, tno.uid, "Pilot" );
 		}

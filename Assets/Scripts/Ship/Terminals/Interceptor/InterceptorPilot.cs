@@ -29,7 +29,7 @@ public class InterceptorPilot : ShipControl {
 		Debug.DrawRay( rigidbody.position, rigidbody.velocity * 10 );
 		
 		//TODO Change this away from the input manager
-		if ( Input.GetAxis( "Break" ) > 0 ) {
+		if ( Input.GetButton( "Break" ) ) {
 			//MAYBE!! TODO Think of some way to still accelerate towards the keyed vectors while breaking the others
 			
 			//TODO Fine, use Hyper Thrust meter to emergency break
@@ -63,7 +63,7 @@ public class InterceptorPilot : ShipControl {
 		//The offset in the direction of travel. This is not working out currently. Should not need when I implement Movement indicators.
 //		Vector3 offset = transform.InverseTransformDirection( rigidbody.velocity * 0.05f );
 
-		playerCamera.transform.position = (oldLookVector * (cameraPoint.localPosition /* - offset */ ) ) + transform.position;
+		playerCamera.transform.position = ( oldLookVector * ( cameraPoint.localPosition /* - offset */ ) ) + transform.position;
 
 		#endregion
 	}

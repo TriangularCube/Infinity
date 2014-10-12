@@ -36,7 +36,7 @@ public class PlayersManager : TNSingleton<PlayersManager> {
 
 	void Update(){
 		//DEBUG
-		if( Input.GetKeyUp( KeyCode.LeftControl ) ){
+		if( Input.GetKeyDown( KeyCode.LeftControl ) ){
 			Screen.lockCursor = !Screen.lockCursor;
 		}
 	}
