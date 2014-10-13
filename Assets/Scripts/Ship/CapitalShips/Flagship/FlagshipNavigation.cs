@@ -12,9 +12,7 @@ public class FlagshipNavigation : ShipControl {
 
 		//TODO Maybe deal with this if I ever want to implement Warp
 		//If drifting faster than max velocity, set back to max velocity
-		if( rigidbody.velocity.sqrMagnitude > stats.maxSpeedSqr ){
-			rigidbody.velocity *= 0.99f;
-		}
+
 
 		//TODO Change this away from the input manager
 		if ( Input.GetAxis( "Break" ) > 0 ) {
@@ -22,7 +20,7 @@ public class FlagshipNavigation : ShipControl {
 			
 			//TODO Fine, use Hyper Thrust meter to emergency break
 			//IF player wants to use the break, scale back the velocity
-			rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, Vector3.zero, stats.breakSmooth * Time.deltaTime );
+			rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, Vector3.zero, stats.breakForce * Time.deltaTime );
 			
 		} else {
 			//OTHERWISE accelerate towards a vector
@@ -34,7 +32,7 @@ public class FlagshipNavigation : ShipControl {
 				accelVector.x = Input.GetAxis( "Thrust X" );
 				accelVector.y = Input.GetAxis( "Thrust Y" );
 				accelVector.z = Input.GetAxis( "Thrust Z" );
-				accelVector = accelVector.normalized * Time.deltaTime * stats.acceleration;
+//				accelVector = accelVector.normalized * Time.deltaTime * stats.acceleration;
 				
 				rigidbody.AddRelativeForce( accelVector );
 			}
