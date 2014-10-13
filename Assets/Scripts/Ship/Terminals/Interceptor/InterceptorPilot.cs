@@ -6,24 +6,68 @@ public class InterceptorPilot : ShipControl {
 	//Our Looking point
 	private Quaternion lookVector = Quaternion.identity;
 
+	bool hyperThurst{ 
+		get{
+			return stats.hyperThurst;
+		}
+
+		set{
+			stats.hyperThurst = value;
+		}
+	}
+
+	[SerializeField]
+	private int ticksInHyperThrust = 30;
+	private int hyperThrustTickCount = 0;
+	private bool hyperThrustButton = false;
+
 	void Update(){
 		if ( playerCamera != null && Screen.lockCursor == true ) {
 			lookVector *= Quaternion.Euler( new Vector3( -Input.GetAxis( "Pitch" ), Input.GetAxis( "Yaw" ), Input.GetAxis( "Roll" ) ) );
+		}
+
+		if ( !hyperThrustButton && !hyperThurst ) {
+			hyperThrustButton = Input.GetButtonDown( "Boost" );
 		}
 	}
 	
 	void FixedUpdate(){
 
+		if (hyperThurst) {
+			if (++hyperThrustTickCount >= ticksInHyperThrust) {
+				hyperThrustTickCount = 0;
+				hyperThurst = false;
+			}
+		} else {
+
+			ApplyVector ();
+
+		}
+
+		ApplyAttitude ();
+
+	}
+
+	private void ApplyAttitude(){
+
 		//Find the look vector
 		Quaternion oldLookVector = lookVector;
-		Vector3 accelVector = Vector3.zero;
+
+		//TODO Do some fancy attitude controls later.
+		transform.rotation = Quaternion.RotateTowards( transform.rotation, lookVector, 5f );
+		playerCamera.transform.rotation = oldLookVector;
 		
-		#region Applying Velocity
+		//The offset in the direction of travel. This is not working out currently. Should not need when I implement Movement indicators.
+		//		Vector3 offset = transform.InverseTransformDirection( rigidbody.velocity * 0.05f );
 		
+		playerCamera.transform.position = ( oldLookVector * ( cameraPoint.localPosition /* - offset */ ) ) + transform.position;
+	}
+
+	private void ApplyVector(){
 		//TODO Maybe deal with this if I ever want to implement Warp
 		//If drifting faster than max velocity, set back to max velocity
 		if( rigidbody.velocity.sqrMagnitude > stats.maxSpeedSqr ){
-			rigidbody.velocity *= 0.99f;
+			rigidbody.velocity = Vector3.ClampMagnitude( rigidbody.velocity, stats.maxSpeed );
 		}
 		
 		Debug.DrawRay( rigidbody.position, rigidbody.velocity * 10 );
@@ -33,38 +77,55 @@ public class InterceptorPilot : ShipControl {
 			//MAYBE!! TODO Think of some way to still accelerate towards the keyed vectors while breaking the others
 			
 			//TODO Fine, use Hyper Thrust meter to emergency break
-			//IF player wants to use the break, scale back the velocity
-			rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, Vector3.zero, stats.breakSmooth * Time.deltaTime );
+			rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, Vector3.zero, stats.breakForce * Time.deltaTime );
 			
 		} else {
 			//OTHERWISE accelerate towards a vector
 			
 			
 			//TODO Implement Hyper Thursting if double tap
-			//If the speed isn't already at max
-			if( rigidbody.velocity.sqrMagnitude < stats.maxSpeedSqr ){
-				accelVector.x = Input.GetAxis( "Thrust X" );
-				accelVector.y = Input.GetAxis( "Thrust Y" );
-				accelVector.z = Input.GetAxis( "Thrust Z" );
-				accelVector = accelVector.normalized * Time.deltaTime * stats.acceleration;
-				
-				rigidbody.AddRelativeForce( accelVector );
+			Vector3 inputVector = new Vector3( Input.GetAxis( "Thrust X" ), Input.GetAxis( "Thrust Y" ), Input.GetAxis( "Thrust Z" ) );
+
+
+			//Boosting!
+			if( inputVector != Vector3.zero && hyperThrustButton ){
+				rigidbody.velocity = lookVector * ( inputVector.normalized * stats.maxSpeed );
+				transform.rotation = lookVector;
+				playerCamera.transform.position = cameraPoint.position;
+
+				hyperThurst = true;
+				hyperThrustButton = false;
+
+				return;
 			}
+			
+			Vector3 targetVector = Vector3.zero;
+			
+			//Process the left and right thrust
+			targetVector.x = inputVector.x * stats.otherForce;
+			
+			//Process the up and down thrust
+			targetVector.y = inputVector.y * stats.otherForce;
+			
+			if( inputVector.z > 0f ){
+				
+				//Process the forward thrust
+				targetVector.z = inputVector.z * stats.forwordForce;
+				
+			} else {
+				
+				//Process the backward thrust
+				targetVector.z = inputVector.z * stats.backwardForce;
+				
+			}
+			
+			rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, transform.TransformDirection( inputVector.normalized * stats.maxSpeed ), targetVector.magnitude * Time.deltaTime );
 		}
-		
-		#endregion
-		
-		#region Applying Attitude Control
-		
-		//TODO Do some fancy attitude controls later.
-		transform.rotation = Quaternion.RotateTowards( transform.rotation, lookVector, 5f );
-		playerCamera.transform.rotation = oldLookVector;
+	}
 
-		//The offset in the direction of travel. This is not working out currently. Should not need when I implement Movement indicators.
-//		Vector3 offset = transform.InverseTransformDirection( rigidbody.velocity * 0.05f );
-
-		playerCamera.transform.position = ( oldLookVector * ( cameraPoint.localPosition /* - offset */ ) ) + transform.position;
-
-		#endregion
+	public override void CleanUp ()
+	{
+		base.CleanUp ();
+		lookVector = Quaternion.identity;
 	}
 }

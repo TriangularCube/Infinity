@@ -16,6 +16,9 @@ public class TerminalFireControl : MonoBehaviour {
 	//Weapon Switch cooldown time
 	float weaponSwitchCooldownTime = 0.3f;
 
+	[SerializeField]
+	Stats stats;
+
 	void Start(){
 		if (activeWeaponList.Count < 1) {
 			Debug.LogError( "What? This terminal has no usable weapons? Check if this is right." );
@@ -61,7 +64,7 @@ public class TerminalFireControl : MonoBehaviour {
 		}
 
 		//Fire the current weapon
-		if( Input.GetMouseButton( 0 ) ){
+		if( Input.GetMouseButton( 0 ) && !stats.hyperThurst ){
 			activeWeaponList[currentWeapon].Fire();
 		}
 	}
