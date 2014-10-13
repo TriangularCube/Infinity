@@ -182,6 +182,8 @@ public abstract class Carrier : Ship {
 
 		if (pilot == TNManager.player) {
 			LaunchMenuManager.instance.Launched ();
+
+			Screen.lockCursor = true;
 		}
 	}
 

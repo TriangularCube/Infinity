@@ -26,14 +26,12 @@ public abstract class ShipControl : MonoBehaviour {
 		playerCamera.transform.position = cameraPoint.position;
 		playerCamera.transform.rotation = cameraPoint.rotation;
 
-		Screen.lockCursor = true;
-
 		enabled = true;
 
 	}
 
 	//Do this to clean up the object in preparation for deactivation or destruction
-	public void CleanUp(){
+	public virtual void CleanUp(){
 		if( playerCamera != null ){
 			playerCamera.transform.parent = null;
 			
