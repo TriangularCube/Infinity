@@ -6,24 +6,10 @@ public class InterceptorPilot : ShipControl {
 	//Our Looking point
 	private Quaternion lookVector = Quaternion.identity;
 
-	bool hyperThurst{ 
-		get{
-			return stats.hyperThurst;
-		}
-
-		set{
-			stats.hyperThurst = value;
-		}
-	}
-
-	[SerializeField]
-	private int ticksInHyperThrust = 30;
-	private int hyperThrustTickCount = 0;
-	private bool hyperThrustButton = false;
 
 	void Update(){
 		if ( playerCamera != null && Screen.lockCursor == true ) {
-			lookVector *= Quaternion.Euler( new Vector3( -Input.GetAxis( "Pitch" ), Input.GetAxis( "Yaw" ), Input.GetAxis( "Roll" ) ) );
+			lookVector *= Quaternion.Euler( new Vector3( -Input.GetAxis( "Mouse Y" ), Input.GetAxis( "Mouse X" ), Input.GetAxis( "Roll" ) ) );
 		}
 
 		if ( !hyperThrustButton && !hyperThurst ) {
@@ -46,6 +32,23 @@ public class InterceptorPilot : ShipControl {
 
 		ApplyAttitude ();
 
+	}
+	#endregion
+
+	#region Station and Attitude Control
+	[SerializeField]
+	private int ticksInHyperThrust = 30;
+	private int hyperThrustTickCount = 0;
+	private bool hyperThrustButton = false;
+
+	bool hyperThurst{ 
+		get{
+			return stats.hyperThurst;
+		}
+		
+		set{
+			stats.hyperThurst = value;
+		}
 	}
 
 	private void ApplyAttitude(){
@@ -82,8 +85,7 @@ public class InterceptorPilot : ShipControl {
 		} else {
 			//OTHERWISE accelerate towards a vector
 			
-			
-			//TODO Implement Hyper Thursting if double tap
+
 			Vector3 inputVector = new Vector3( Input.GetAxis( "Thrust X" ), Input.GetAxis( "Thrust Y" ), Input.GetAxis( "Thrust Z" ) );
 
 
@@ -122,6 +124,7 @@ public class InterceptorPilot : ShipControl {
 			rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, transform.TransformDirection( inputVector.normalized * stats.maxSpeed ), targetVector.magnitude * Time.deltaTime );
 		}
 	}
+	#endregion
 
 	public override void CleanUp ()
 	{
