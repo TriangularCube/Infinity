@@ -31,6 +31,7 @@ public class PlayersManager : TNSingleton<PlayersManager> {
 	void Start(){
 		//DEBUG
 		startingObject.GetComponent<Ship> ().AssignDefault (TNManager.player);
+		Screen.lockCursor = true;
 	}
 
 
