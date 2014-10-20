@@ -7,7 +7,7 @@ public class TerminalWeapon : MonoBehaviour {
 	Rigidbody rootRigidbody;
 
 	void Awake(){
-		transform.root.GetComponent<TerminalFireControl> ().RegisterWeapon (this);
+		transform.root.GetComponent<TerminalPilot> ().RegisterWeapon (this);
 		rootRigidbody = transform.root.rigidbody;
 	}
 
