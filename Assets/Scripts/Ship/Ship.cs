@@ -16,7 +16,7 @@ public abstract class Ship : TNBehaviour {
 	public abstract void AssignDefault( TNet.Player player );
 
 	#region Cache Transform
-	protected Transform thisTransform;
+	private Transform thisTransform;
 
 	protected virtual void Awake(){
 		thisTransform = base.transform;
