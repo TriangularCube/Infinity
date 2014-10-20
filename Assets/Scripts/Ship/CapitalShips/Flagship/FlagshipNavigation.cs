@@ -3,50 +3,75 @@ using System.Collections;
 
 public class FlagshipNavigation : ShipControl {
 
-	//should be in local coordinates
-	private Vector3 accelVector;
+	private Quaternion freeLookVector = Quaternion.identity;
+	private Quaternion headingVector = Quaternion.identity;
+
+	private Quaternion saveVector = Quaternion.identity;
+
+	private bool isFreeLook = true;
+
+	void Update(){
+
+		if (!Screen.lockCursor) return;
+
+		if( Input.GetButtonDown( "Look" ) ) isFreeLook = false;
+		if (Input.GetButtonUp ("Look"))	isFreeLook = true;
+
+
+		if ( isFreeLook ) {
+
+			FreeLook();
+
+		} else {
+
+			HeadingChange();
+
+		}
+
+	}
+
+	void FreeLook(){
+
+		saveVector *= Quaternion.Euler (0f, Input.GetAxis ("Mouse X"), 0f);
+		freeLookVector = Quaternion.AngleAxis (-Input.GetAxis ("Mouse Y"), saveVector * Vector3.right ) * Quaternion.AngleAxis (Input.GetAxis ("Mouse X"), Vector3.up ) * freeLookVector;
+
+	}
+
+	void HeadingChange(){
+
+		headingVector *= Quaternion.Euler (-Input.GetAxis ("Mouse Y"), Input.GetAxis ("Mouse X"), Input.GetAxis ("Roll"));
+
+	}
 
 	void FixedUpdate(){
 
-		#region Applying Velocity
+		StationControl ();
 
-		//TODO Maybe deal with this if I ever want to implement Warp
-		//If drifting faster than max velocity, set back to max velocity
+		AttitudeControl ();
+		
+	}
+
+	void StationControl(){
 
 
-		//TODO Change this away from the input manager
-		if ( Input.GetAxis( "Break" ) > 0 ) {
-			//MAYBE!! TODO Think of some way to still accelerate towards the keyed vectors while breaking the others
-			
-			//TODO Fine, use Hyper Thrust meter to emergency break
-			//IF player wants to use the break, scale back the velocity
-			rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, Vector3.zero, stats.breakForce * Time.deltaTime );
-			
+
+	}
+
+	void AttitudeControl(){
+
+		//TODO Apply rotation
+		rigidbody.MoveRotation (Quaternion.RotateTowards (rigidbody.rotation, headingVector, 1f));
+
+		if (!isFreeLook) {
+
+			playerCamera.transform.rotation = headingVector;
+			playerCamera.transform.position = headingVector * ( cameraPoint.localPosition + transform.position );
+
 		} else {
-			//OTHERWISE accelerate towards a vector
-			
-			
-			//TODO Implement Hyper Thursting if double tap
-			//If the speed isn't already at max
-			if( rigidbody.velocity.sqrMagnitude < stats.maxSpeedSqr ){
-				accelVector.x = Input.GetAxis( "Thrust X" );
-				accelVector.y = Input.GetAxis( "Thrust Y" );
-				accelVector.z = Input.GetAxis( "Thrust Z" );
-//				accelVector = accelVector.normalized * Time.deltaTime * stats.acceleration;
-				
-				rigidbody.AddRelativeForce( accelVector );
-			}
+
+			playerCamera.transform.localRotation = freeLookVector;
+			playerCamera.transform.localPosition =  freeLookVector * cameraPoint.localPosition;
+
 		}
-		
-		#endregion
-		
-		#region Applying Attitude Control
-		
-		//TODO This is pretty basic. Do some fancy attitude controls later.
-		if( Screen.lockCursor ){
-			rigidbody.rotation = rigidbody.rotation * Quaternion.Euler( -Input.GetAxis( "Pitch" ), Input.GetAxis( "Yaw" ), Input.GetAxis( "Roll" ) );
-		}
-		
-		#endregion
 	}
 }
