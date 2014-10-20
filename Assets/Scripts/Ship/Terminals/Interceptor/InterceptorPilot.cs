@@ -57,7 +57,9 @@ public class InterceptorPilot : ShipControl {
 		Quaternion oldLookVector = lookVector;
 
 		//TODO Do some fancy attitude controls later.
-		transform.rotation = Quaternion.RotateTowards( transform.rotation, lookVector, 5f );
+		rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, lookVector, 5f ) );
+
+		//Reset the look vector
 		playerCamera.transform.rotation = oldLookVector;
 		
 		//The offset in the direction of travel. This is not working out currently. Should not need when I implement Movement indicators.
