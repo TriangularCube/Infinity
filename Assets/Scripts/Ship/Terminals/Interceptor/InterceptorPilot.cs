@@ -1,13 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class InterceptorPilot : ShipControl {
+public class InterceptorPilot : TerminalPilot {
 
 	//Our Looking point
 	private Quaternion lookVector = Quaternion.identity;
 
+	#region Main Loop Functions
+	protected override void Update(){
+		base.Update();
 
-	void Update(){
 		if ( playerCamera != null && Screen.lockCursor == true ) {
 			lookVector *= Quaternion.Euler( new Vector3( -Input.GetAxis( "Mouse Y" ), Input.GetAxis( "Mouse X" ), Input.GetAxis( "Roll" ) ) );
 		}
