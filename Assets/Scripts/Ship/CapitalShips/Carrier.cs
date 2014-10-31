@@ -13,6 +13,8 @@ public abstract class Carrier : Ship {
 	private ShipControl navigation;
 	[SerializeField]
 	private Transform dock;
+	[SerializeField]
+	private Transform launchPoint;
 
 	public TNet.List<GameObject> dockedTerminals{ get; set; }
 
@@ -75,8 +77,8 @@ public abstract class Carrier : Ship {
 		
 		//Physically dock the ship
 		terminal.transform.parent = dock;
-		terminal.transform.position = dock.position;
-		terminal.transform.rotation = dock.rotation;
+		terminal.transform.position = launchPoint.position;
+		terminal.transform.rotation = launchPoint.rotation;
 		dockedTerminals.Add (terminal);
 
 		if (LaunchMenuManager.instance.carrier == this) {
