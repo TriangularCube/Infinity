@@ -38,24 +38,19 @@ public abstract class Carrier : Ship {
 		}
 	}
 
-	public virtual void ApplyDock (GameObject terminal){
+	#region Docking
+	public virtual void ApplyDock ( NetPlayer pilot, uint terminalUID ){
 //		Debug.Log ("Requested Docking");
-		
-		if (terminal.GetComponent<Terminal> () == null) {
-			throw new UnityException ("Dock is called on a non-terminal object");
-		}
-		
-		NetPlayer pilot = terminal.GetComponent<Terminal> ().pilot;
-		
+
 		//Dock the incoming terminal
-		DockTerminal( terminal.GetComponent<TNObject> ().uid );
+		DockTerminal (terminalUID, pilot );
 		
 		//The default role is Observation, so we automatically assign the pilot to observation
 		AssignDefault (pilot);
 	}
 
 	[RFC]
-	void DockTerminal( uint terminalID ){
+	void DockTerminal( uint terminalID, NetPlayer pilot ){
 		
 		if (TNManager.isHosting) {
 			tno.Send( "DockTerminal", Target.Others, terminalID );
@@ -66,8 +61,8 @@ public abstract class Carrier : Ship {
 //		Debug.Log ("Found Terminal " + terminalID + " in DockTerminal - " + terminal);
 		
 		//If this is us
-		if (terminal.GetComponent<Terminal> ().pilot == TNManager.player) {
-			ShipControl control = terminal.GetComponent<ShipControl>();
+		if (pilot == TNManager.player) {
+			ShipControl control = terminal.GetComponent<TerminalPilot>();
 			
 			//Do cleanup operations
 			control.CleanUp ();
