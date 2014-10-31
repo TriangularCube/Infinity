@@ -4,15 +4,19 @@ using TNet;
 
 public abstract class Terminal : Ship {
 
-	public ShipControl control;
-	public Player pilot{ get; set; }
+	[SerializeField]
+	private TerminalPilot control;
+
+	private Player pilot;
+
+	private bool readyToDock = false;
+	private Carrier receivingCarrier = null;
 
 	public override bool ContainsPlayer (Player check)
 	{
 		return pilot == check;
 	}
 
-	//TODO
 	[RFC]
 	public override void AssignDefault (Player pilot)
 	{
@@ -29,6 +33,10 @@ public abstract class Terminal : Ship {
 
 		if (pilot == TNManager.player) {
 			CameraControls.instance.SetTarget( transform, control );
+
+			LaunchMenuManager.instance.Launched ();
+			
+			Screen.lockCursor = true;
 		}
 
 		this.pilot = pilot;

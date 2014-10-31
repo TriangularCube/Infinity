@@ -3,8 +3,13 @@ using System.Collections;
 
 public class Dock : MonoBehaviour {
 
-	public Carrier carrier;
+	[SerializeField]
+	private Carrier carrier;
 
+	void Awake(){
+		Debug.Log ("Awake on Dock");
+		if (TNManager.isHosting) {
+			gameObject.SetActive( false );
 		}
 	}
 

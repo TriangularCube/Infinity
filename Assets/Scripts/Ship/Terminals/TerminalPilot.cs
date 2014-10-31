@@ -9,13 +9,20 @@ public class TerminalPilot : ShipControl {
 	}
 	
 	protected virtual void Update(){
-		FireWeapon ();
+		//Back out if our mouse isn't locked
+		//HACK This might need to be changed later
+		if ( !Screen.lockCursor ) return;
+
 		//HACK Fix later
 		if (Input.GetButtonDown ("Dock")) {
 			GetComponent<Terminal>().InitiateDocking();
 		}
+
+		ResolveWeaponSwitch ();
+
+		ResolveWeaponFire ();
 	}
-	
+
 	#region Fire Control
 	//Our list of active weapons
 	List<TerminalWeapon> activeWeaponList = new List<TerminalWeapon>();
@@ -44,12 +51,9 @@ public class TerminalPilot : ShipControl {
 	public void RegisterWeapon( TerminalWeapon weapon ){
 		activeWeaponList.Add (weapon);
 	}
-	
-	void FireWeapon(){
-		//Back out if our mouse isn't locked
-		//HACK This might need to be changed later
-		if ( !Screen.lockCursor ) return;
-		
+
+	void ResolveWeaponSwitch(){
+
 		//To switch weapons, first check check if we activated the switch, then check if we're in cooldown 
 		if ( Input.GetAxis ( "Mouse ScrollWheel" ) != 0f && !weaponSwitchCooldown ) {
 			//Do switch
@@ -73,17 +77,21 @@ public class TerminalPilot : ShipControl {
 			StartCoroutine( Cooldown() );
 			
 		}
-		
-		//Fire the current weapon
-		if( Input.GetButton( "Fire Weapon" ) && !stats.hyperThurst ){
-			activeWeaponList[currentWeapon].Fire();
-		}
+
 	}
-	
+
 	IEnumerator Cooldown(){
 		weaponSwitchCooldown = true;
 		yield return new WaitForSeconds( weaponSwitchCooldownTime );
 		weaponSwitchCooldown = false;
+	}
+
+	void ResolveWeaponFire(){
+		
+		//Fire the current weapon
+		if( Input.GetButton( "Fire Weapon" ) && !stats.hyperThurst && !weaponSwitchCooldown ){
+			activeWeaponList[currentWeapon].Fire();
+		}
 	}
 	#endregion
 

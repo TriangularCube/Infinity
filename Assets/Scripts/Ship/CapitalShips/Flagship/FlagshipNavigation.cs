@@ -6,7 +6,7 @@ public class FlagshipNavigation : ShipControl {
 	private Quaternion freeLookVector = Quaternion.identity;
 	private Quaternion headingVector = Quaternion.identity;
 
-	private Quaternion saveVector = Quaternion.identity;
+	private Quaternion fixedFreeLookVector = Quaternion.identity;
 
 	private bool isFreeLook = true;
 
@@ -32,8 +32,8 @@ public class FlagshipNavigation : ShipControl {
 
 	void FreeLook(){
 
-		saveVector *= Quaternion.Euler (0f, Input.GetAxis ("Mouse X"), 0f);
-		freeLookVector = Quaternion.AngleAxis (-Input.GetAxis ("Mouse Y"), saveVector * Vector3.right ) * Quaternion.AngleAxis (Input.GetAxis ("Mouse X"), Vector3.up ) * freeLookVector;
+		fixedFreeLookVector *= Quaternion.Euler (0f, Input.GetAxis ("Mouse X"), 0f);
+		freeLookVector = Quaternion.AngleAxis (-Input.GetAxis ("Mouse Y"), fixedFreeLookVector * Vector3.right ) * Quaternion.AngleAxis (Input.GetAxis ("Mouse X"), Vector3.up ) * freeLookVector;
 
 	}
 
@@ -59,7 +59,6 @@ public class FlagshipNavigation : ShipControl {
 
 	void AttitudeControl(){
 
-		//TODO Apply rotation
 		rigidbody.MoveRotation (Quaternion.RotateTowards (rigidbody.rotation, headingVector, 1f));
 
 		if (!isFreeLook) {
