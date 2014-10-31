@@ -41,4 +41,33 @@ public abstract class Terminal : Ship {
 		gameObject.SetActive( false );
 	}
 
+	//Called when entering a docking area for a carrier
+	public void ReadyForDocking( Carrier carrier ){
+
+		receivingCarrier = carrier;
+		readyToDock = true;
+
+	}
+
+	//Called when leaving the docking area
+	public void LeavingDockingArea(){
+
+		readyToDock = false;
+		receivingCarrier = null;
+
+	}
+
+	[RFC]
+	public void InitiateDocking(){
+
+		if ( !TNManager.isHosting ) {
+			tno.Send( "InitiateDocking", Target.Host );
+			return;
+		}
+
+		if ( !readyToDock ) return;
+
+		receivingCarrier.ApplyDock( pilot, tno.uid );
+
+	}
 }

@@ -10,6 +10,10 @@ public class TerminalPilot : ShipControl {
 	
 	protected virtual void Update(){
 		FireWeapon ();
+		//HACK Fix later
+		if (Input.GetButtonDown ("Dock")) {
+			GetComponent<Terminal>().InitiateDocking();
+		}
 	}
 	
 	#region Fire Control
