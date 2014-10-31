@@ -85,6 +85,49 @@ public abstract class Carrier : Ship {
 			LaunchMenuManager.instance.PopulateList();
 		}
 	}
+	#endregion
+
+	#region Launch
+	public void ApplyForLaunch( NetPlayer pilot, GameObject terminal ){
+		tno.Send ("LaunchTerminal", Target.Host, pilot, terminal.GetComponent<TNObject> ().uid);
+	}
+
+	[RFC]
+	protected virtual void LaunchTerminal( NetPlayer pilot, uint terminalID ){
+		if (TNManager.isHosting) {
+			tno.Send( "LaunchTerminal", Target.Others, pilot, terminalID );
+		}
+
+		//Find the Terminal
+		GameObject terminal = TNObject.Find (terminalID).gameObject;
+
+		if (pilot == TNManager.player) {
+			//Reset all controls
+			ResetControls();
+		}
+
+		//Remove the pilot from the carrier
+		playerRoles.Remove (pilot);
+
+		//Remove the Terminal
+		dockedTerminals.Remove (terminal);
+
+		//Debug
+		terminal.transform.position = launchPoint.position;
+
+		terminal.GetComponent<Terminal>().OnLaunch ( launchPoint.rotation, pilot );
+		
+	}
+	#endregion
+
+	#region Assignment
+	public override void AssignDefault ( NetPlayer pilot )
+	{
+//		AssignObservation (pilot);
+
+		//Debug
+		AssignNavigation (pilot);
+	}
 
 	[RFC]
 	protected void AssignObservation( NetPlayer player ){
@@ -113,11 +156,6 @@ public abstract class Carrier : Ship {
 		Debug.Log ("Assigned Observation");
 	}
 	
-	//TODO Launch a terminal
-	public void ApplyForLaunch( NetPlayer pilot, GameObject terminal ){
-		tno.Send ("LaunchTerminal", Target.Host, pilot, terminal.GetComponent<TNObject> ().uid);
-	}
-
 	[RFC]
 	private void AssignNavigation( NetPlayer player ){
 		if (TNManager.isHosting) {
@@ -143,51 +181,7 @@ public abstract class Carrier : Ship {
 		
 		Debug.Log ("Assigned Navigation");
 	}
-
-	[RFC]
-	protected virtual void LaunchTerminal( NetPlayer pilot, uint terminalID ){
-		if (TNManager.isHosting) {
-			tno.Send( "LaunchTerminal", Target.Others, pilot, terminalID );
-		}
-
-		//Find the Terminal
-		GameObject terminal = TNObject.Find (terminalID).gameObject;
-
-		if (pilot == TNManager.player) {
-			//Reset all controls
-			ResetControls();
-		}
-
-		//Remove the pilot from the carrier
-		playerRoles.Remove (pilot);
-
-		//Remove the Terminal
-		dockedTerminals.Remove (terminal);
-
-		//TODO Activate the Terminal
-		terminal.SetActive (true);
-		terminal.transform.parent = null;
-		terminal.transform.localScale = Vector3.one;
-
-		//Debug
-		terminal.transform.Translate (Vector3.forward * 40);
-
-		terminal.rigidbody.AddRelativeForce (Vector3.forward * 20);
-
-		//Seat the pilot onto the Terminal
-		terminal.GetComponent<Terminal> ().AssignDefault (pilot);
-
-		if (pilot == TNManager.player) {
-			LaunchMenuManager.instance.Launched ();
-
-			Screen.lockCursor = true;
-		}
-	}
-
-	public override void AssignDefault ( NetPlayer pilot )
-	{
-		AssignObservation (pilot);
-	}
+	#endregion
 
 	protected virtual void ResetControls(){
 		observationStation.enabled = false;

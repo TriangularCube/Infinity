@@ -130,6 +130,12 @@ public class InterceptorPilot : TerminalPilot {
 	}
 	#endregion
 
+	public override void OnLaunch (Quaternion facing)
+	{
+		lookVector = facing;
+	}
+
+
 	public override void CleanUp ()
 	{
 		base.CleanUp ();

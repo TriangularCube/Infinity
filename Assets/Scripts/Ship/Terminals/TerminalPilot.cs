@@ -87,4 +87,5 @@ public class TerminalPilot : ShipControl {
 	}
 	#endregion
 
+	public virtual void OnLaunch( Quaternion facing ){}
 }

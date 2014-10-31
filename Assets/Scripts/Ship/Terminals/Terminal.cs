@@ -41,6 +41,35 @@ public abstract class Terminal : Ship {
 		gameObject.SetActive( false );
 	}
 
+	#region Carrier Interaction
+	[RFC]
+	//Called when launched from a carrier
+	public virtual void OnLaunch ( Quaternion facing, Player toBeSeated ){
+
+		if (TNManager.isHosting) {
+			tno.Send( "OnLaunch", Target.Others, facing, toBeSeated );
+		}
+
+		//Unparent ourself
+		transform.parent = null;
+
+		//Reset our Scale (because for some reason the scale gets messed up when we parent
+		transform.localScale = Vector3.one;
+
+		control.OnLaunch (facing);
+
+		//Set ourself to active
+		gameObject.SetActive (true);
+
+		if (TNManager.isHosting) {
+			rigidbody.AddRelativeForce( Vector3.forward * 10, ForceMode.Impulse );
+		}
+
+		AssignDefault (toBeSeated);
+
+	}
+
+
 	//Called when entering a docking area for a carrier
 	public void ReadyForDocking( Carrier carrier ){
 
@@ -70,4 +99,6 @@ public abstract class Terminal : Ship {
 		receivingCarrier.ApplyDock( pilot, tno.uid );
 
 	}
+	#endregion
+
 }
