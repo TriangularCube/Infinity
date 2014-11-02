@@ -54,10 +54,6 @@ public abstract class Terminal : Ship {
 	//Called when launched from a carrier
 	public virtual void OnLaunch ( Quaternion facing, Player toBeSeated ){
 
-		if (TNManager.isHosting) {
-			tno.Send( "OnLaunch", Target.Others, facing, toBeSeated );
-		}
-
 		//Unparent ourself
 		transform.parent = null;
 
@@ -71,9 +67,9 @@ public abstract class Terminal : Ship {
 
 		if (TNManager.isHosting) {
 			rigidbody.AddRelativeForce( Vector3.forward * 10, ForceMode.Impulse );
-		}
 
-		AssignDefault (toBeSeated);
+			AssignDefault (toBeSeated);
+		}
 
 	}
 

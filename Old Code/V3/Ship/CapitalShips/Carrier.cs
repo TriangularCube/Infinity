@@ -184,7 +184,7 @@ public abstract class Carrier : Ship {
 	#endregion
 
 	protected virtual void ResetControls(){
-		observationStation.enabled = false;
-		navigation.enabled = false;
+		observationStation.CleanUp();
+		navigation.CleanUp();
 	}
 }

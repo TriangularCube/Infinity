@@ -13,6 +13,11 @@ public abstract class ShipControl : MonoBehaviour {
 			return _cameraPoint;
 		}
 	}
+	protected Vector3 localPosition;
+
+	void Awake(){
+		localPosition = _cameraPoint.localPosition;
+	}
 
 	[SerializeField]
 	protected Stats stats;
@@ -32,6 +37,10 @@ public abstract class ShipControl : MonoBehaviour {
 
 	//Do this to clean up the object in preparation for deactivation or destruction
 	public virtual void CleanUp(){
+
+		_cameraPoint.localPosition = localPosition;
+		_cameraPoint.localRotation = Quaternion.identity;
+
 		if( playerCamera != null ){
 			playerCamera.transform.parent = null;
 			
