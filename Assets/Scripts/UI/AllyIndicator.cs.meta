@@ -2,7 +2,10 @@ fileFormatVersion: 2
 guid: bb3c5939a9fb4b743bd58b2810af2233
 MonoImporter:
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - texture: {fileID: 11400000, guid: 5f8d763fbe94fd24e8284b7f2fb5a9ed, type: 2}
+  - box: {instanceID: 0}
+  - arrow: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
