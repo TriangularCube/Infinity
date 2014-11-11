@@ -67,7 +67,8 @@ public class Interceptor : Terminal {
 	protected override void Awake ()
 	{
 		base.Awake ();
-		StartCoroutine (Sync ());
+		//TODO
+		//StartCoroutine (Sync ());
 	}
 
 	protected override System.Collections.IEnumerator Sync ()

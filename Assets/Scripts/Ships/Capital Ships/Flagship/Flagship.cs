@@ -17,4 +17,9 @@ public class Flagship : Carrier {
 	public void OnDestroy(){
 		//TODO Figure out what to do when the thing we're on is destroyed.
 	}
+
+	protected override IEnumerator Sync ()
+	{
+		throw new System.NotImplementedException ();
+	}
 }
