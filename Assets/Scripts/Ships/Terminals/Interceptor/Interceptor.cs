@@ -9,19 +9,22 @@ public class Interceptor : Terminal {
 
 	//Hyper Thrust
 	[SerializeField]
-	private int hyperBurstCooldownTicks = 30;
-	private int hyperBurstCooldownTickCount = 0;
+	private int hyperBurstCooldownTickTotal = 30;
+	private int hyperBurstCooldownTickCurrent = 0;
 	private bool activateHyperBurst = false;
+	private bool inHyperBurstCooldown {
+		get{ 
+			return hyperBurstCooldownTickCurrent > 0 ? true : false ;
+		}
+	}
 
 	void FixedUpdate(){
 
 		//Applying Hyper Burst effect
 		if (activateHyperBurst) {
 
-			//TODO do Hyper Burst stuff
+			tno.Send( "ApplyHyperBurst", Target.All );
 
-			hyperBurstCooldownTickCount = hyperBurstCooldownTicks;
-			activateHyperBurst = false;
 			return;
 
 		}
@@ -29,9 +32,9 @@ public class Interceptor : Terminal {
 		//TODO Apply Attitude Adjustments
 
 		//If in Hyper Burst cooldown
-		if (hyperBurstCooldownTickCount > 0) {
+		if ( inHyperBurstCooldown ) {
 
-			hyperBurstCooldownTickCount--;
+			hyperBurstCooldownTickCurrent--;
 			return;
 
 		}
@@ -40,7 +43,6 @@ public class Interceptor : Terminal {
 
 	}
 
-	[RFC]
 	public void UpdateLookVector( Quaternion newQuat ){
 
 		if (!TNManager.isHosting)
@@ -50,17 +52,33 @@ public class Interceptor : Terminal {
 
 	}
 
-	[RFC]
-	public void InitiateHyperBurst(){
+	#region Hyper Burst
+	public void RequestInitiateHyperBurst(){
 
-		//TODO Send off request for Hyper Burst to server
+		tno.Send ("InitiateHyperBurst", Target.Host);
+
+	}
+
+	[RFC]
+	private void InitiateHyperBurst(){
 
 		//Check if we're in cooldown
-		if ( hyperBurstCooldownTickCount > 0 ) return;
-
+		if ( inHyperBurstCooldown ) return;
+		
 		activateHyperBurst = true;
 
 	}
+
+	[RFC]
+	private void ApplyHyperBurst(){
+
+		//TODO Hyper Burst effects
+
+		hyperBurstCooldownTickCurrent = hyperBurstCooldownTickTotal;
+		activateHyperBurst = false;
+
+	}
+	#endregion
 	#endregion
 
 	#region Sync

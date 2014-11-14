@@ -12,7 +12,7 @@ public class InterceptorControl : TerminalControl {
 
 			if ( Input.GetButtonDown( "Boost" ) ) {
 				
-				shipCore.InitiateHyperBurst();
+				shipCore.RequestInitiateHyperBurst();
 				
 			}
 
