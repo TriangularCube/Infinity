@@ -39,6 +39,21 @@ public abstract class Ship : TNBehaviour {
 	protected float forwardAcceleration, backwardAcceleration, sideAcceleration, verticalAcceration;
 	#endregion
 
-	//Sync
-	protected abstract IEnumerator Sync ();
+	#region Sync
+	protected override void OnEnable(){
+		base.OnEnable ();
+
+		if( TNManager.isHosting) StartCoroutine (Sync ());
+	}
+
+	private IEnumerator Sync(){
+		while (true) {
+			SendData();
+
+			yield return new WaitForSeconds (1f / SessionManager.instance.maxNetworkUpdatesPerSecond);
+		}
+	}
+
+	protected abstract void SendData ();
+	#endregion
 }

@@ -18,8 +18,21 @@ public class Flagship : Carrier {
 		//TODO Figure out what to do when the thing we're on is destroyed.
 	}
 
-	protected override IEnumerator Sync ()
+	#region Sync
+	protected override void SendData ()
 	{
-		throw new System.NotImplementedException ();
+		Debug.Log ("Sync Flagship");
+		//TODO Sync information
+		
+		tno.SendQuickly( 1, Target.Others, transform.position, transform.rotation );
+		
 	}
+	
+	[RFC(1)]
+	private void RecieveSync( Vector3 position, Quaternion facing ){
+		
+		//TODO Do stuff with recieved sync data
+		
+	}
+	#endregion
 }

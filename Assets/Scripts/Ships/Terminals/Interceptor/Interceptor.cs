@@ -63,16 +63,21 @@ public class Interceptor : Terminal {
 	}
 	#endregion
 
-	//Invoking our Syncing script
-	protected override void Awake ()
+	#region Sync
+	protected override void SendData ()
 	{
-		base.Awake ();
-		//TODO
-		//StartCoroutine (Sync ());
+		Debug.Log ("Sync Interceptor");
+		//TODO Sync information
+
+		tno.SendQuickly( 1, Target.Others, transform.position, transform.rotation );
+
 	}
 
-	protected override System.Collections.IEnumerator Sync ()
-	{
-		throw new System.NotImplementedException ();
+	[RFC(1)]
+	private void RecieveSync( Vector3 position, Quaternion facing ){
+
+		//TODO Do stuff with recieved sync data
+
 	}
+	#endregion
 }
