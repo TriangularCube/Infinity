@@ -8,7 +8,7 @@ public abstract class Terminal : Ship {
 
 	public Netplayer pilot{ get; private set; }
 	[SerializeField]
-	private TerminalControl control;
+	protected TerminalControl control;
 
 	//Reference of the carrier we're in range to dock into
 	private Carrier carrierToDockInto = null;
@@ -27,7 +27,7 @@ public abstract class Terminal : Ship {
 			//CameraControls.instance.SetTarget( transform, control );
 
 			//Activate the controls
-			control.enabled = true;
+			control.Assign();
 			
 			Screen.lockCursor = true;
 		}
