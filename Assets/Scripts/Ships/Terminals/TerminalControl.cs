@@ -12,4 +12,14 @@ public abstract class TerminalControl : ShipControl {
 		base.CleanUp ();
 	}
 
+	protected Quaternion savedRotation;
+	protected Vector3 savedPosition;
+
+	void OnEnable(){
+		savedPosition = _cameraPoint.position;
+		savedRotation = _cameraPoint.rotation;
+	}
+
+	public abstract void UpdateCamera();
+
 }

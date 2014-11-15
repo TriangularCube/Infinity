@@ -5,7 +5,7 @@ public class Interceptor : Terminal {
 
 	#region Piloting
 	//Our vector to rotate towards, which happens to also be our free look vector
-	private Quaternion lookVector = Quaternion.identity;
+	private Quaternion targetTravelDirection = Quaternion.identity;
 
 	//Hyper Thrust
 	[SerializeField]
@@ -29,7 +29,7 @@ public class Interceptor : Terminal {
 
 		}
 
-		//TODO Apply Attitude Adjustments
+		ApplyAttitudeControl ();
 
 		//If in Hyper Burst cooldown
 		if ( inHyperBurstCooldown ) {
@@ -41,14 +41,23 @@ public class Interceptor : Terminal {
 
 		//TODO Apply Station Control
 
+		control.UpdateCamera ();
 	}
 
+	private void ApplyAttitudeControl(){
+
+		//TODO Do some fancy attitude controls later.
+		rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetTravelDirection, 5f ) );
+
+	}
+
+	[RFC]
 	public void UpdateLookVector( Quaternion newQuat ){
 
 		if (!TNManager.isHosting)
 						tno.SendQuickly ("UpdateLookVector", Target.Host, newQuat);
 
-		lookVector *= newQuat;
+		targetTravelDirection = newQuat;
 
 	}
 
