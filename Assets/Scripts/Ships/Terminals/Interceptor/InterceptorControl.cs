@@ -20,8 +20,8 @@ public class InterceptorControl : TerminalControl {
 
 				//Camera Changes
 				_cameraPoint.RotateAround( transform.position, _cameraPoint.up, Input.GetAxis( "Mouse X" ) );
-				//_cameraPoint.RotateAround( transform.position, _cameraPoint.right, Input.GetAxis( "Mouse Y" ) );
-				//_cameraPoint.RotateAround( transform.position, _cameraPoint.forward, Input.GetAxis( "Roll" ) );
+				_cameraPoint.RotateAround( transform.position, _cameraPoint.right, Input.GetAxis( "Mouse Y" ) );
+				_cameraPoint.RotateAround( transform.position, _cameraPoint.forward, Input.GetAxis( "Roll" ) );
 
 				shipCore.UpdateLookVector( _cameraPoint.rotation );
 
