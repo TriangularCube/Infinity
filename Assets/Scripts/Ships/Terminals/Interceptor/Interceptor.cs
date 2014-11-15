@@ -84,7 +84,7 @@ public class Interceptor : Terminal {
 	#region Sync
 	protected override void SendData ()
 	{
-		Debug.Log ("Sync Interceptor");
+		//Debug.Log ("Sync Interceptor");
 		//TODO Sync information
 
 		tno.SendQuickly( 1, Target.Others, transform.position, transform.rotation );

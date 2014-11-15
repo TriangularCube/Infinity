@@ -21,7 +21,7 @@ public class Flagship : Carrier {
 	#region Sync
 	protected override void SendData ()
 	{
-		Debug.Log ("Sync Flagship");
+		//Debug.Log ("Sync Flagship");
 		//TODO Sync information
 		
 		tno.SendQuickly( 1, Target.Others, transform.position, transform.rotation );
