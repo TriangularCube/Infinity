@@ -40,8 +40,6 @@ public class Interceptor : Terminal {
 		}
 
 		//TODO Apply Station Control
-
-		control.UpdateCamera ();
 	}
 
 	private void ApplyAttitudeControl(){

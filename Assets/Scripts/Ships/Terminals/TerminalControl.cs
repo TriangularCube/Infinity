@@ -20,6 +20,4 @@ public abstract class TerminalControl : ShipControl {
 		savedRotation = _cameraPoint.rotation;
 	}
 
-	public abstract void UpdateCamera();
-
 }

@@ -48,7 +48,7 @@ public class InterceptorControl : TerminalControl {
 
 	}
 
-	public override void UpdateCamera(){
+	void FixedUpdate(){
 
 		playerCamera.transform.position = _cameraPoint.position;
 		playerCamera.transform.rotation = _cameraPoint.rotation;
