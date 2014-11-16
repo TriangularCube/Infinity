@@ -1,15 +1,26 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public enum InterceptorLookMode{ Locked, Free };
+public enum InterceptorLookMode{ Locked, Free }
+public enum MechLookMode{ Locked, Free }
 
 public class Profile{
-	
+
+	#region Interceptor
 	InterceptorLookMode interceptorLookMode = InterceptorLookMode.Free;
 	
-	public InterceptorLookMode GetInterceptorLookMode(){
+	internal InterceptorLookMode GetInterceptorLookMode(){
 		return interceptorLookMode;
 	}
+	#endregion
+
+	#region Mech
+	MechLookMode mechLookMode = MechLookMode.Free;
+
+	internal MechLookMode GetMechLookMode(){
+		return mechLookMode;
+	}
+	#endregion
 	
 }
 
@@ -18,6 +29,10 @@ public class PlayerSettings {
 	#region Profile Settings
 	public static InterceptorLookMode GetInterceptorLookMode(){
 		return currentProfile.GetInterceptorLookMode ();
+	}
+
+	public static MechLookMode GetMechLookMode(){
+		return currentProfile.GetMechLookMode ();
 	}
 	#endregion
 
