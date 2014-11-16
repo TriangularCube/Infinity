@@ -3,21 +3,19 @@ using System.Collections;
 
 public abstract class TerminalControl : ShipControl {
 
-	[SerializeField]
-	protected Interceptor shipCore;
-
 	public override void CleanUp ()
 	{
 		if (!enabled) return;
 		base.CleanUp ();
 	}
 
-	protected Quaternion savedRotation;
-	protected Vector3 savedPosition;
+	//protected Quaternion savedRotation;
+	protected Vector3 initialPosition;
+	protected Quaternion lookRotation;
 
-	void OnEnable(){
-		savedPosition = _cameraPoint.position;
-		savedRotation = _cameraPoint.rotation;
+	void Start(){
+		initialPosition = _cameraPoint.localPosition;
+		lookRotation = _cameraPoint.rotation;
 	}
 
 }

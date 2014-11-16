@@ -3,56 +3,69 @@ using System.Collections;
 
 public class InterceptorControl : TerminalControl {
 
+	[SerializeField]
+	Interceptor shipCore;
+
+	bool updateCamera = false;
+
+	void FixedUpdate(){
+
+		//Update the camera this frame
+		updateCamera = true;
+		
+	}
+	
 	void Update(){
 
-		//Reset the Camera's posiiont and rotaiton if it was changed between last frame and this one (i.e. by ship rotation)
-		if (PlayerSettings.GetInterceptorLookMode () == InterceptorLookMode.Free) {
-			
-			_cameraPoint.rotation = savedRotation;
-			_cameraPoint.position = savedPosition;
+		if (Screen.lockCursor) {
 
-		}
-
-		if ( Screen.lockCursor ) {
-			
+			#region Rotation
 			//Get input to update lookVector
-			if( PlayerSettings.GetInterceptorLookMode() == InterceptorLookMode.Free ){
+			if (PlayerSettings.GetInterceptorLookMode () == InterceptorLookMode.Free) {
 
 				//Camera Changes
-				_cameraPoint.RotateAround( transform.position, _cameraPoint.up, Input.GetAxis( "Mouse X" ) );
-				_cameraPoint.RotateAround( transform.position, _cameraPoint.right, Input.GetAxis( "Mouse Y" ) );
-				_cameraPoint.RotateAround( transform.position, _cameraPoint.forward, Input.GetAxis( "Roll" ) );
+				lookRotation = Quaternion.AngleAxis( Input.GetAxis( "Mouse X" ), transform.up ) * lookRotation;
+				lookRotation = lookRotation * Quaternion.AngleAxis( Input.GetAxis( "Mouse Y" ), Vector3.right );
+				lookRotation = lookRotation * Quaternion.AngleAxis( Input.GetAxis( "Roll" ), Vector3.forward );
 
-				shipCore.UpdateLookVector( _cameraPoint.rotation );
-
-				//Save our camera point's position and rotaiton
-				savedRotation = _cameraPoint.rotation;
-				savedPosition = _cameraPoint.position;
+				shipCore.UpdateLookVector ( lookRotation );
 
 			} else {
 				//TODO Flight input for Locked type
 
-				/* Probably something to do with Screen Spaces
-				 */
+				//Probably something to do with Screen Spaces
 			}
 
-			if ( Input.GetButtonDown( "Boost" ) ) {
-				
-				shipCore.RequestInitiateHyperBurst();
-				
-			}
+			shipCore.UpdateBoost( Input.GetButton ("Boost") );
+			#endregion
+
+			#region Translation
+
+			shipCore.UpdateInputVectorAndBreak( new Vector3( Input.GetAxis( "Thrust X" ), Input.GetAxis( "Thrust Y" ), Input.GetAxis( "Thrust Z") ), Input.GetButton( "Break" ) );
+
+			#endregion
+
+		} else {
+
+			//If mouse is not locked pass through zeroed values
+			shipCore.UpdateBoost( false );
+			shipCore.UpdateInputVectorAndBreak( Vector3.zero, false );
 
 		}
 
-		//Debug.DrawRay( savedPosition, (savedRotation * Vector3.forward) * 10 );
+		//If FixedUpdate ran this frame
+		if (updateCamera) {
+
+			//Update the camera. Since Update runs after internal physics updates, this means all movement would have been done by this time
+			playerCamera.transform.rotation = lookRotation;
+			playerCamera.transform.position = lookRotation * initialPosition + transform.position;
+			
+			updateCamera = false;
+			
+		}
 
 	}
 
-	void FixedUpdate(){
 
-		playerCamera.transform.position = _cameraPoint.position;
-		playerCamera.transform.rotation = _cameraPoint.rotation;
-
-	}
 
 }
