@@ -29,7 +29,6 @@ public abstract class Ship : TNBehaviour {
 	#endregion
 
 	#region Ship Movement
-	protected Vector3 velocity = Vector3.zero;
 	[SerializeField]
 	protected float maxSpeed = 20f;
 	[SerializeField]
