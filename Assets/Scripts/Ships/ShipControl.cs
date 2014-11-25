@@ -41,10 +41,7 @@ public abstract class ShipControl : MonoBehaviour {
 
 	public virtual void Assign(){
 
-		playerCamera = Camera.main;
-//		playerCamera.transform.parent = transform;
-//		playerCamera.transform.position = _cameraPoint.position;
-//		playerCamera.transform.rotation = _cameraPoint.rotation;
+		playerCamera = Camera.main;//HACK
 
 		enabled = true;
 
