@@ -22,9 +22,9 @@ public class Interceptor : Terminal {
 	private bool breakButton = false;
 
 	[RFC]
-	public void UpdateInputVectorAndBreak( Vector3 newInput, bool newBreak ){
+	public override void UpdateInputAndBreak( Vector3 newInput, bool newBreak ){
 
-		if (!TNManager.isHosting) tno.SendQuickly( "UpdateInputVector", Target.Host, newInput, newBreak );
+		if (!TNManager.isHosting) tno.SendQuickly( "UpdateInputAndBreak", Target.Host, newInput, newBreak );
 
 		inputDirection = newInput;
 		breakButton = newBreak;
@@ -65,29 +65,30 @@ public class Interceptor : Terminal {
 
 		float currentMaxSpeed = isBoostActive ? maxBurstSpeed : maxSpeed;
 
-		rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, targetTravelDirection * inputDirection.normalized * currentMaxSpeed, mag * Time.deltaTime );
+		rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, targetLookDirection * inputDirection.normalized * currentMaxSpeed, mag * Time.deltaTime );
 
 	}
 	#endregion Station Control
 
 	#region Attitude Control
 	//Our vector to rotate towards, which happens to also be our free look vector
-	private Quaternion targetTravelDirection = Quaternion.identity;
+	private Quaternion targetLookDirection = Quaternion.identity;
 
 	private void ApplyAttitudeControl(){
 
 		//TODO Do some fancy attitude controls later.
-		rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetTravelDirection, 5f ) );
+		rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetLookDirection, 5f ) );
 
 	}
 
 	[RFC]
-	public void UpdateLookVector( Quaternion newQuat ){
+	public override void UpdateLookVector( Quaternion newQuat ){
 
-		if (!TNManager.isHosting)
+		//TODO This is sending every frame, which is dumb. Find some way to filter this
+		if( !TNManager.isHosting && newQuat != rigidbody.rotation )
 						tno.SendQuickly ("UpdateLookVector", Target.Host, newQuat);
 
-		targetTravelDirection = newQuat;
+		targetLookDirection = newQuat;
 
 	}
 	#endregion Attitude Control
@@ -97,13 +98,13 @@ public class Interceptor : Terminal {
 	private int boostCharge = 360; //1 Boost unit is used per physics tick
 	private bool isBoostActive = false;
 
-	public void UpdateBoost( bool boostStatus ){
+	public override void UpdateBurst( bool burstStatus ){
 
-		if (isBoostActive != boostStatus) {
+		if( isBoostActive != burstStatus ) {
 
-			if( !TNManager.isHosting ) tno.Send( "UpdateBoostOnServer", Target.Host, boostStatus );
+			if( !TNManager.isHosting ) tno.Send( "UpdateBoostOnServer", Target.Host, burstStatus );
 		
-			isBoostActive = boostStatus;
+			isBoostActive = burstStatus;
 		}
 
 	}

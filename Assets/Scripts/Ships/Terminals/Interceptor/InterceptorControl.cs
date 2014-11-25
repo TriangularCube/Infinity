@@ -24,20 +24,20 @@ public class InterceptorControl : TerminalControl {
 				//Probably something to do with Screen Spaces
 			}
 
-			shipCore.UpdateBoost( Input.GetButton ("Boost") );
+			shipCore.UpdateBurst( Input.GetButton ("Boost") );
 			#endregion
 
 			#region Translation
 
-			shipCore.UpdateInputVectorAndBreak( new Vector3( Input.GetAxis( "Thrust X" ), Input.GetAxis( "Thrust Y" ), Input.GetAxis( "Thrust Z") ), Input.GetButton( "Break" ) );
+			shipCore.UpdateInputAndBreak( new Vector3( Input.GetAxis( "Thrust X" ), Input.GetAxis( "Thrust Y" ), Input.GetAxis( "Thrust Z") ), Input.GetButton( "Break" ) );
 
 			#endregion
 
 		} else {
 
 			//If mouse is not locked pass through zeroed values
-			shipCore.UpdateBoost( false );
-			shipCore.UpdateInputVectorAndBreak( Vector3.zero, false );
+			shipCore.UpdateBurst( false );
+			shipCore.UpdateInputAndBreak( Vector3.zero, false );
 
 		}
 
@@ -45,7 +45,5 @@ public class InterceptorControl : TerminalControl {
 
 		UpdateCamera();
 	}
-
-
 
 }

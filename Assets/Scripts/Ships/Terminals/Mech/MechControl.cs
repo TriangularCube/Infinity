@@ -15,6 +15,8 @@ public class MechControl : TerminalControl {
 				lookRotation = lookRotation * Quaternion.AngleAxis( Input.GetAxis( "Mouse Y" ), Vector3.right );
 				lookRotation = lookRotation * Quaternion.AngleAxis( Input.GetAxis( "Roll" ), Vector3.forward );
 				
+				shipCore.UpdateLookVector ( lookRotation );
+
 				
 			} else {
 				//TODO Flight input for Locked type
@@ -25,8 +27,12 @@ public class MechControl : TerminalControl {
 			
 			if ( Input.GetButtonDown( "Boost" ) ) {
 				
-				shipCore.RequestInitiateHyperBurst();
+				shipCore.UpdateBurst(true);
+				
+			}
+
 			CheckForDocking();
+			
 			//If FixedUpdate ran this frame
 			if (updateCamera) {
 				

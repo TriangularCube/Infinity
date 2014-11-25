@@ -132,4 +132,9 @@ public abstract class Terminal : Ship {
 	}
 	#endregion
 
+	#region Station and Attitude Controls
+	public abstract void UpdateLookVector( Quaternion newQuat );
+	public abstract void UpdateBurst( bool burst );
+	public abstract void UpdateInputAndBreak( Vector3 input, bool breakButton );
+	#endregion
 }

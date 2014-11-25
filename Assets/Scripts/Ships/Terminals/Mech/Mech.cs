@@ -42,16 +42,9 @@ public class Mech : Terminal {
 		
 		//TODO Apply Station Control
 	}
-	
-	private void ApplyAttitudeControl(){
-		
-		//TODO Do some fancy attitude controls later.
-		rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetTravelDirection, 5f ) );
-		
-	}
-	
-	[RFC]
-	public void UpdateLookVector( Quaternion newQuat ){
+
+	#region Attitude Control
+	public override void UpdateLookVector( Quaternion newQuat ){
 		
 		if (!TNManager.isHosting)
 			tno.SendQuickly ("UpdateLookVector", Target.Host, newQuat);
@@ -59,12 +52,25 @@ public class Mech : Terminal {
 		targetTravelDirection = newQuat;
 		
 	}
-	
+
+	private void ApplyAttitudeControl(){
+		
+		//TODO Do some fancy attitude controls later.
+		rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetTravelDirection, 5f ) );
+		
+	}
+	#endregion
+
+	#region Station Control
+	public override void UpdateInputAndBreak( Vector3 input, bool breakButton ){
+		throw new System.NotImplementedException ();//TODO
+	}
+	#endregion
+
 	#region Hyper Burst
-	public void RequestInitiateHyperBurst(){
-		
-		tno.Send ("InitiateHyperBurst", Target.Host);
-		
+	public override void UpdateBurst (bool burst)
+	{
+		tno.Send ("InitiateHyperBurst", Target.Host);	
 	}
 	
 	[RFC]
