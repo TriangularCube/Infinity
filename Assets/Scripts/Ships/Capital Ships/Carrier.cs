@@ -69,10 +69,10 @@ public abstract class Carrier : Ship {
 		dockedTerminals.Add (terminal);
 
 		//Fire off an event telling relevant parties something's docked
-		EventManager.instance.QueueEvent (new AllyDocked (terminal, this));
+		EventManager.instance.QueueEvent( new AllyDocked( pilot, this ) );
 
 		//Assign the pilot to Default
-		AssignDefault (pilot);
+		AssignDefault( pilot );
 
 	}
 	#endregion

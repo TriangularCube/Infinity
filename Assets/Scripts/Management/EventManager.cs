@@ -53,11 +53,11 @@ public class RequestLaunch : BaseEvent {
 
 public class AllyDocked : BaseEvent {
 
-	public Terminal terminal{ get; private set; }
+	public Netplayer pilot{ get; private set; }
 	public Carrier carrier{ get; private set; }
 	
-	public AllyDocked( Terminal toDock, Carrier targetCarrier ){
-		terminal = toDock;
+	public AllyDocked( Netplayer toDock, Carrier targetCarrier ){
+		pilot = toDock;
 		carrier = targetCarrier;
 	}
 
@@ -89,7 +89,7 @@ public class AssignedShipRole : BaseEvent {
 
 }
 #endregion
-	
+
 public class EventManager : Singleton<EventManager> {
 
 	[SerializeField]
