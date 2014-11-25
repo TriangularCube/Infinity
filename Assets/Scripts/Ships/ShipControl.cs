@@ -2,7 +2,6 @@
 
 public abstract class ShipControl : MonoBehaviour {
 
-	#region Camera Controls
 	[SerializeField]
 	protected Transform _cameraPoint;
 	public Transform cameraPoint{
@@ -10,7 +9,33 @@ public abstract class ShipControl : MonoBehaviour {
 			return _cameraPoint;
 		}
 	}
-	#endregion
+
+	protected bool updateCamera = false;
+	protected Quaternion lookRotation;
+
+	void OnEnable(){
+		lookRotation = _cameraPoint.rotation;
+	}
+
+	void FixedUpdate(){
+		
+		//Update the camera this frame
+		updateCamera = true;
+		
+	}
+
+	protected void UpdateCamera(){
+		//If FixedUpdate ran this frame
+		if (updateCamera) {
+			
+			//Update the camera. Since Update runs after internal physics updates, this means all movement would have been done by this time
+			playerCamera.transform.rotation = lookRotation;
+			playerCamera.transform.position = lookRotation * _cameraPoint.localPosition + transform.position;
+			
+			updateCamera = false;
+			
+		}
+	}
 
 	protected Camera playerCamera = null;
 

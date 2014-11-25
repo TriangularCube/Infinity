@@ -3,20 +3,23 @@ using System.Collections;
 
 public class ObservationStation : CapitalShipStation {
 
+	Quaternion storedRotation = Quaternion.identity;
+
 	void Update(){
+
 		if ( Screen.lockCursor ) {
 			//This is observation, so we're just going to let the player move the camera around
 			
-			_cameraPoint.transform.RotateAround( transform.position, transform.TransformDirection( Vector3.up ), Input.GetAxis( "Yaw" ) );
-			_cameraPoint.transform.RotateAround( transform.position, playerCamera.transform.TransformDirection( Vector3.left ), Input.GetAxis( "Pitch" ) );
+			//Camera Changes
+			storedRotation = Quaternion.AngleAxis( Input.GetAxis( "Mouse X" ), Vector3.up) * storedRotation;
+			storedRotation = storedRotation * Quaternion.Euler( Input.GetAxis( "Mouse Y" ), 0f, 0f);
+
 		}
 
-	}
+		//TODO Optimize this
+		lookRotation = _cameraPoint.rotation * storedRotation;
 
-	void FixedUpdate(){
-
-		playerCamera.transform.position = _cameraPoint.position;
-		playerCamera.transform.rotation = _cameraPoint.rotation;
+		UpdateCamera();
 
 	}
 

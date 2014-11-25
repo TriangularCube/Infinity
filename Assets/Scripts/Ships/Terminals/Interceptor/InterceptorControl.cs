@@ -3,18 +3,6 @@ using System.Collections;
 
 public class InterceptorControl : TerminalControl {
 
-	[SerializeField]
-	Interceptor shipCore;
-
-	bool updateCamera = false;
-
-	void FixedUpdate(){
-
-		//Update the camera this frame
-		updateCamera = true;
-		
-	}
-	
 	void Update(){
 
 		if (Screen.lockCursor) {
@@ -53,16 +41,6 @@ public class InterceptorControl : TerminalControl {
 
 		}
 
-		//If FixedUpdate ran this frame
-		if (updateCamera) {
-
-			//Update the camera. Since Update runs after internal physics updates, this means all movement would have been done by this time
-			playerCamera.transform.rotation = lookRotation;
-			playerCamera.transform.position = lookRotation * initialPosition + transform.position;
-			
-			updateCamera = false;
-			
-		}
 
 	}
 
