@@ -26,6 +26,7 @@ public class MechControl : TerminalControl {
 			if ( Input.GetButtonDown( "Boost" ) ) {
 				
 				shipCore.RequestInitiateHyperBurst();
+			CheckForDocking();
 			//If FixedUpdate ran this frame
 			if (updateCamera) {
 				

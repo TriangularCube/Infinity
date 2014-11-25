@@ -41,7 +41,9 @@ public class InterceptorControl : TerminalControl {
 
 		}
 
+		CheckForDocking();
 
+		UpdateCamera();
 	}
 
 
