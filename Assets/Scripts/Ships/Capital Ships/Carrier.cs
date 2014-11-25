@@ -151,10 +151,10 @@ public abstract class Carrier : Ship {
 	#region Assignment
 	public override void AssignDefault ( Netplayer pilot )
 	{
-		//AssignObservation (pilot);
+		AssignObservation (pilot);
 		
 		//Debug
-		AssignNavigation (pilot);
+		//AssignNavigation (pilot);
 	}
 
 	protected void AssignObservation( Netplayer player ){
@@ -191,6 +191,6 @@ public abstract class Carrier : Ship {
 
 	protected virtual void ResetControls(){
 		observationStation.CleanUp();
-		navigation.CleanUp();
+		//navigation.CleanUp();
 	}
 }

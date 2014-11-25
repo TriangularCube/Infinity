@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -11,7 +11,9 @@ public class Flagship : Carrier {
 
 	public override bool ContainsPlayer (Netplayer check)
 	{
-		throw new System.NotImplementedException ();
+		//throw new System.NotImplementedException ();
+		//DEBUG
+		return false;
 	}
 	
 	public void OnDestroy(){
@@ -32,7 +34,7 @@ public class Flagship : Carrier {
 	private void RecieveSync( Vector3 position, Quaternion facing ){
 		
 		//TODO Do stuff with recieved sync data
-		
+
 	}
 	#endregion
 }
