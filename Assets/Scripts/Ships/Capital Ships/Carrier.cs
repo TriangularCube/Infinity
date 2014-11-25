@@ -39,29 +39,23 @@ public abstract class Carrier : Ship {
 		}
 		//TODO Sort the Terminals we just added
 
-		EventManager.instance.AddListener( "ReqeustDock", new DelegateEventHandler( RequestDock ) );
 		EventManager.instance.AddListener( "RequestLaunch", new DelegateEventHandler ( RequestLaunch ) );
 	}
 
 	#region Docking Terminal
-	private bool RequestDock ( IEvent evt ){
+	public void RequestDock( Terminal terminal ){
 
-		RequestDock req = (RequestDock) evt;
+		Debug.Log( "Requested to Dock" );
+		tno.Send( "DockTerminal", Target.All, terminal.tno.uid );
 
-		if (req.carrier != this) {
-			return false;
-		}
-
-		tno.Send ("DockTerminal", Target.All, req.terminal.tno.uid);
-
-		return true;
 	}
 
 	[RFC]
-	void DockTerminal( uint terminalID ){
+	protected void DockTerminal( uint terminalID ){
 
 		//Find our GameObject
-		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
+		Terminal terminal = TNObject.Find( terminalID ).gameObject.GetComponent<Terminal>();
+		Debug.Log( "Found Object" );
 
 		//Pull out our pilot
 		Netplayer pilot = terminal.pilot;

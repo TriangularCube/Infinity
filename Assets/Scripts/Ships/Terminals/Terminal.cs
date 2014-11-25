@@ -101,18 +101,18 @@ public abstract class Terminal : Ship {
 		//If we're not in docking range, do nothing
 		if (!inCarrierRange) return;
 
-		tno.Send ("RequestDock", Target.Host);
+		tno.Send( "RequestDock", Target.Host );
 
 	}
 
 	[RFC]
-	private void RequestDock(){
-
+	protected void RequestDock(){
+		
 		//If we're somehow no longer in docking range in the time it took us to request docking, do nothing
 		if (!inCarrierRange) return;
-
-		EventManager.instance.QueueEvent (new RequestDock (this, carrierToDockInto));
-
+		
+		carrierToDockInto.RequestDock (this);
+		
 	}
 
 	public void DockPrep(){

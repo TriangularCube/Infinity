@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 
+using Netplayer = TNet.Player;
+
 #region Setup
 public delegate bool DelegateEventHandler( IEvent evt );
 
@@ -35,18 +37,6 @@ public class LeavingDockingRange : BaseEvent {
 		terminal = toLeave;
 	}
 	
-}
-
-public class RequestDock : BaseEvent {
-
-	public Terminal terminal{ get; private set; }
-	public Carrier carrier{ get; private set; }
-
-	public RequestDock( Terminal toDock, Carrier targetCarrier ){
-		terminal = toDock;
-		carrier = targetCarrier;
-	}
-
 }
 
 public class RequestLaunch : BaseEvent {
