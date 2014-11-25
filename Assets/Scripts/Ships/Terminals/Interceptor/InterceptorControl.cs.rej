@@ -1,0 +1,10 @@
+diff a/Assets/Scripts/Ships/Terminals/Interceptor/InterceptorControl.cs b/Assets/Scripts/Ships/Terminals/Interceptor/InterceptorControl.cs	(rejected hunks)
+@@ -3,8 +3,6 @@
+ 
+ public class InterceptorControl : TerminalControl {
+ 
+-	[SerializeField]
+-	Interceptor shipCore;
+ 	void Update(){
+ 
+ 		if (Screen.lockCursor) {
