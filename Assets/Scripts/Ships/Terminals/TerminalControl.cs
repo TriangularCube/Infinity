@@ -15,7 +15,6 @@ public abstract class TerminalControl : ShipControl {
 	protected virtual void CheckForDocking(){
 
 		if( Input.GetButtonDown( "Dock" ) ){
-			Debug.Log( "Button Press" );
 			shipCore.AttemptRequestDock();
 			updateCamera = false;
 		}

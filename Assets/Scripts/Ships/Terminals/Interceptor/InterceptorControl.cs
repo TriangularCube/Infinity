@@ -33,6 +33,8 @@ public class InterceptorControl : TerminalControl {
 
 			#endregion
 
+			CheckForDocking();
+
 		} else {
 
 			//If mouse is not locked pass through zeroed values
@@ -40,8 +42,6 @@ public class InterceptorControl : TerminalControl {
 			shipCore.UpdateInputAndBreak( Vector3.zero, false );
 
 		}
-
-		CheckForDocking();
 
 		UpdateCamera();
 	}
