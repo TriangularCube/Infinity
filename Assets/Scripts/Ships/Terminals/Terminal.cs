@@ -10,10 +10,7 @@ public abstract class Terminal : Ship {
 	[SerializeField]
 	protected TerminalControl control;
 
-	//Reference of the carrier we're in range to dock into
-	private Carrier carrierToDockInto = null;
-	//A boolean to transfer across network
-	private bool inCarrierRange = false;
+
 
 	#region Override
 	public override bool ContainsPlayer ( Netplayer check ){
@@ -37,19 +34,27 @@ public abstract class Terminal : Ship {
 	{
 		base.Awake ();
 
-		if (TNManager.isHosting) {
-
-			//Register Listeners
-			EventManager.instance.AddListener ("EnteringDockingRange", EnteringDockingZone);
-			EventManager.instance.AddListener ("LeavingDockingRange", LeavingDockingZone);
-		
-		}
-
+		SetupDockingAndLaunching();
 	}
 	#endregion
 
+	#region Launching and Docking
+	//Reference of the carrier we're in range to dock into
+	private Carrier carrierToDockInto = null;
+	//A boolean to transfer across network
+	private bool inCarrierRange = false;
+
+	private void SetupDockingAndLaunching(){
+		if (TNManager.isHosting) {
+			
+			//Register Listeners
+			EventManager.instance.AddListener ("EnteringDockingRange", EnteringDockingZone);
+			EventManager.instance.AddListener ("LeavingDockingRange", LeavingDockingZone);
+			
+		}
+	}
+
 	//These listeners are only called on Host
-	#region Listeners
 	private bool EnteringDockingZone( IEvent evt ){
 
 		EnteringDockingRange edr = (EnteringDockingRange)evt;
@@ -75,9 +80,7 @@ public abstract class Terminal : Ship {
 		return false;
 
 	}
-	#endregion
-
-	#region Launching and Docking
+	
 	public void OnLaunch( Netplayer toBeSeated ){
 		//Unparent ourself
 		transform.parent = null;
@@ -136,5 +139,6 @@ public abstract class Terminal : Ship {
 	public abstract void UpdateLookVector( Quaternion newQuat );
 	public abstract void UpdateBurst( bool burst );
 	public abstract void UpdateInputAndBreak( Vector3 input, bool breakButton );
+	public abstract void UpdateFireControl( bool nextWeapon, bool prevWeapon, bool fireWeapon );
 	#endregion
 }

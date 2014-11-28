@@ -116,6 +116,12 @@ public class Interceptor : Terminal {
 		
 	}
 	#endregion Boost
+
+	#region Fire Control
+	public override void UpdateFireControl (bool nextWeapon, bool prevWeapon, bool fireWeapon){
+		throw new System.NotImplementedException ();
+	}
+	#endregion
 	#endregion Piloting
 
 	#region Sync

@@ -93,6 +93,12 @@ public class Mech : Terminal {
 		
 	}
 	#endregion
+
+	#region Fire Control
+	public override void UpdateFireControl (bool nextWeapon, bool prevWeapon, bool fireWeapon){
+		throw new System.NotImplementedException ();
+	}
+	#endregion
 	#endregion
 	
 	#region Sync
