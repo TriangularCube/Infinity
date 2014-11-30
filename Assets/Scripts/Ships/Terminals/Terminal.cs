@@ -35,6 +35,13 @@ public abstract class Terminal : Ship {
 		base.Awake ();
 
 		SetupDockingAndLaunching();
+
+		/*
+		//Disable ourselves if we're parented to something
+		if( transform.parent ){
+			gameObject.SetActive( false );
+		}
+		*/
 	}
 	#endregion
 
