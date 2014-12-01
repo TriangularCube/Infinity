@@ -6,7 +6,7 @@ using TNet;
  */
 
 [RequireComponent(typeof(TNObject))]
-public abstract class TNSingleton<T> : Singleton<T> where T : MonoBehaviour {
+public abstract class TNSingleton<T> : Singleton<T> where T : PimpedMonoBehaviour {
 
 	TNObject mTNO;
 	

@@ -24,12 +24,102 @@ public class HUD : Singleton<HUD> {
 
 	void Update(){
 
-		SuppressHUD ();
+		SuppressHUD();
 
 		DrawIndicators();
 	
 	}
+
+	#region Listeners
+	private bool TerminalEnteringDockingRange( IEvent evt ){
+		
+		EnteringDockingRange edr = (EnteringDockingRange)evt;
+		
+		//If it's not us, we don't care
+		if( edr.terminal.pilot != TNManager.player ) return false;
+		
+		//TODO Turn on Within Range notification
+		dockingRangeIndicator.SetActive( true );
+		
+		return false;
+	}
 	
+	private bool TerminalLeavingDockingRange( IEvent evt ){
+		
+		LeavingDockingRange ldr = (LeavingDockingRange)evt;
+		
+		//If it's not us, we don't care
+		if( ldr.terminal.pilot != TNManager.player ) return false; 
+		
+		//TODO Turn off Within Range notification
+		dockingRangeIndicator.SetActive( false );
+		
+		return false;
+	}
+	
+	private bool AllyDocked( IEvent evt ){
+		
+		AllyDocked dockedEvent = (AllyDocked) evt;
+		
+		//If this is us
+		if( dockedEvent.pilot == TNManager.player ){
+			
+			if( dockedEvent.carrier == flagship ){
+				
+				//Disable the flagship's display box since we landed on it
+				flagshipIndicator.gameObject.SetActive( false );
+				
+			} else {
+				
+				//TODO Disable display box for whatever ship we landed on
+				
+			}
+
+			dockingRangeIndicator.SetActive( false );
+			
+		} else {
+			
+			//Else disable the display box for that ally
+			allyIndicatorList[dockedEvent.pilot].gameObject.SetActive( false );
+			
+		}
+		
+		//TODO Add this guy's name to the carrier's name list?
+		
+		return false;
+		
+	}
+	
+	private bool AllyLaunched( IEvent evt ){
+		
+		AllyLaunched launchEvent = (AllyLaunched)evt;
+		
+		//If this is us
+		if ( launchEvent.terminal.pilot == TNManager.player ) {
+
+			if( launchEvent.carrier == flagship ){
+				
+				//Enable the flagship's display box since we just launched from it
+				flagshipIndicator.gameObject.SetActive( true );
+				
+			} else {
+				
+				//TODO Enable display box for whatever ship we landed on
+				
+			}
+			
+		} else {
+			
+			//Else enable the display box for that ally
+			allyIndicatorList[launchEvent.terminal.pilot].gameObject.SetActive( true );
+			
+		}
+		
+		return false;
+		
+	}
+	#endregion
+
 	#region HUD
 	private bool suppressHUD = false;
 	[SerializeField]
@@ -54,7 +144,8 @@ public class HUD : Singleton<HUD> {
 	
 	[SerializeField]
 	private GameObject allyTargetingPrefab;
-	private Dictionary<Netplayer, GameObject> playerList = new Dictionary<Netplayer, GameObject>(); //Player, Ship
+	private Dictionary<Netplayer, AllyIndicator> allyIndicatorList = new Dictionary<Netplayer, AllyIndicator>();
+	private Dictionary<Netplayer, Transform> allyTransformList = new Dictionary<Netplayer, Transform>();
 
 	[SerializeField]
 	private GameObject dockingRangeIndicator;
@@ -71,7 +162,7 @@ public class HUD : Singleton<HUD> {
 
 	private void SuppressHUD(){
 
-		if (suppressHUD)
+		if( suppressHUD )
 			HUDPanel.alpha = SuppressedAlpha;
 		else 
 			HUDPanel.alpha = UnsupressedAlpha;
@@ -96,7 +187,7 @@ public class HUD : Singleton<HUD> {
 		viewportPoint.y -= 0.5f;
 		
 		
-		if (viewportPoint.z > 0f && viewportPoint.y > -screenPadding && viewportPoint.y < screenPadding && viewportPoint.x > -screenPadding && viewportPoint.x < screenPadding) {
+		if( viewportPoint.z > 0f && viewportPoint.y > -screenPadding && viewportPoint.y < screenPadding && viewportPoint.x > -screenPadding && viewportPoint.x < screenPadding ){
 			
 			//The target is within the screen
 			
@@ -168,95 +259,6 @@ public class HUD : Singleton<HUD> {
 		indicator.transform.localPosition = viewportPoint;
 		
 	}
-	
-	
-	#region Listeners
-	private bool TerminalEnteringDockingRange( IEvent evt ){
-		
-		EnteringDockingRange edr = (EnteringDockingRange)evt;
-		
-		//If it's not us, we don't care
-		if( edr.terminal.pilot != TNManager.player ) return false;
-		
-		//TODO Turn on Within Range notification
-		dockingRangeIndicator.SetActive( true );
-		
-		return false;
-	}
-	
-	private bool TerminalLeavingDockingRange( IEvent evt ){
-		
-		LeavingDockingRange ldr = (LeavingDockingRange)evt;
-		
-		//If it's not us, we don't care
-		if( ldr.terminal.pilot != TNManager.player ) return false; 
-		
-		//TODO Turn off Within Range notification
-		dockingRangeIndicator.SetActive( false );
-		
-		return false;
-	}
-	
-	private bool AllyDocked( IEvent evt ){
-		
-		AllyDocked dockedEvent = (AllyDocked) evt;
-		
-		//If this is us
-		if (dockedEvent.pilot == TNManager.player){
-			
-			if( dockedEvent.carrier == flagship ){
-				
-				//Disable the flagship's display box since we landed on it
-				flagshipIndicator.gameObject.SetActive( false );
-				
-			} else {
-				
-				//TODO Disable display box for whatever ship we landed on
-				
-			}
-			
-		} else {
-			
-			//Else disable the display box for that ally
-			playerList[dockedEvent.pilot].SetActive( false );
-			
-		}
-		
-		//TODO Add this guy's name to the carrier's name list?
-		
-		return false;
-		
-	}
-	
-	private bool AllyLaunched( IEvent evt ){
-		
-		AllyLaunched launchEvent = (AllyLaunched)evt;
-		
-		//If this is us
-		if ( launchEvent.terminal.pilot == TNManager.player ) {
-			
-			if( launchEvent.carrier == flagship ){
-				
-				//Enable the flagship's display box since we just launched from it
-				flagshipIndicator.gameObject.SetActive( true );
-				
-			} else {
-				
-				//TODO Enable display box for whatever ship we landed on
-				
-			}
-			
-		} else {
-			
-			//Else enable the display box for that ally
-			playerList[launchEvent.terminal.pilot].SetActive( true );
-			
-		}
-		
-		return false;
-		
-	}
-	#endregion
 	#endregion
 	
 	#region Launch Menu

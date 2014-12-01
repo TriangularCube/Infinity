@@ -12,7 +12,14 @@ public class AllyIndicator : MonoBehaviour {
 	[SerializeField]
 	private Texture arrow;
 
-	#region Transform Cache
+	#region Transform and GameObject Cache
+	private GameObject thisGameObject;
+	public new GameObject gameObject{
+		get{
+			return thisGameObject;
+		}
+	}
+
 	private Transform thisTransform;
 	public new Transform transform{
 		get{
@@ -22,6 +29,7 @@ public class AllyIndicator : MonoBehaviour {
 
 	void Awake(){
 		thisTransform = base.transform;
+		thisGameObject = base.gameObject;
 	}
 	#endregion
 

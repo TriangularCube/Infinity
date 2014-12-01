@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour{
+public abstract class Singleton<T> : PimpedMonoBehaviour where T : PimpedMonoBehaviour{
 
 	protected static T _instance;
 

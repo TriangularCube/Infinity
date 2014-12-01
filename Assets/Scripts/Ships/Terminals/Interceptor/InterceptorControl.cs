@@ -27,13 +27,11 @@ public class InterceptorControl : TerminalControl {
 			shipCore.UpdateBurst( Input.GetButton ("Boost") );
 			#endregion
 
-			#region Translation
-
 			shipCore.UpdateInputAndBreak( new Vector3( Input.GetAxis( "Thrust X" ), Input.GetAxis( "Thrust Y" ), Input.GetAxis( "Thrust Z") ), Input.GetButton( "Break" ) );
 
-			#endregion
+			shipCore.UpdateFireControl( Input.GetAxis( "Mouse ScrollWheel" ) > 0, Input.GetAxis( "Mouse ScrollWheel" ) < 0, Input.GetButton( "Fire" ) );
 
-			CheckForDocking();
+			ResolveDockingRequest();
 
 		} else {
 

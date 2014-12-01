@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public abstract class ShipControl : MonoBehaviour {
+public abstract class ShipControl : PimpedMonoBehaviour {
 
 	[SerializeField]
 	protected Transform _cameraPoint;
@@ -10,6 +10,7 @@ public abstract class ShipControl : MonoBehaviour {
 		}
 	}
 
+	protected Camera playerCamera = null;
 	protected bool updateCamera = false;
 	protected Quaternion lookRotation;
 
@@ -37,7 +38,7 @@ public abstract class ShipControl : MonoBehaviour {
 		}
 	}
 
-	protected Camera playerCamera = null;
+
 
 	public virtual void Assign(){
 

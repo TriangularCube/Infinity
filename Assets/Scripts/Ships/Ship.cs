@@ -29,12 +29,12 @@ public abstract class Ship : TNBehaviour {
 	#endregion
 
 	#region Ship Movement
-	[SerializeField]
+	[SerializeField, Group("Movement")]
 	protected float maxSpeed = 20f;
-	[SerializeField]
+	[SerializeField, Group("Movement")]
 	protected float maxBurstSpeed = 45f;
 
-	[SerializeField]
+	[SerializeField, Group("Movement")]
 	protected float forwardAcceleration, backwardAcceleration, sideAcceleration, verticalAcceration;
 	#endregion
 
@@ -42,7 +42,7 @@ public abstract class Ship : TNBehaviour {
 	protected override void OnEnable(){
 		base.OnEnable ();
 
-		if( TNManager.isHosting) StartCoroutine (Sync ());
+		if( TNManager.isHosting) StartCoroutine( Sync () );
 	}
 
 	private IEnumerator Sync(){

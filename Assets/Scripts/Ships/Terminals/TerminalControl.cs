@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public abstract class TerminalControl : ShipControl {
@@ -12,7 +12,8 @@ public abstract class TerminalControl : ShipControl {
 		base.CleanUp ();
 	}
 
-	protected virtual void CheckForDocking(){
+	//Doesn't do Mouse Lock check
+	protected virtual void ResolveDockingRequest(){
 
 		if( Input.GetButtonDown( "Dock" ) ){
 			shipCore.AttemptRequestDock();

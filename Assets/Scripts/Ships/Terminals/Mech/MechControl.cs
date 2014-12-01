@@ -31,7 +31,7 @@ public class MechControl : TerminalControl {
 				
 			}
 
-			CheckForDocking();
+			ResolveDockingRequest();
 			
 			//If FixedUpdate ran this frame
 			if (updateCamera) {
