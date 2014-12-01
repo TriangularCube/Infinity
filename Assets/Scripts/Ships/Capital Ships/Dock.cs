@@ -7,12 +7,10 @@ public class Dock : MonoBehaviour {
 	private Carrier carrier;
 
 	void Awake(){
-		/*
 		Debug.Log ("Awake on Dock");
 		if (!TNManager.isHosting) {
 			gameObject.SetActive( false );
 		}
-		*/
 	}
 
 	void OnTriggerEnter( Collider other ){
