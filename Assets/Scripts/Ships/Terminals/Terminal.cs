@@ -28,7 +28,12 @@ public abstract class Terminal : Ship {
 			
 			Screen.lockCursor = true;
 		}
+
+		//TODO, DEBUG
+		AssignWeapons( weaponSelection );
 	}
+
+	protected abstract void AssignWeapons( string weaponSelection );
 
 	protected override void Awake ()
 	{
@@ -88,7 +93,7 @@ public abstract class Terminal : Ship {
 
 	}
 	
-	public void OnLaunch( Netplayer toBeSeated ){
+	public void OnLaunch( Netplayer toBeSeated, string weaponSelection ){
 		//Unparent ourself
 		transform.parent = null;
 		
@@ -99,7 +104,7 @@ public abstract class Terminal : Ship {
 		gameObject.SetActive (true);
 
 		//Assign the player to the pilot position
-		AssignDefault (toBeSeated);
+		AssignPilot( toBeSeated, weaponSelection );
 
 		//TODO Add some forwards momentum
 		rigidbody.AddRelativeForce( Vector3.forward * 10, ForceMode.Impulse );

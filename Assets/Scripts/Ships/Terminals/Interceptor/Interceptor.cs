@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 using TNet;
 
 public class Interceptor : Terminal {
@@ -14,7 +15,7 @@ public class Interceptor : Terminal {
 	}
 
 	#region Station Control
-	[SerializeField]
+	[SerializeField, Group("Boost")]
 	private float boostAcceleration;
 
 	//A normalized input vector
@@ -94,7 +95,7 @@ public class Interceptor : Terminal {
 	#endregion Attitude Control
 
 	#region Boost
-	[SerializeField]
+	[SerializeField, Group("Boost")]
 	private int boostCharge = 360; //1 Boost unit is used per physics tick
 	private bool isBoostActive = false;
 
@@ -118,9 +119,68 @@ public class Interceptor : Terminal {
 	#endregion Boost
 
 	#region Fire Control
+	[SerializeField, Group("Weapons")]
+	private TerminalWeapon autoCannon, plasmaGun, bombLauncher;
+
+	private bool weaponSwitchCooldown = false;
+	[SerializeField]
+	//Weapon Switch cooldown time
+	float weaponSwitchCooldownTime = 0.3f;
+	
+	IEnumerator WeaponSwitchCooldown(){
+		weaponSwitchCooldown = true;
+		yield return new WaitForSeconds( weaponSwitchCooldownTime );
+		weaponSwitchCooldown = false;
+	}
+
+	private int currentWeapon = 1;
+
+	private TerminalWeapon weapon1, weapon2, weapon3;
+
+	protected override void AssignWeapons( string weaponSelection ){
+
+		//The following are DEBUG functionality TODO, HACK
+
+		weapon1 = autoCannon;
+		weapon1.gameObject.SetActive( true );
+
+		weapon2 = plasmaGun;
+		weapon2.gameObject.SetActive( true );
+
+		weapon3 = bombLauncher;
+		weapon3.gameObject.SetActive( true );
+
+	}
 
 	public override void UpdateFireControl( bool nextWeapon, bool prevWeapon, bool fireWeapon ){
-		throw new System.NotImplementedException ();
+		if( nextWeapon ){
+			if( ++currentWeapon > 3 ){
+				currentWeapon = 0;
+			}
+		}
+		if( prevWeapon ){
+			if( --currentWeapon < 1 ){
+				currentWeapon = 3;
+			}
+		}
+
+		if( nextWeapon || prevWeapon )
+			StartCoroutine( WeaponSwitchCooldown() );
+
+		if( fireWeapon ){
+			switch( currentWeapon ){
+			case 1:
+				weapon1.Fire();
+				break;
+			case 2:
+				weapon2.Fire();
+				break;
+			case 3:
+				weapon3.Fire();
+				break;
+			}
+		}
+
 	}
 	#endregion
 	#endregion Piloting
