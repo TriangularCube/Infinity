@@ -10,14 +10,14 @@ public abstract class Terminal : Ship {
 	[SerializeField]
 	protected TerminalControl control;
 
-
-
 	#region Override
-	public override bool ContainsPlayer ( Netplayer check ){
+	/*
+	public bool ContainsPlayer ( Netplayer check ){
 		return pilot == check ? true : false;
 	}
+	*/
 
-	public override void AssignDefault ( Netplayer player ){
+	public void AssignPilot( Netplayer player, string weaponSelection ){
 		pilot = player;
 
 		if (pilot == TNManager.player) {

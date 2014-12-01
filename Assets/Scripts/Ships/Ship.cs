@@ -6,13 +6,11 @@ using System.Collections;
 public abstract class Ship : TNBehaviour {
 
 	//Madatory check for if a player is on this ship
-	public abstract bool ContainsPlayer( TNet.Player check );
+	//public abstract bool ContainsPlayer( TNet.Player check );
 
 	//A list of enemy ships this ship can see
 	protected TNet.List<GameObject> trackingList = new TNet.List<GameObject>();
-
-	//A convinience method, for the future if the game wants to directly assign a player to a ship
-	public abstract void AssignDefault( TNet.Player player );
+	
 
 	#region Cache Transform
 	private Transform thisTransform;

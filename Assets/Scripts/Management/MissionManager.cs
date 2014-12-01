@@ -9,7 +9,10 @@ public class MissionManager : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-		startingShip.AssignDefault( TNManager.player );
+		if( startingShip is Carrier )
+			((Carrier)startingShip).AssignDefault( TNManager.player );
+		else if( startingShip is Terminal )
+			((Terminal)startingShip).AssignPilot( TNManager.player, "" );
 
 	}
 

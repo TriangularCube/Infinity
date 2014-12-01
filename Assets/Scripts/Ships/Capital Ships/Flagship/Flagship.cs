@@ -9,13 +9,6 @@ using Netplayer = TNet.Player;
 
 public class Flagship : Carrier {
 
-	public override bool ContainsPlayer (Netplayer check)
-	{
-		//throw new System.NotImplementedException ();
-		//DEBUG
-		return false;
-	}
-	
 	public void OnDestroy(){
 		//TODO Figure out what to do when the thing we're on is destroyed.
 	}
