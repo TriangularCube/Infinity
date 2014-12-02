@@ -31,6 +31,10 @@ public class AllyIndicator : MonoBehaviour {
 		thisTransform = base.transform;
 		thisGameObject = base.gameObject;
 	}
+
+	public void Activate(){
+		base.gameObject.SetActive( true );
+	}
 	#endregion
 
 	public void SetArrow(){

@@ -27,7 +27,8 @@ public class HUD : Singleton<HUD> {
 		SuppressHUD();
 
 		DrawIndicators();
-	
+
+        Debug.Log( "Hud" );
 	}
 
 	#region Listeners
@@ -75,6 +76,7 @@ public class HUD : Singleton<HUD> {
 				
 			}
 
+			//Turn off the Docking Range indicator
 			dockingRangeIndicator.SetActive( false );
 			
 		} else {
@@ -152,10 +154,10 @@ public class HUD : Singleton<HUD> {
 
 	//On Start
 	private void SetupHUD(){
-		
+
 		//TODO Initialize the players' terminal display boxes
 		if( !flagship.ContainsPlayer( TNManager.player ) ){
-			flagshipIndicator.gameObject.SetActive( true );
+			flagshipIndicator.Activate();
 		}
 
 	}
@@ -169,7 +171,7 @@ public class HUD : Singleton<HUD> {
 
 	}
 	
-	void DrawIndicators(){
+	private void DrawIndicators(){
 		//Update Flagship Indicator
 		if( flagship.gameObject.activeSelf ){
 			DrawIndicatorOnScreen( flagship.transform.position, flagshipIndicator );
@@ -226,7 +228,7 @@ public class HUD : Singleton<HUD> {
 				if( cos > 0f ){
 					//If we're on the top half of screen
 					viewportPoint.y = screenPadding;
-					viewportPoint.x = - ( tan * screenPadding );
+					viewportPoint.x = -( tan * screenPadding );
 				} else {
 					//If we're on the bottom half of the screen
 					viewportPoint.y = -screenPadding;
@@ -239,7 +241,7 @@ public class HUD : Singleton<HUD> {
 				if( sin < 0f ){
 					//If we're on the right side
 					viewportPoint.x = screenPadding;
-					viewportPoint.y = - ( screenPadding / tan );
+					viewportPoint.y = -( screenPadding / tan );
 				} else {
 					//If we're on the left side
 					viewportPoint.x = -screenPadding;
