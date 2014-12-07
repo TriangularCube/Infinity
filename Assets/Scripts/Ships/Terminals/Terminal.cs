@@ -10,14 +10,26 @@ public abstract class Terminal : Ship {
 	[SerializeField]
 	protected TerminalControl control;
 
-	#region Override
-	/*
-	public bool ContainsPlayer ( Netplayer check ){
+/*  public bool ContainsPlayer ( Netplayer check ){
 		return pilot == check ? true : false;
 	}
 	*/
 
-	public void AssignPilot( Netplayer player, string weaponSelection ){
+	protected override void Awake ()
+	{
+		base.Awake ();
+
+		SetupDockingAndLaunching();
+
+		/*
+		//Disable ourselves if we're parented to something
+		if( transform.parent ){
+			gameObject.SetActive( false );
+		}
+		*/
+	}
+
+    public void AssignPilot( Netplayer player, string weaponSelection ){
 		pilot = player;
 
 		if (pilot == TNManager.player) {
@@ -33,25 +45,27 @@ public abstract class Terminal : Ship {
 		AssignWeapons( weaponSelection );
 	}
 
-	protected abstract void AssignWeapons( string weaponSelection );
+    #region Weapons
+    protected bool weaponSwitchCooldown = false;
+    [SerializeField]
+    //Weapon Switch cooldown time
+    protected float weaponSwitchCooldownTime = 0.3f;
 
-	protected override void Awake ()
-	{
-		base.Awake ();
+    protected IEnumerator WeaponSwitchCooldown() {
+        weaponSwitchCooldown = true;
+        yield return new WaitForSeconds( weaponSwitchCooldownTime );
+        weaponSwitchCooldown = false;
+    }
 
-		SetupDockingAndLaunching();
+    protected int currentWeapon = 1;
 
-		/*
-		//Disable ourselves if we're parented to something
-		if( transform.parent ){
-			gameObject.SetActive( false );
-		}
-		*/
-	}
-	#endregion
+    protected TerminalWeapon weapon1, weapon2, weapon3;
 
-	#region Launching and Docking
-	//Reference of the carrier we're in range to dock into
+    protected abstract void AssignWeapons( string weaponSelection );
+    #endregion Weapons
+
+    #region Launching and Docking
+    //Reference of the carrier we're in range to dock into
 	private Carrier carrierToDockInto = null;
 	//A boolean to transfer across network
 	private bool inCarrierRange = false;
@@ -110,6 +124,12 @@ public abstract class Terminal : Ship {
 		rigidbody.AddRelativeForce( Vector3.forward * 10, ForceMode.Impulse );
 
 	}
+
+    public TerminalWeapon[] GetWeaponSelection() {
+
+        return new TerminalWeapon[] { weapon1, weapon2, weapon3 };
+
+    }
 	
 	public void AttemptRequestDock(){
 
@@ -147,7 +167,7 @@ public abstract class Terminal : Ship {
 	}
 	#endregion
 
-	#region Station and Attitude Controls
+	#region Station, Attitude, and Fire Controls
 	public abstract void UpdateLookVector( Quaternion newQuat );
 	public abstract void UpdateBurst( bool burst );
 	public abstract void UpdateInputAndBreak( Vector3 input, bool breakButton );

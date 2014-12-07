@@ -122,21 +122,6 @@ public class Interceptor : Terminal {
 	[SerializeField, Group("Weapons")]
 	private TerminalWeapon autoCannon, plasmaGun, bombLauncher;
 
-	private bool weaponSwitchCooldown = false;
-	[SerializeField]
-	//Weapon Switch cooldown time
-	float weaponSwitchCooldownTime = 0.3f;
-	
-	IEnumerator WeaponSwitchCooldown(){
-		weaponSwitchCooldown = true;
-		yield return new WaitForSeconds( weaponSwitchCooldownTime );
-		weaponSwitchCooldown = false;
-	}
-
-	private int currentWeapon = 1;
-
-	private TerminalWeapon weapon1, weapon2, weapon3;
-
 	protected override void AssignWeapons( string weaponSelection ){
 
 		//The following are DEBUG functionality TODO, HACK
@@ -155,7 +140,7 @@ public class Interceptor : Terminal {
 	public override void UpdateFireControl( bool nextWeapon, bool prevWeapon, bool fireWeapon ){
 		if( nextWeapon ){
 			if( ++currentWeapon > 3 ){
-				currentWeapon = 0;
+				currentWeapon = 1;
 			}
 		}
 		if( prevWeapon ){
@@ -164,8 +149,15 @@ public class Interceptor : Terminal {
 			}
 		}
 
-		if( nextWeapon || prevWeapon )
-			StartCoroutine( WeaponSwitchCooldown() );
+        if( nextWeapon || prevWeapon ) {
+            
+            StartCoroutine( WeaponSwitchCooldown() );
+
+            if( pilot == TNManager.player ) {
+                EventManager.instance.QueueEvent( new WeaponSwitch( currentWeapon ) );
+            }
+
+        }
 
 		if( fireWeapon ){
 			switch( currentWeapon ){
