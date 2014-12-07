@@ -14,9 +14,21 @@ public interface IEvent{
 public class BaseEvent : IEvent {
 	public string GetName(){ return GetType ().Name; }
 }
-#endregion
+#endregion Setup
 
 #region Events
+public class WeaponSwitch : BaseEvent {
+
+    public int weaponSelection { get; private set; }
+
+    public WeaponSwitch( int weaponSelect ) {
+
+        weaponSelection = weaponSelect;
+
+    }
+    
+}
+
 public class EnteringDockingRange : BaseEvent {
 	
 	public Terminal terminal{ get; private set; }
@@ -88,7 +100,7 @@ public class AssignedShipRole : BaseEvent {
 	}
 
 }
-#endregion
+#endregion Events
 
 public class EventManager : Singleton<EventManager> {
 
