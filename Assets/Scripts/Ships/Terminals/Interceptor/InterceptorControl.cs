@@ -29,7 +29,7 @@ public class InterceptorControl : TerminalControl {
 
 			shipCore.UpdateInputAndBreak( new Vector3( Input.GetAxis( "Thrust X" ), Input.GetAxis( "Thrust Y" ), Input.GetAxis( "Thrust Z") ), Input.GetButton( "Break" ) );
 
-			shipCore.UpdateFireControl( Input.GetAxis( "Mouse ScrollWheel" ) > 0, Input.GetAxis( "Mouse ScrollWheel" ) < 0, Input.GetButton( "Fire" ) );
+			shipCore.UpdateFireControl( Input.GetAxis( "Mouse ScrollWheel" ) >0, Input.GetAxis( "Mouse ScrollWheel" ) < 0, Input.GetButton( "Fire" ) );
 
 			ResolveDockingRequest();
 

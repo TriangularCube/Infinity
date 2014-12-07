@@ -11,9 +11,10 @@ public class MissionManager : MonoBehaviour {
 
 		if( startingShip is Carrier )
 			((Carrier)startingShip).AssignDefault( TNManager.player );
-		else if( startingShip is Terminal )
+        else if( startingShip is Terminal ) {
 			((Terminal)startingShip).AssignPilot( TNManager.player, "" );
-
+            EventManager.instance.QueueEvent( new AllyLaunched( (Terminal)startingShip, null ) );
+        }
 	}
 
 	void Update(){

@@ -191,6 +191,8 @@ public abstract class Carrier : Ship {
 		dockedTerminals.Remove (terminal);
 		
 		terminal.OnLaunch( player, "" );//HACK, TODO
+
+        EventManager.instance.QueueEvent( new AllyLaunched( terminal, this ) );
 		
 	}
 	#endregion
