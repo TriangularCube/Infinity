@@ -1,28 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class TerminalWeapon : PimpedMonoBehaviour {
+public abstract class TerminalWeapon : PimpedMonoBehaviour {
 
-	[SerializeField]
-	private GameObject Ammo;
+    [SerializeField]
+    private string _weaponName;
+    public string weaponName { get { return _weaponName; } }
+
+    public abstract int reserve { get; }
+
+	public abstract void Fire();
 	
-	[SerializeField]
-	private float coolDown = 0.1f;
-	private bool isOnCooldown = false;
-
-	public void Fire(){
-		//TODO Fire stuff
-		
-		if (!isOnCooldown) {
-			/* GameObject obj = (GameObject) */ Instantiate( Ammo, transform.position, transform.rotation );
-			//obj.SendMessage( "PassFiringVector", rootRigidbody.velocity, SendMessageOptions.RequireReceiver );
-			StartCoroutine( Cooldown() );
-		}
-	}
-
-	IEnumerator Cooldown(){
-		isOnCooldown = true;
-		yield return new WaitForSeconds( coolDown );
-		isOnCooldown = false;
-	}
 }
