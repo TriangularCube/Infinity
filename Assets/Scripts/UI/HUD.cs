@@ -6,20 +6,9 @@ using Netplayer = TNet.Player;
 
 public class HUD : Singleton<HUD> {
 	
-	protected override void Awake(){
-		base.Awake ();
-
-		//Register our listeners
-		EventManager.instance.AddListener( "AllyDocked", AllyDocked );
-		EventManager.instance.AddListener( "AllyLaunched", AllyLaunched );
-		
-		//Only add these events on the Host, since only the host runs the "correct" physics simulation
-		EventManager.instance.AddListener( "EnteringDockingRange", TerminalEnteringDockingRange );
-		EventManager.instance.AddListener( "LeavingDockingRange", TerminalLeavingDockingRange );
-	}
-
 	void Start(){
-		SetupHUD ();
+		SetupHUD();
+        SetupTerminalHUD();
 	}
 
 	void Update(){
@@ -28,129 +17,34 @@ public class HUD : Singleton<HUD> {
 
 		DrawIndicators();
 
-        Debug.Log( "Hud" );
 	}
 
-	#region Listeners
-	private bool TerminalEnteringDockingRange( IEvent evt ){
-		
-		EnteringDockingRange edr = (EnteringDockingRange)evt;
-		
-		//If it's not us, we don't care
-		if( edr.terminal.pilot != TNManager.player ) return false;
-		
-		//TODO Turn on Within Range notification
-		dockingRangeIndicator.SetActive( true );
-		
-		return false;
-	}
-	
-	private bool TerminalLeavingDockingRange( IEvent evt ){
-		
-		LeavingDockingRange ldr = (LeavingDockingRange)evt;
-		
-		//If it's not us, we don't care
-		if( ldr.terminal.pilot != TNManager.player ) return false; 
-		
-		//TODO Turn off Within Range notification
-		dockingRangeIndicator.SetActive( false );
-		
-		return false;
-	}
-	
-	private bool AllyDocked( IEvent evt ){
-		
-		AllyDocked dockedEvent = (AllyDocked) evt;
-		
-		//If this is us
-		if( dockedEvent.pilot == TNManager.player ){
-			
-			if( dockedEvent.carrier == flagship ){
-				
-				//Disable the flagship's display box since we landed on it
-				flagshipIndicator.gameObject.SetActive( false );
-				
-			} else {
-				
-				//TODO Disable display box for whatever ship we landed on
-				
-			}
-
-			//Turn off the Docking Range indicator
-			dockingRangeIndicator.SetActive( false );
-			
-		} else {
-			
-			//Else disable the display box for that ally
-			allyIndicatorList[dockedEvent.pilot].gameObject.SetActive( false );
-			
-		}
-		
-		//TODO Add this guy's name to the carrier's name list?
-		
-		return false;
-		
-	}
-	
-	private bool AllyLaunched( IEvent evt ){
-		
-		AllyLaunched launchEvent = (AllyLaunched)evt;
-		
-		//If this is us
-		if ( launchEvent.terminal.pilot == TNManager.player ) {
-
-			if( launchEvent.carrier == flagship ){
-				
-				//Enable the flagship's display box since we just launched from it
-				flagshipIndicator.gameObject.SetActive( true );
-				
-			} else {
-				
-				//TODO Enable display box for whatever ship we landed on
-				
-			}
-			
-		} else {
-			
-			//Else enable the display box for that ally
-			allyIndicatorList[launchEvent.terminal.pilot].gameObject.SetActive( true );
-			
-		}
-		
-		return false;
-		
-	}
-	#endregion
-
-	#region HUD
+	#region General HUD
 	private bool suppressHUD = false;
-	[SerializeField]
+	[SerializeField, Group( "General HUD" )]
 	private float SuppressedAlpha = 0.2f;
-	[SerializeField]
+    [SerializeField, Group( "General HUD" )]
 	private float UnsupressedAlpha = 1f;
 
-	[SerializeField]
+    [SerializeField, Group( "General HUD" )]
 	private UIPanel HUDPanel;
-	[SerializeField]
+    [SerializeField, Group( "General HUD" )]
 	private float screenPadding = 0.485f;
-	
-	[SerializeField]
+
+    [SerializeField, Group( "General HUD" )]
 	private Camera playerCamera;
-	
-	
-	[SerializeField]
+
+
+    [SerializeField, Group( "General HUD" )]
 	private Carrier flagship;
-	[SerializeField]
+    [SerializeField, Group( "General HUD" )]
 	private AllyIndicator flagshipIndicator;
-	
-	
-	[SerializeField]
+
+
+    [SerializeField, Group( "General HUD" )]
 	private GameObject allyTargetingPrefab;
 	private Dictionary<Netplayer, AllyIndicator> allyIndicatorList = new Dictionary<Netplayer, AllyIndicator>();
 	private Dictionary<Netplayer, Transform> allyTransformList = new Dictionary<Netplayer, Transform>();
-
-	[SerializeField]
-	private GameObject dockingRangeIndicator;
 
 	//On Start
 	private void SetupHUD(){
@@ -160,9 +54,82 @@ public class HUD : Singleton<HUD> {
 			flagshipIndicator.Activate();
 		}
 
+        //Register our listeners
+        EventManager.instance.AddListener( "AllyDocked", AllyDocked );
+        EventManager.instance.AddListener( "AllyLaunched", AllyLaunched );
+
 	}
 
-	private void SuppressHUD(){
+    #region HUD Listeners
+    private bool AllyDocked( IEvent evt ) {
+
+        AllyDocked dockedEvent = (AllyDocked)evt;
+
+        //If this is us
+        if( dockedEvent.pilot == TNManager.player ) {
+
+            if( dockedEvent.carrier == flagship ) {
+
+                //Disable the flagship's display box since we landed on it
+                flagshipIndicator.gameObject.SetActive( false );
+
+            } else {
+
+                // TODO Disable display box for whatever ship we landed on.
+
+            }
+
+            //Turn off the Docking Range indicator
+            dockingRangeIndicator.SetActive( false );
+
+            DisableTerminalHUD();
+
+        } else {
+
+            //Else disable the display box for that ally
+            allyIndicatorList[dockedEvent.pilot].gameObject.SetActive( false );
+
+        }
+
+        // TODO Add this guy's name to the carrier's name list?
+
+        return false;
+
+    }
+
+    private bool AllyLaunched( IEvent evt ) {
+
+        AllyLaunched launchEvent = (AllyLaunched)evt;
+
+        //If this is us
+        if( launchEvent.terminal.pilot == TNManager.player ) {
+
+            if( launchEvent.carrier == flagship ) {
+
+                //Enable the flagship's display box since we just launched from it
+                flagshipIndicator.gameObject.SetActive( true );
+
+            } else {
+
+                //TODO Enable display box for whatever ship we Lauched From
+
+            }
+
+            EnableTerminalHUD( launchEvent.terminal );
+
+        } else {
+
+            //Else enable the display box for that ally
+            allyIndicatorList[launchEvent.terminal.pilot].gameObject.SetActive( true );
+
+        }
+
+        return false;
+
+    }
+    #endregion HUD Listeners
+
+    private void SuppressHUD(){
 
 		if( suppressHUD )
 			HUDPanel.alpha = SuppressedAlpha;
@@ -261,12 +228,132 @@ public class HUD : Singleton<HUD> {
 		indicator.transform.localPosition = viewportPoint;
 		
 	}
-	#endregion
-	
-	#region Launch Menu
-	[SerializeField]
+	#endregion General HUD
+
+    #region Terminal HUD
+
+    private void SetupTerminalHUD() {
+
+        //Register Listeners
+        EventManager.instance.AddListener( "EnteringDockingRange", TerminalEnteringDockingRange );
+        EventManager.instance.AddListener( "LeavingDockingRange", TerminalLeavingDockingRange );
+        EventManager.instance.AddListener( "WeaponSwitch", WeaponSwitched );
+
+        //Setup Position Refrences for Weapon Labels
+        firstWeaponPosition = firstWeaponLabel.transform.position;
+        secondWeaponPosition = secondWeaponLabel.transform.position;
+        thirdWeaponPosition = thirdWeaponLabel.transform.position;
+
+    }
+
+    private Terminal activeTerminal = null;
+
+    [SerializeField, Group( "Terminal HUD" )]
+    private GameObject TerminalHUD;
+
+    [SerializeField, Group( "Terminal HUD" )]
+    private GameObject dockingRangeIndicator;
+
+    [SerializeField, Group( "Terminal HUD" )]
+    private Transform WeaponSelectionLabel;
+
+    [SerializeField, Group( "Terminal HUD" )]
+    private UILabel firstWeaponLabel, secondWeaponLabel, thirdWeaponLabel;
+    [SerializeField, Group( "Terminal HUD" )]
+    private UILabel firstWeaponAmmoCounter, secondWeaponAmmoCounter, thirdWeaponLabelCounter;
+
+    private Vector3 firstWeaponPosition;
+    private Vector3 secondWeaponPosition;
+    private Vector3 thirdWeaponPosition;
+
+    private int currentWeapon = 1;
+
+    #region Terminal Listeners
+    private bool TerminalEnteringDockingRange( IEvent evt ) {
+
+        EnteringDockingRange edr = (EnteringDockingRange)evt;
+
+        //If it's not us, we don't care
+        if( edr.terminal != activeTerminal) return false;
+
+        //TODO Turn on Within Range notification
+        dockingRangeIndicator.SetActive( true );
+
+        return false;
+    }
+
+    private bool TerminalLeavingDockingRange( IEvent evt ) {
+
+        LeavingDockingRange ldr = (LeavingDockingRange)evt;
+
+        //If it's not us, we don't care
+        if( ldr.terminal != activeTerminal ) return false;
+
+        //TODO Turn off Within Range notification
+        dockingRangeIndicator.SetActive( false );
+
+        return false;
+    }
+    
+    private bool WeaponSwitched( IEvent evt ) {
+
+        WeaponSwitch ws = (WeaponSwitch)evt;
+
+        currentWeapon = ws.weaponSelection;
+
+        switch( currentWeapon ) {
+            case 1:
+                WeaponSelectionLabel.position = firstWeaponPosition;
+                break;
+            case 2:
+                WeaponSelectionLabel.position = secondWeaponPosition;
+                break;
+            case 3:
+                WeaponSelectionLabel.position = thirdWeaponPosition;
+                break;
+        }
+
+        return false;
+
+    }
+    #endregion Terminal Listeners
+
+    TerminalWeapon[] weapons;
+
+    private void EnableTerminalHUD( Terminal terminal ) {
+
+        activeTerminal = terminal;
+
+        weapons = activeTerminal.GetWeaponSelection();
+
+        //Set the weapon name labels
+        firstWeaponLabel.text = weapons[0].weaponName;
+        secondWeaponLabel.text = weapons[1].weaponName;
+        thirdWeaponLabel.text = weapons[2].weaponName;
+
+    }
+
+    private void DisableTerminalHUD() {
+
+        TerminalHUD.SetActive( false );
+
+        activeTerminal = null;
+        weapons = null;
+
+        currentWeapon = 1;
+
+        firstWeaponLabel.text = "Weapon 1";
+        secondWeaponLabel.text = "Weapon 2";
+        thirdWeaponLabel.text = "Weapon 3";
+
+    }
+
+    #endregion Terminal HUD
+
+    #region Launch Menu
+    [SerializeField, Group( "Launch Menu" )]
 	private GameObject launchMenuPanel;
-	[SerializeField]
+    [SerializeField, Group( "Launch Menu" )]
 	private UIGrid launchMenuGrid;
-	#endregion
+	#endregion Launch Menu
 }
