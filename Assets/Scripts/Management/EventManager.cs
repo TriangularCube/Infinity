@@ -17,18 +17,6 @@ public class BaseEvent : IEvent {
 #endregion Setup
 
 #region Events
-public class WeaponSwitch : BaseEvent {
-
-    public int weaponSelection { get; private set; }
-
-    public WeaponSwitch( int weaponSelect ) {
-
-        weaponSelection = weaponSelect;
-
-    }
-    
-}
-
 public class EnteringDockingRange : BaseEvent {
 	
 	public Terminal terminal{ get; private set; }

@@ -8,14 +8,18 @@ public class MissionManager : MonoBehaviour {
 	Ship startingShip;
 #pragma warning restore 0649
 
-	// Use this for initialization
+    //DEBUG Initialization
 	void Start () {
 
 		if( startingShip is Carrier )
 			((Carrier)startingShip).AssignDefault( TNManager.player );
         else if( startingShip is Terminal ) {
-			((Terminal)startingShip).OnLaunch( TNManager.player, "" );
-            EventManager.instance.QueueEvent( new AllyLaunched( (Terminal)startingShip, null ) );
+            Terminal startShip;
+            startShip = (Terminal)startingShip;
+
+            startShip.gameObject.SetActive( false );
+			startShip.OnLaunch( TNManager.player, "" );
+            EventManager.instance.QueueEvent( new AllyLaunched( startShip, null ) );
         }
 	}
 
