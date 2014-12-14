@@ -19,13 +19,14 @@ public class InterceptorAutoCannon : TerminalWeapon {
     private bool isOnCooldown = false;
 
     public override void Fire() {
-        if( !isOnCooldown ) {
-            /* GameObject obj = (GameObject) */
+        if( !_overHeated && reserveAmmunition > 0 && !isOnCooldown ) {
+
             Instantiate( AmmoObject, transform.position, transform.rotation );
             //obj.SendMessage( "PassFiringVector", rootRigidbody.velocity, SendMessageOptions.RequireReceiver );
 
             reserveAmmunition--;
 
+            HeatHandling( ref _currentHeat, heatGeneratedPerTick, maxHeatBeforeOverheat, ref _overHeated );
             StartCoroutine( Cooldown() );
         }
     }

@@ -4,7 +4,7 @@ using System.Collections;
 public class InterceptorBombLauncher : TerminalWeapon {
 
     public override int reserve {
-        get { throw new System.NotImplementedException(); }
+        get { return 0; }
     }
 
     //THIS WHOLE CLASS IS ONLY IMPLEMENTED WITH TEMPORARY FUNCTIONALITY
