@@ -17,6 +17,10 @@ public class HUD : Singleton<HUD> {
 
 		DrawIndicators();
 
+        if( activeTerminal ) {
+            UpdateWeaponAmmo();
+        }
+
 	}
 
 	#region General HUD
@@ -263,7 +267,7 @@ public class HUD : Singleton<HUD> {
     [SerializeField, Group( "Terminal HUD" )]
     private UILabel firstWeaponLabel, secondWeaponLabel, thirdWeaponLabel;
     [SerializeField, Group( "Terminal HUD" )]
-    private UILabel firstWeaponAmmoCounter, secondWeaponAmmoCounter, thirdWeaponLabelCounter;
+    private UILabel firstWeaponAmmoCounter, secondWeaponAmmoCounter, thirdWeaponAmmoCounter;
 
     private Vector3 firstWeaponPosition;
     private Vector3 secondWeaponPosition;
@@ -334,6 +338,14 @@ public class HUD : Singleton<HUD> {
         firstWeaponLabel.text = weapons[0].weaponName;
         secondWeaponLabel.text = weapons[1].weaponName;
         thirdWeaponLabel.text = weapons[2].weaponName;
+
+    }
+
+    private void UpdateWeaponAmmo() {
+
+        firstWeaponAmmoCounter.text = weapons[0].reserve.ToString();
+        secondWeaponAmmoCounter.text = weapons[1].reserve.ToString();
+        thirdWeaponAmmoCounter.text = weapons[2].reserve.ToString();
 
     }
 
