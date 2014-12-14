@@ -3,8 +3,10 @@ using System.Collections;
 
 public class MissionManager : MonoBehaviour {
 
+#pragma warning disable 0649
 	[SerializeField]
 	Ship startingShip;
+#pragma warning restore 0649
 
 	// Use this for initialization
 	void Start () {

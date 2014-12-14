@@ -9,8 +9,10 @@ public class InterceptorAutoCannon : TerminalWeapon {
 
     public int reserveAmmunition = 500;
 
+#pragma warning disable 0649
     [SerializeField]
     private GameObject AmmoObject;
+#pragma warning restore 0649
 
     [SerializeField]
     private float coolDown = 0.1f;

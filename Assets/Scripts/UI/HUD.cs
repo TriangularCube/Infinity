@@ -20,7 +20,8 @@ public class HUD : Singleton<HUD> {
 	}
 
 	#region General HUD
-	private bool suppressHUD = false;
+#pragma warning disable 0649
+    private bool suppressHUD = false;
 	[SerializeField, Group( "General HUD" )]
 	private float SuppressedAlpha = 0.2f;
     [SerializeField, Group( "General HUD" )]
@@ -43,7 +44,8 @@ public class HUD : Singleton<HUD> {
 
     [SerializeField, Group( "General HUD" )]
 	private GameObject allyTargetingPrefab;
-	private Dictionary<Netplayer, AllyIndicator> allyIndicatorList = new Dictionary<Netplayer, AllyIndicator>();
+#pragma warning restore 0649
+    private Dictionary<Netplayer, AllyIndicator> allyIndicatorList = new Dictionary<Netplayer, AllyIndicator>();
 	private Dictionary<Netplayer, Transform> allyTransformList = new Dictionary<Netplayer, Transform>();
 
 	//On Start
@@ -248,6 +250,7 @@ public class HUD : Singleton<HUD> {
 
     private Terminal activeTerminal = null;
 
+#pragma warning disable 0649
     [SerializeField, Group( "Terminal HUD" )]
     private GameObject TerminalHUD;
 
@@ -265,6 +268,7 @@ public class HUD : Singleton<HUD> {
     private Vector3 firstWeaponPosition;
     private Vector3 secondWeaponPosition;
     private Vector3 thirdWeaponPosition;
+#pragma warning restore 0649
 
     private int currentWeapon = 1;
 

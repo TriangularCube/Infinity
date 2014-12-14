@@ -25,12 +25,14 @@ public abstract class Carrier : Ship {
 		return false;
 	}
 
-	[SerializeField]
+#pragma warning disable 0649
+    [SerializeField]
 	private Transform dock;
 	[SerializeField]
 	private Transform launchPoint;
-	
-	//Our list of currently docked Terminals
+#pragma warning restore 0649
+
+    //Our list of currently docked Terminals
 	private List<Terminal> dockedTerminals = new List<Terminal>();
 
 
@@ -71,13 +73,15 @@ public abstract class Carrier : Ship {
 
 
 	#region Assignment
-	[SerializeField]
+#pragma warning disable 0649
+    [SerializeField]
 	private ObservationStation observationStation;
 	[SerializeField]
 	private CapitalShipStation navigation;
+#pragma warning restore 0649
 
 
-	//Our list of players currently in our Observation Deck
+    //Our list of players currently in our Observation Deck
 	private TNet.List<Netplayer> playersInObservation = new List<Netplayer>();
 	
 	//Our currnet Navigator

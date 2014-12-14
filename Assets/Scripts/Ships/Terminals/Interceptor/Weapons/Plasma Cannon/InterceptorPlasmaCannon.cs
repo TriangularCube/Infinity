@@ -9,8 +9,10 @@ public class InterceptorPlasmaCannon : TerminalWeapon {
 
     //THIS WHOLE CLASS IS ONLY IMPLEMENTED WITH TEMPORARY FUNCTIONALITY
 
+#pragma warning disable 0649
     [SerializeField]
-    private GameObject Ammo;
+    private GameObject AmmoObject;
+#pragma warning restore 0649
 
     [SerializeField]
     private float coolDown = 0.1f;
@@ -19,7 +21,7 @@ public class InterceptorPlasmaCannon : TerminalWeapon {
     public override void Fire() {
         if( !isOnCooldown ) {
             /* GameObject obj = (GameObject) */
-            Instantiate( Ammo, transform.position, transform.rotation );
+            Instantiate( AmmoObject, transform.position, transform.rotation );
             //obj.SendMessage( "PassFiringVector", rootRigidbody.velocity, SendMessageOptions.RequireReceiver );
             StartCoroutine( Cooldown() );
         }

@@ -4,16 +4,18 @@ using System.Collections;
 [RequireComponent (typeof (UITexture) )]
 public class AllyIndicator : MonoBehaviour {
 
-	[SerializeField]
+#pragma warning disable 0649
+    [SerializeField]
 	private UITexture texture;
 
 	[SerializeField]
 	private Texture box;
 	[SerializeField]
 	private Texture arrow;
+#pragma warning restore 0649
 
-	#region Transform and GameObject Cache
-	private GameObject thisGameObject;
+    #region Transform and GameObject Cache
+    private GameObject thisGameObject;
 	public new GameObject gameObject{
 		get{
 			return thisGameObject;

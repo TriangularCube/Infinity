@@ -3,10 +3,12 @@ using System.Collections;
 
 public class Dock : MonoBehaviour {
 
-	[SerializeField]
+#pragma warning disable 0649
+    [SerializeField]
 	private Carrier carrier;
+#pragma warning restore 0649
 
-	void Awake(){
+    void Awake(){
 		//Debug.Log ("Awake on Dock");
 		
         /*

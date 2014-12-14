@@ -7,8 +7,10 @@ public class Interceptor : Terminal {
 	#region Piloting
 
 	#region Station Control
+#pragma warning disable 0649
     [SerializeField, Group("Boost")]
 	private float boostAcceleration;
+#pragma warning restore 0649
 
 	protected override void ApplyStationControl(){
 
@@ -64,8 +66,10 @@ public class Interceptor : Terminal {
 	#endregion Boost
 
 	#region Fire Control
+#pragma warning disable 0649
     [SerializeField, Group("Weapons")]
 	private TerminalWeapon autoCannon, plasmaGun, bombLauncher;
+#pragma warning restore 0649
 
     protected override void AssignWeapons( string weaponSelection ){
 
