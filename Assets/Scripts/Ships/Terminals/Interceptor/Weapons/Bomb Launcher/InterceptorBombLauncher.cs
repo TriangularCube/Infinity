@@ -33,4 +33,8 @@ public class InterceptorBombLauncher : TerminalWeapon {
         isOnCooldown = false;
     }
 
+    protected override void SendData() {
+        throw new System.NotImplementedException();
+    }
+
 }

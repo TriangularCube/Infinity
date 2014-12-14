@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using TNet;
 
 public class InterceptorAutoCannon : TerminalWeapon {
 
@@ -26,7 +27,7 @@ public class InterceptorAutoCannon : TerminalWeapon {
 
             reserveAmmunition--;
 
-            HeatHandling( ref _currentHeat, heatGeneratedPerTick, maxHeatBeforeOverheat, ref _overHeated );
+            HeatHandling( ref _currentHeat, heatGeneratedPerTick, heatCapacity, ref _overHeated );
             StartCoroutine( Cooldown() );
         }
     }
@@ -35,6 +36,20 @@ public class InterceptorAutoCannon : TerminalWeapon {
         isOnCooldown = true;
         yield return new WaitForSeconds( coolDown );
         isOnCooldown = false;
+    }
+
+    void FixedUpdate() {
+        if( !isOnCooldown ) HeatSink( ref _currentHeat, heatSinkPerTick, ref _overHeated );
+    }
+
+    protected override void SendData() {
+        tno.SendQuickly( 10, terminal.pilot, _currentHeat, _overHeated );
+    }
+
+    [RFC(10)]
+    protected void RecieveData( float heat, bool over ) {
+        _currentHeat = heat;
+        _overHeated = over;
     }
 
 }

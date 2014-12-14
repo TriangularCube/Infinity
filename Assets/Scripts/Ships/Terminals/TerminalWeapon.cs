@@ -1,28 +1,33 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public abstract class TerminalWeapon : PimpedMonoBehaviour {
+public abstract class TerminalWeapon : TNBehaviour {
 
 #pragma warning disable 0649
     //Weapon Name
     [SerializeField]
     private string _weaponName = "Generic Weapon";
     public string weaponName { get { return _weaponName; } }
+
+    [SerializeField]
+    protected Terminal terminal;
 #pragma warning restore 0649
 
     //Ammo Reserves
     public abstract int reserve { get; }
 
     #region Heat Handling
-    //Overheating
     protected float _currentHeat = 0f;
-    public float currentHeat { get { return _currentHeat / maxHeatBeforeOverheat; } } //This returns a percentage
+    /* <summery>
+     * The current heat value as a percentage of max Heat Capacity
+     */ 
+    public float currentHeat { get { return _currentHeat / heatCapacity; } } //This returns a percentage
 
     protected bool _overHeated = false;
     public bool isOverHeated { get { return _overHeated; } }
 
     [SerializeField]
-    protected float maxHeatBeforeOverheat = 100f;
+    protected float heatCapacity = 100f;
     [SerializeField]
     protected float heatGeneratedPerTick = 1f;
     [SerializeField]
@@ -58,5 +63,24 @@ public abstract class TerminalWeapon : PimpedMonoBehaviour {
 
     //The specific implementation of firing the weapon is handled in their own scripts
 	public abstract void Fire();
-	
+
+    #region Sync
+    [SerializeField]
+    private bool shouldSync = false;
+
+    void OnEnable() {
+
+        if( !TNManager.isHosting && shouldSync ) StartCoroutine( Sync() );
+
+    }
+
+    IEnumerator Sync() {
+        while( true ) {
+            SendData();
+            yield return new WaitForSeconds( 1f / SessionManager.instance.maxNetworkUpdatesPerSecond );
+        }
+    }
+
+    protected abstract void SendData();
+    #endregion Sync
 }
