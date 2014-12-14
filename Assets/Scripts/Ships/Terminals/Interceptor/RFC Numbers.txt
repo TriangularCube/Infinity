@@ -1,0 +1,4 @@
+1	Recieve Sync from Host to Everyone Else
+2	Recieve Sync from Player to Host
+
+10	Auto Cannon Sync from Host to Everyone Else
