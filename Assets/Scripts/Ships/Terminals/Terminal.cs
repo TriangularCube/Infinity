@@ -15,13 +15,10 @@ public abstract class Terminal : Ship {
 	}
 	*/
 
-	protected override void Awake ()
-	{
+	protected override void Awake () {
 		base.Awake ();
 
 		SetupDockingAndLaunching();
-
-        gameObject.SetActive( false ); //DEBUG FUNCTION
 
 		/*
 		//Disable ourselves if we're parented to something
@@ -63,22 +60,6 @@ public abstract class Terminal : Ship {
     protected abstract void ApplyStationControl();
 
     protected void ApplyFireControl() {
-        if( nextWeapon ) {
-            if( ++currentWeapon > 3 ) {
-                currentWeapon = 1;
-            }
-        }
-        if( prevWeapon ) {
-            if( --currentWeapon < 1 ) {
-                currentWeapon = 3;
-            }
-        }
-
-        if( nextWeapon || prevWeapon ) {
-
-            StartCoroutine( WeaponSwitchCooldown() );
-
-        }
 
         if( fireWeapon ) {
             switch( currentWeapon ) {
@@ -122,12 +103,12 @@ public abstract class Terminal : Ship {
     #endregion
 
     #region Weapons
-    protected bool weaponSwitchCooldown = false;
+    private bool weaponSwitchCooldown = false;
     [SerializeField]
     //Weapon Switch cooldown time
-    protected float weaponSwitchCooldownTime = 0.3f;
+    private float weaponSwitchCooldownTime = 0.3f;
 
-    protected IEnumerator WeaponSwitchCooldown() {
+    private IEnumerator WeaponSwitchCooldown() {
         weaponSwitchCooldown = true;
         yield return new WaitForSeconds( weaponSwitchCooldownTime );
         weaponSwitchCooldown = false;
@@ -138,14 +119,41 @@ public abstract class Terminal : Ship {
     protected abstract void AssignWeapons( string weaponSelection );
 
     protected int currentWeapon = 1;
-    protected bool nextWeapon, prevWeapon, fireWeapon; //The variables synced from the Host
-    private bool nextWeaponToSync, prevWeaponToSync, fireWeaponToSync; //The variables to sync to the Host
+    protected bool fireWeapon; //The variables synced from the Host
+    private bool fireWeaponToSync; //The variables to sync to the Host
 
     public void UpdateFireControl( bool switchToNextWeapon, bool switchToPrevWeapon, bool fireCurrentWeapon ) {
 
-        nextWeaponToSync = switchToNextWeapon;
-        prevWeaponToSync = switchToPrevWeapon;
+        if( !weaponSwitchCooldown ) {
+            if( switchToNextWeapon ) {
+                tno.Send( "SwitchWeapon", Target.Host, true );
+            }
+
+            if( switchToPrevWeapon ) {
+                tno.Send( "SwitchWeapon", Target.Host, false );
+            }
+
+            if( switchToPrevWeapon || switchToNextWeapon ) {
+                StartCoroutine( WeaponSwitchCooldown() );
+            }
+        }
+        
         fireWeaponToSync = fireCurrentWeapon;
+
+    }
+
+    [RFC]
+    protected void SwitchWeapon( bool direction ) {
+
+        //Debug.Log( ++currentWeapon > 3 );
+
+        if( direction ) {
+            if( ++currentWeapon > 3 ) currentWeapon = 1;
+        } else {
+            if( --currentWeapon < 1 ) currentWeapon = 3;
+        }
+
+        if( !TNManager.isHosting ) StartCoroutine( WeaponSwitchCooldown() );
 
     }
     #endregion Weapons
@@ -212,12 +220,6 @@ public abstract class Terminal : Ship {
 
 	}
     #endregion Listeners
-
-    public TerminalWeapon[] GetWeaponSelection() {
-
-        return new TerminalWeapon[] { weapon1, weapon2, weapon3 };
-
-    }
 	
 	public void AttemptRequestDock(){
 
@@ -253,9 +255,22 @@ public abstract class Terminal : Ship {
 		gameObject.SetActive(false);
 
 	}
-	#endregion
+	#endregion Launching and Docking
 
-	
+    #region HUD Hooks
+    public TerminalWeapon[] weaponSelection {
+        get {
+            return new TerminalWeapon[] { weapon1, weapon2, weapon3 };
+        }
+    }
+
+    public int selectedWeapon {
+        get {
+            return currentWeapon;
+        }
+    }
+    #endregion HUD Hooks
+
 
     #region Sync To Host
     protected override void OnEnable() {
@@ -268,7 +283,6 @@ public abstract class Terminal : Ship {
 
         while( true ) {
             SendDataToHost();
-
             yield return new WaitForSeconds( 1f / SessionManager.instance.maxNetworkUpdatesPerSecond );
         }
 
@@ -276,20 +290,18 @@ public abstract class Terminal : Ship {
 
     private void SendDataToHost() {
 
-        tno.SendQuickly( 2, Target.Host, targetLookDirectionToSync, inputDirectionSync, breakButtonSync, boostSync, nextWeapon, prevWeapon, fireWeapon );
+        tno.SendQuickly( 2, Target.Host, targetLookDirectionToSync, inputDirectionSync, breakButtonSync, boostSync, fireWeaponToSync );
 
     }
 
     [RFC(2)]
-    protected void RecieveSyncOnHost( Quaternion lookDirection, Vector3 input, bool onBreak, bool boost, bool switchNextWeapon, bool switchPrevWeapon, bool fireCurrentWeapon ){
+    protected void RecieveSyncOnHost( Quaternion lookDirection, Vector3 input, bool onBreak, bool boost, bool fireCurrentWeapon ){
 
         targetLookDirection = lookDirection;
         inputDirection = input;
         breakButton = onBreak;
         isBoostActive = boost;
 
-        nextWeapon = switchNextWeapon;
-        prevWeapon = switchPrevWeapon;
         fireWeapon = fireCurrentWeapon;
 
     }
