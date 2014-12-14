@@ -105,13 +105,7 @@ public class Interceptor : Terminal {
 
         // TODO Facing and Flight Input
 
-        if( selectedWeapon != currentWeapon ) {
-
-            currentWeapon = selectedWeapon;
-
-            if( TNManager.player == pilot ) EventManager.instance.QueueEvent( new WeaponSwitch( currentWeapon ) );
-
-        }
+        currentWeapon = selectedWeapon;
 
         // TODO Fire Weapon
         
