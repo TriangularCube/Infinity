@@ -21,6 +21,8 @@ public abstract class Terminal : Ship {
 
 		SetupDockingAndLaunching();
 
+        gameObject.SetActive( false ); //DEBUG FUNCTION
+
 		/*
 		//Disable ourselves if we're parented to something
 		if( transform.parent ){
@@ -29,7 +31,7 @@ public abstract class Terminal : Ship {
 		*/
 	}
 
-    public void AssignPilot( Netplayer player, string weaponSelection ){
+    private void AssignPilot( Netplayer player, string weaponSelection ){
 		pilot = player;
 
 		if (pilot == TNManager.player) {
@@ -45,6 +47,80 @@ public abstract class Terminal : Ship {
 		AssignWeapons( weaponSelection );
 	}
 
+    void FixedUpdate() {
+
+        ApplyAttitudeControl();
+
+        ApplyStationControl();
+
+        ApplyFireControl();
+
+    }
+
+    #region Station, Attitude, and Fire Controls
+    protected abstract void ApplyAttitudeControl();
+
+    protected abstract void ApplyStationControl();
+
+    protected void ApplyFireControl() {
+        if( nextWeapon ) {
+            if( ++currentWeapon > 3 ) {
+                currentWeapon = 1;
+            }
+        }
+        if( prevWeapon ) {
+            if( --currentWeapon < 1 ) {
+                currentWeapon = 3;
+            }
+        }
+
+        if( nextWeapon || prevWeapon ) {
+
+            StartCoroutine( WeaponSwitchCooldown() );
+
+        }
+
+        if( fireWeapon ) {
+            switch( currentWeapon ) {
+                case 1:
+                    weapon1.Fire();
+                    break;
+                case 2:
+                    weapon2.Fire();
+                    break;
+                case 3:
+                    weapon3.Fire();
+                    break;
+            }
+        }
+    }
+
+
+    //Our vector to rotate towards, which happens to also be our free look vector
+    protected Quaternion targetLookDirection = Quaternion.identity;
+    private Quaternion targetLookDirectionToSync = Quaternion.identity;
+    public void UpdateLookVector( Quaternion newQuat ) {
+        targetLookDirectionToSync = newQuat;
+    }
+
+    protected bool isBoostActive = false;
+    private bool boostSync = false;
+    public void UpdateBurst( bool burst ) {
+        boostSync = burst;
+    }
+
+    protected Vector3 inputDirection = Vector3.zero; //A normalized input vector
+    protected bool breakButton = false;
+
+    private Vector3 inputDirectionSync = Vector3.zero;
+    private bool breakButtonSync = false;
+
+    public void UpdateInputAndBreak( Vector3 newInput, bool newBreak ) {
+        inputDirectionSync = newInput;
+        breakButtonSync = newBreak;
+    }
+    #endregion
+
     #region Weapons
     protected bool weaponSwitchCooldown = false;
     [SerializeField]
@@ -57,11 +133,21 @@ public abstract class Terminal : Ship {
         weaponSwitchCooldown = false;
     }
 
-    protected int currentWeapon = 1;
-
     protected TerminalWeapon weapon1, weapon2, weapon3;
 
     protected abstract void AssignWeapons( string weaponSelection );
+
+    protected int currentWeapon = 1;
+    protected bool nextWeapon, prevWeapon, fireWeapon; //The variables synced from the Host
+    private bool nextWeaponToSync, prevWeaponToSync, fireWeaponToSync; //The variables to sync to the Host
+
+    public void UpdateFireControl( bool switchToNextWeapon, bool switchToPrevWeapon, bool fireCurrentWeapon ) {
+
+        nextWeaponToSync = switchToNextWeapon;
+        prevWeaponToSync = switchToPrevWeapon;
+        fireWeaponToSync = fireCurrentWeapon;
+
+    }
     #endregion Weapons
 
     #region Launching and Docking
@@ -80,7 +166,8 @@ public abstract class Terminal : Ship {
 		}
 	}
 
-	//These listeners are only called on Host
+    #region Listeners
+    //These listeners are only called on Host
 	private bool EnteringDockingZone( IEvent evt ){
 
 		EnteringDockingRange edr = (EnteringDockingRange)evt;
@@ -112,10 +199,7 @@ public abstract class Terminal : Ship {
 		transform.parent = null;
 		
 		//Reset our Scale (because for some reason the scale gets messed up when we parent)
-		transform.localScale = Vector3.one;
-
-		//Set ourself to active
-		gameObject.SetActive (true);
+        transform.localScale = Vector3.one;
 
 		//Assign the player to the pilot position
 		AssignPilot( toBeSeated, weaponSelection );
@@ -123,7 +207,11 @@ public abstract class Terminal : Ship {
 		//TODO Add some forwards momentum
 		rigidbody.AddRelativeForce( Vector3.forward * 10, ForceMode.Impulse );
 
+        //Set ourself to active
+        gameObject.SetActive( true );
+
 	}
+    #endregion Listeners
 
     public TerminalWeapon[] GetWeaponSelection() {
 
@@ -167,10 +255,43 @@ public abstract class Terminal : Ship {
 	}
 	#endregion
 
-	#region Station, Attitude, and Fire Controls
-	public abstract void UpdateLookVector( Quaternion newQuat );
-	public abstract void UpdateBurst( bool burst );
-	public abstract void UpdateInputAndBreak( Vector3 input, bool breakButton );
-	public abstract void UpdateFireControl( bool nextWeapon, bool prevWeapon, bool fireWeapon );
-	#endregion
+	
+
+    #region Sync To Host
+    protected override void OnEnable() {
+        base.OnEnable();
+
+        if( TNManager.player == pilot ) StartCoroutine( SyncToHost() );
+    }
+
+    private IEnumerator SyncToHost() {
+
+        while( true ) {
+            SendDataToHost();
+
+            yield return new WaitForSeconds( 1f / SessionManager.instance.maxNetworkUpdatesPerSecond );
+        }
+
+    }
+
+    private void SendDataToHost() {
+
+        tno.SendQuickly( 2, Target.Host, targetLookDirectionToSync, inputDirectionSync, breakButtonSync, boostSync, nextWeapon, prevWeapon, fireWeapon );
+
+    }
+
+    [RFC(2)]
+    protected void RecieveSyncOnHost( Quaternion lookDirection, Vector3 input, bool onBreak, bool boost, bool switchNextWeapon, bool switchPrevWeapon, bool fireCurrentWeapon ){
+
+        targetLookDirection = lookDirection;
+        inputDirection = input;
+        breakButton = onBreak;
+        isBoostActive = boost;
+
+        nextWeapon = switchNextWeapon;
+        prevWeapon = switchPrevWeapon;
+        fireWeapon = fireCurrentWeapon;
+
+    }
+    #endregion Sync To Host
 }
