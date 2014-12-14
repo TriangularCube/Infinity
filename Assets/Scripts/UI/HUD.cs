@@ -18,7 +18,7 @@ public class HUD : Singleton<HUD> {
 		DrawIndicators();
 
         if( activeTerminal ) {
-            UpdateWeaponAmmo();
+            UpdateWeaponStatus();
         }
 
 	}
@@ -121,7 +121,9 @@ public class HUD : Singleton<HUD> {
 
             }
 
-            EnableTerminalHUD( launchEvent.terminal );
+            activeTerminal = launchEvent.terminal;
+
+            EnableTerminalHUD();
 
         } else {
 
@@ -243,7 +245,6 @@ public class HUD : Singleton<HUD> {
         //Register Listeners
         EventManager.instance.AddListener( "EnteringDockingRange", TerminalEnteringDockingRange );
         EventManager.instance.AddListener( "LeavingDockingRange", TerminalLeavingDockingRange );
-        EventManager.instance.AddListener( "WeaponSwitch", WeaponSwitched );
 
         //Setup Position Refrences for Weapon Labels
         firstWeaponPosition = firstWeaponLabel.transform.position;
@@ -268,13 +269,15 @@ public class HUD : Singleton<HUD> {
     private UILabel firstWeaponLabel, secondWeaponLabel, thirdWeaponLabel;
     [SerializeField, Group( "Terminal HUD" )]
     private UILabel firstWeaponAmmoCounter, secondWeaponAmmoCounter, thirdWeaponAmmoCounter;
+    [SerializeField, Group( "Terminal HUD" )]
+    private UITexture firstWeaponHeatDisplay, secondWeaponHeatDisplay, thirdWeaponHeatDisplay;
+    [SerializeField, Group( "Terminal HUD" )]
+    private Color32 notOverheated, overheated;
 
     private Vector3 firstWeaponPosition;
     private Vector3 secondWeaponPosition;
     private Vector3 thirdWeaponPosition;
 #pragma warning restore 0649
-
-    private int currentWeapon = 1;
 
     #region Terminal Listeners
     private bool TerminalEnteringDockingRange( IEvent evt ) {
@@ -282,7 +285,7 @@ public class HUD : Singleton<HUD> {
         EnteringDockingRange edr = (EnteringDockingRange)evt;
 
         //If it's not us, we don't care
-        if( edr.terminal != activeTerminal) return false;
+        if( edr.terminal != activeTerminal ) return false;
 
         //TODO Turn on Within Range notification
         dockingRangeIndicator.SetActive( true );
@@ -302,37 +305,13 @@ public class HUD : Singleton<HUD> {
 
         return false;
     }
-    
-    private bool WeaponSwitched( IEvent evt ) {
-
-        WeaponSwitch ws = (WeaponSwitch)evt;
-
-        currentWeapon = ws.weaponSelection;
-
-        switch( currentWeapon ) {
-            case 1:
-                WeaponSelectionLabel.position = firstWeaponPosition;
-                break;
-            case 2:
-                WeaponSelectionLabel.position = secondWeaponPosition;
-                break;
-            case 3:
-                WeaponSelectionLabel.position = thirdWeaponPosition;
-                break;
-        }
-
-        return false;
-
-    }
     #endregion Terminal Listeners
 
-    TerminalWeapon[] weapons;
+    private TerminalWeapon[] weapons;
 
-    private void EnableTerminalHUD( Terminal terminal ) {
+    private void EnableTerminalHUD() {
 
-        activeTerminal = terminal;
-
-        weapons = activeTerminal.GetWeaponSelection();
+        weapons = activeTerminal.weaponSelection;
 
         //Set the weapon name labels
         firstWeaponLabel.text = weapons[0].weaponName;
@@ -341,11 +320,53 @@ public class HUD : Singleton<HUD> {
 
     }
 
-    private void UpdateWeaponAmmo() {
+    private int selectedWeapon = 1;
+
+    private void UpdateWeaponStatus() {
+
+        if( selectedWeapon != activeTerminal.selectedWeapon ) {
+
+            selectedWeapon = activeTerminal.selectedWeapon;
+
+            switch( selectedWeapon ) {
+                case 1:
+                    WeaponSelectionLabel.position = firstWeaponPosition;
+                    break;
+                case 2:
+                    WeaponSelectionLabel.position = secondWeaponPosition;
+                    break;
+                case 3:
+                    WeaponSelectionLabel.position = thirdWeaponPosition;
+                    break;
+                default:
+                    throw new UnityException( "Weapon Selection is not the three weapons" );
+            }
+
+        }
 
         firstWeaponAmmoCounter.text = weapons[0].reserve.ToString();
         secondWeaponAmmoCounter.text = weapons[1].reserve.ToString();
         thirdWeaponAmmoCounter.text = weapons[2].reserve.ToString();
+
+        if( weapons[0].isOverHeated )
+            firstWeaponHeatDisplay.color = overheated;
+        else
+            firstWeaponHeatDisplay.color = notOverheated;
+        firstWeaponHeatDisplay.fillAmount = weapons[0].currentHeat;
+
+        if( weapons[1].isOverHeated )
+            secondWeaponHeatDisplay.color = overheated;
+        else
+            secondWeaponHeatDisplay.color = notOverheated;
+        secondWeaponHeatDisplay.fillAmount = weapons[1].currentHeat;
+
+        if( weapons[2].isOverHeated )
+            thirdWeaponHeatDisplay.color = overheated;
+        else
+            thirdWeaponHeatDisplay.color = notOverheated;
+        thirdWeaponHeatDisplay.fillAmount = weapons[2].currentHeat;
+
+
 
     }
 
@@ -356,7 +377,7 @@ public class HUD : Singleton<HUD> {
         activeTerminal = null;
         weapons = null;
 
-        currentWeapon = 1;
+        selectedWeapon = 1;
 
         firstWeaponLabel.text = "Weapon 1";
         secondWeaponLabel.text = "Weapon 2";
