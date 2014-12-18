@@ -23,46 +23,7 @@ public class HUD : Singleton<HUD> {
 
 	}
 
-	#region General HUD
-#pragma warning disable 0649
-    private bool suppressHUD = false;
-	[SerializeField, Group( "General HUD" )]
-	private float SuppressedAlpha = 0.2f;
-    [SerializeField, Group( "General HUD" )]
-	private float UnsupressedAlpha = 1f;
 
-    [SerializeField, Group( "General HUD" )]
-	private UIPanel HUDPanel;
-    [SerializeField, Group( "General HUD" )]
-	private float screenPadding = 0.485f;
-
-    [SerializeField, Group( "General HUD" )]
-	private Camera playerCamera;
-
-
-    [SerializeField, Group( "General HUD" )]
-	private Carrier flagship;
-    [SerializeField, Group( "General HUD" )]
-	private AllyIndicator flagshipIndicator;
-
-
-    [SerializeField, Group( "General HUD" )]
-	private GameObject allyTargetingPrefab;
-#pragma warning restore 0649
-    private Dictionary<Netplayer, AllyIndicator> allyIndicatorList = new Dictionary<Netplayer, AllyIndicator>();
-	private Dictionary<Netplayer, Transform> allyTransformList = new Dictionary<Netplayer, Transform>();
-
-	//On Start
-	private void SetupHUD(){
-
-		//TODO Initialize the players' terminal display boxes
-		if( !flagship.ContainsPlayer( TNManager.player ) ){
-			flagshipIndicator.Activate();
-		}
-
-        //Register our listeners
-        EventManager.instance.AddListener( "AllyDocked", AllyDocked );
-        EventManager.instance.AddListener( "AllyLaunched", AllyLaunched );
 
 	}
 
@@ -136,6 +97,49 @@ public class HUD : Singleton<HUD> {
 
     }
     #endregion HUD Listeners
+
+	#region General HUD
+#pragma warning disable 0649
+    private bool suppressHUD = false;
+	[SerializeField, Group( "General HUD" )]
+	private float SuppressedAlpha = 0.2f;
+    [SerializeField, Group( "General HUD" )]
+	private float UnsupressedAlpha = 1f;
+
+    [SerializeField, Group( "General HUD" )]
+	private UIPanel HUDPanel;
+    [SerializeField, Group( "General HUD" )]
+	private float screenPadding = 0.485f;
+
+    [SerializeField, Group( "General HUD" )]
+	private Camera playerCamera;
+
+
+    [SerializeField, Group( "General HUD" )]
+	private Carrier flagship;
+    [SerializeField, Group( "General HUD" )]
+	private AllyIndicator flagshipIndicator;
+
+
+    [SerializeField, Group( "General HUD" )]
+	private GameObject allyTargetingPrefab;
+#pragma warning restore 0649
+    private Dictionary<Netplayer, AllyIndicator> allyIndicatorList = new Dictionary<Netplayer, AllyIndicator>();
+	private Dictionary<Netplayer, Transform> allyTransformList = new Dictionary<Netplayer, Transform>();
+
+	//On Start
+	private void SetupHUD(){
+
+		//TODO Initialize the players' terminal display boxes
+		if( !flagship.ContainsPlayer( TNManager.player ) ){
+			flagshipIndicator.Activate();
+		}
+
+        //Register our listeners
+        EventManager.instance.AddListener( "AllyDocked", AllyDocked );
+        EventManager.instance.AddListener( "AllyLaunched", AllyLaunched );
+
+	}
 
     private void SuppressHUD(){
 
