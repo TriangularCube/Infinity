@@ -17,13 +17,11 @@ public class HUD : Singleton<HUD> {
 
 		DrawIndicators();
 
-        if( activeTerminal ) {
-            UpdateWeaponStatus();
-        }
+        if( activeTerminal )  UpdateTerminalHUD();
 
-	}
+        if( activeCarrier ) UpdateCarrierHUD();
 
-
+        if( launchMenuPanel ) UpdateLaunchMenu();
 
 	}
 
@@ -50,6 +48,7 @@ public class HUD : Singleton<HUD> {
             dockingRangeIndicator.SetActive( false );
 
             DisableTerminalHUD();
+            EnableCarrierHUD( dockedEvent.carrier );
 
         } else {
 
@@ -82,9 +81,7 @@ public class HUD : Singleton<HUD> {
 
             }
 
-            activeTerminal = launchEvent.terminal;
-
-            EnableTerminalHUD();
+            EnableTerminalHUD( launchEvent.terminal );
 
         } else {
 
@@ -243,7 +240,6 @@ public class HUD : Singleton<HUD> {
 	#endregion General HUD
 
     #region Terminal HUD
-
     private void SetupTerminalHUD() {
 
         //Register Listeners
@@ -283,6 +279,10 @@ public class HUD : Singleton<HUD> {
     private Vector3 thirdWeaponPosition;
 #pragma warning restore 0649
 
+    private void UpdateTerminalHUD() {
+        UpdateTerminalWeaponStatus();
+    }
+
     #region Terminal Listeners
     private bool TerminalEnteringDockingRange( IEvent evt ) {
 
@@ -311,22 +311,11 @@ public class HUD : Singleton<HUD> {
     }
     #endregion Terminal Listeners
 
+    #region Terminal Weapons
     private TerminalWeapon[] weapons;
-
-    private void EnableTerminalHUD() {
-
-        weapons = activeTerminal.weaponSelection;
-
-        //Set the weapon name labels
-        firstWeaponLabel.text = weapons[0].weaponName;
-        secondWeaponLabel.text = weapons[1].weaponName;
-        thirdWeaponLabel.text = weapons[2].weaponName;
-
-    }
-
     private int selectedWeapon = 1;
 
-    private void UpdateWeaponStatus() {
+    private void UpdateTerminalWeaponStatus() {
 
         if( selectedWeapon != activeTerminal.selectedWeapon ) {
 
@@ -373,7 +362,20 @@ public class HUD : Singleton<HUD> {
 
 
     }
+    #endregion Terminal Weapons
 
+    private void EnableTerminalHUD( Terminal term ) {
+
+        activeTerminal = term;
+
+        weapons = activeTerminal.weaponSelection;
+
+        //Set the weapon name labels
+        firstWeaponLabel.text = weapons[0].weaponName;
+        secondWeaponLabel.text = weapons[1].weaponName;
+        thirdWeaponLabel.text = weapons[2].weaponName;
+
+    }
     private void DisableTerminalHUD() {
 
         TerminalHUD.SetActive( false );
@@ -388,13 +390,43 @@ public class HUD : Singleton<HUD> {
         thirdWeaponLabel.text = "Weapon 3";
 
     }
-
     #endregion Terminal HUD
 
+    #region Carrier HUD
+    private Carrier activeCarrier = null;
+
+    private void UpdateCarrierHUD() {
+        //TODO
+    }
+
+    private void EnableCarrierHUD( Carrier car ) {
+
+        activeCarrier = car;
+
+    }
+    private void DisableCarrierHUD() {
+
+        activeCarrier = null;
+
+    }
+    #endregion Carrier HUD
+
     #region Launch Menu
+#pragma warning disable 0649
     [SerializeField, Group( "Launch Menu" )]
 	private GameObject launchMenuPanel;
     [SerializeField, Group( "Launch Menu" )]
-	private UIGrid launchMenuGrid;
-	#endregion Launch Menu
+	private UITable launchMenuTable;
+    [SerializeField, Group( "Launch Menu" )]
+    private UIButton RequestButton, LaunchButton;
+    [SerializeField, Group( "Launch Menu" )]
+    private GameObject InterceptorList, BomberList, MobileFrameList, DroneList, DroneProgress;
+    [SerializeField, Group( "Launch Menu" )]
+    private UITexture DroneProgressBackground, DroneProgressBar;
+#pragma warning restore 0649
+
+    void UpdateLaunchMenu() {
+        //TODO
+    }
+    #endregion Launch Menu
 }
