@@ -20,6 +20,7 @@ public class MissionManager : MonoBehaviour {
             startShip.gameObject.SetActive( false );
 			startShip.OnLaunch( TNManager.player, "" );
             EventManager.instance.QueueEvent( new AllyLaunched( startShip, null ) );
+            Screen.lockCursor = true;
         }
 	}
 

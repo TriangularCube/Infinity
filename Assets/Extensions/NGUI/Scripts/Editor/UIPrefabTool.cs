@@ -412,7 +412,7 @@ public class UIPrefabTool : EditorWindow
 		else if (!UnityEditorInternal.InternalEditorUtility.HasPro())
 		{
 			// Render textures only work in Unity Pro
-			string path = "Assets/NGUI/Editor/Preview/" + item.prefab.name + ".png";
+			string path = "Assets/Extensions/NGUI/Editor/Preview/" + item.prefab.name + ".png";
 			item.tex = File.Exists(path) ? (Texture2D)Resources.LoadAssetAtPath(path, typeof(Texture2D)) : null;
 			item.dynamicTex = false;
 			return;
