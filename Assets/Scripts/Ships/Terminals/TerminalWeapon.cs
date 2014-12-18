@@ -3,6 +3,13 @@ using System.Collections;
 
 public abstract class TerminalWeapon : TNBehaviour {
 
+    public override TNObject tno {
+        get {
+            if( mTNO == null ) mTNO = transform.root.gameObject.GetComponent<TNObject>();
+            return mTNO;
+        }
+    }
+
 #pragma warning disable 0649
     //Weapon Name
     [SerializeField]
@@ -35,17 +42,16 @@ public abstract class TerminalWeapon : TNBehaviour {
 
     protected static void HeatSink( ref float currentHeat, float heatSink, ref bool overHeat ) {
 
+        if( currentHeat == 0f ) {
+            return;
+        }
+
         currentHeat -= heatSink;
 
         if( currentHeat <= 0f ){
 
             currentHeat = 0f;
-
-            if( overHeat ) {
-
-                overHeat = false;
-
-            }
+            overHeat = false;
 
         }
 
@@ -68,7 +74,9 @@ public abstract class TerminalWeapon : TNBehaviour {
     [SerializeField]
     private bool shouldSync = false;
 
-    void OnEnable() {
+    protected override void OnEnable() {
+
+        base.OnEnable();
 
         if( !TNManager.isHosting && shouldSync ) StartCoroutine( Sync() );
 
