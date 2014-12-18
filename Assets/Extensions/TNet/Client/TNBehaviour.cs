@@ -13,9 +13,9 @@ using TNet;
 [RequireComponent(typeof(TNObject))]
 public abstract class TNBehaviour : PimpedMonoBehaviour
 {
-	TNObject mTNO;
+	protected TNObject mTNO;
 
-	public TNObject tno
+	public virtual TNObject tno
 	{
 		get
 		{
