@@ -20,6 +20,8 @@ public abstract class Terminal : Ship {
 
 		SetupDockingAndLaunching();
 
+        isUnderRepair = false; //HACK, TODO
+
 		/*
 		//Disable ourselves if we're parented to something
 		if( transform.parent ){
@@ -269,6 +271,8 @@ public abstract class Terminal : Ship {
             return currentWeapon;
         }
     }
+
+    public bool isUnderRepair{ get; private set; }
     #endregion HUD Hooks
 
 
