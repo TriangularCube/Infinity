@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 4897a65c3a7632a4bbae550c5710be40
+guid: b6e144b388b7f8b4ab2a6ad1a3518504
 labels:
 - code
+- script
 - intellisense
 - hint
-- script
 MonoAssemblyImporter:
   serializedVersion: 1
   iconMap: {}
