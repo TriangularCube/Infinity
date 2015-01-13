@@ -413,20 +413,42 @@ public class HUD : Singleton<HUD> {
 
     #region Launch Menu
 #pragma warning disable 0649
+    //The Launch Menu panel we can enable/disable
     [SerializeField, Group( "Launch Menu" )]
 	private GameObject launchMenuPanel;
+
+    //The Table for the lists of terminals. Need to reposition once in a while
     [SerializeField, Group( "Launch Menu" )]
 	private UITable launchMenuTable;
+
+    //The two buttons...although I'm not sure we really need a reference to them
     [SerializeField, Group( "Launch Menu" )]
     private UIButton RequestButton, LaunchButton;
+
+    //The lists of terminals, as well as the Drone build display
     [SerializeField, Group( "Launch Menu" )]
     private GameObject InterceptorList, BomberList, MobileFrameList, DroneList, DroneProgress;
+
+    //The Drone progress bar
     [SerializeField, Group( "Launch Menu" )]
-    private UITexture DroneProgressBackground, DroneProgressBar;
+    private UITexture DroneProgressBar;
 #pragma warning restore 0649
+
+    private ShipSelectButton selectedTerminal;
 
     void UpdateLaunchMenu() {
         //TODO
+    }
+
+    public void SelectTerminal( ShipSelectButton term ) {
+
+        if( selectedTerminal ) {
+            selectedTerminal.Select( false );
+        }
+
+        selectedTerminal = term;
+        selectedTerminal.Select( true );
+
     }
     #endregion Launch Menu
 }
