@@ -443,11 +443,22 @@ public class HUD : Singleton<HUD> {
     public void SelectTerminal( ShipSelectButton term ) {
 
         if( selectedTerminal ) {
+            bool quit = selectedTerminal == term;
             selectedTerminal.Select( false );
+            if ( quit ){
+                selectedTerminal = null;
+                return;
+            }
         }
 
         selectedTerminal = term;
         selectedTerminal.Select( true );
+
+    }
+
+    public void RequestTerminal() {
+        if( !selectedTerminal ) return;
+
 
     }
     #endregion Launch Menu
