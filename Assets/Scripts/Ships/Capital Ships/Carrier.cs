@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-//using System.Collections.Generic;
+using System.Collections.Generic;
 using TNet;
 
 using Netplayer = TNet.Player;
@@ -33,7 +33,19 @@ public abstract class Carrier : Ship {
 #pragma warning restore 0649
 
     //Our list of currently docked Terminals
-	private List<Terminal> dockedTerminals = new List<Terminal>();
+	private TNet.List<Terminal> dockedTerminals = new TNet.List<Terminal>();
+    //List of requests for terminals
+    private Dictionary<Terminal, Netplayer> terminalRequests = new Dictionary<Terminal, Netplayer>();
+
+    private void AddTerminal( Terminal toAdd ) {
+        dockedTerminals.Add( toAdd );
+        terminalRequests.Add( toAdd, null );
+    }
+
+    private void RemoveTerminal( Terminal toRemove ) {
+        dockedTerminals.Remove( toRemove );
+        terminalRequests.Remove( toRemove );
+    }
 
 
 	#region Docking Terminal
@@ -60,7 +72,8 @@ public abstract class Carrier : Ship {
 		terminal.transform.parent = dock;
 		terminal.transform.position = launchPoint.position;
 		terminal.transform.rotation = launchPoint.rotation;
-		dockedTerminals.Add (terminal);
+
+        AddTerminal( terminal );
 
 		//Fire off an event telling relevant parties something's docked
 		EventManager.instance.QueueEvent( new AllyDocked( pilot, this ) );
@@ -82,7 +95,7 @@ public abstract class Carrier : Ship {
 
 
     //Our list of players currently in our Observation Deck
-	private TNet.List<Netplayer> playersInObservation = new List<Netplayer>();
+	private TNet.List<Netplayer> playersInObservation = new TNet.List<Netplayer>();
 	
 	//Our currnet Navigator
 	private Netplayer navigator;
@@ -165,6 +178,13 @@ public abstract class Carrier : Ship {
 		
 		//Find the Terminal
 		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
+
+        if( terminalRequests[ terminal ] != player ) {
+
+            //The player who is currently requesting to launch the terminal is not the person who reserved it
+            return;
+
+        }
 		
 		//If the terminal is no longer docked (as in, someone else requested it first), just do nothing
 		if ( terminal && !dockedTerminals.Contains( terminal ) ){
@@ -192,7 +212,7 @@ public abstract class Carrier : Ship {
 		RemovePilot (player);
 		
 		//Remove the Terminal
-		dockedTerminals.Remove (terminal);
+        RemoveTerminal( terminal );
 		
 		terminal.OnLaunch( player, "" );//HACK, TODO
 
