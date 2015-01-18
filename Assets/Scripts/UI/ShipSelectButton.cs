@@ -12,7 +12,7 @@ public class ShipSelectButton : PimpedMonoBehaviour {
     private UITexture underRepair;
 #pragma warning restore 0649
 
-    private Terminal terminal;
+    public Terminal terminal;
 
     void OnClick() {
         HUD.instance.SelectTerminal( this );
