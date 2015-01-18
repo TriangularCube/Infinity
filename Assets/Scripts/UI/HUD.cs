@@ -459,7 +459,7 @@ public class HUD : Singleton<HUD> {
     public void RequestTerminal() {
         if( !selectedTerminal ) return;
 
-
+        activeCarrier.RequestReserveTerminal( selectedTerminal.terminal );
     }
     #endregion Launch Menu
 }
