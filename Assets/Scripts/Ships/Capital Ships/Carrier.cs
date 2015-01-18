@@ -35,16 +35,16 @@ public abstract class Carrier : Ship {
     //Our list of currently docked Terminals
 	private TNet.List<Terminal> dockedTerminals = new TNet.List<Terminal>();
     //List of requests for terminals
-    private Dictionary<Terminal, Netplayer> terminalRequests = new Dictionary<Terminal, Netplayer>();
+    private Dictionary<Terminal, Netplayer> terminalReserve = new Dictionary<Terminal, Netplayer>();
 
     private void AddTerminal( Terminal toAdd ) {
         dockedTerminals.Add( toAdd );
-        terminalRequests.Add( toAdd, null );
+        terminalReserve.Add( toAdd, null );
     }
 
     private void RemoveTerminal( Terminal toRemove ) {
         dockedTerminals.Remove( toRemove );
-        terminalRequests.Remove( toRemove );
+        terminalReserve.Remove( toRemove );
     }
 
 
@@ -84,6 +84,91 @@ public abstract class Carrier : Ship {
 	}
 	#endregion
 
+	#region Launching Terminal
+    public void RequestReserveTerminal( Terminal toReserve ) {
+        if( !TNManager.isHosting ) {
+            tno.Send( "AttemptReserveTerminal", Target.Host, toReserve.tno.uid );
+        }
+    }
+
+    [RFC]
+    protected void AttemptReserveTerminal( uint terminalID, Netplayer player ) {
+        Terminal terminal = TNObject.Find( terminalID ).gameObject.GetComponent<Terminal>();
+
+        if( terminalReserve[ terminal ] != null ) {
+            //Already reserved by someone else
+            return;
+        }
+
+        tno.Send( "ReserveTerminal", Target.All, terminalID, player );
+    }
+
+    [RFC]
+    protected void ReserveTerminal( uint terminalID, Netplayer player ) {
+        terminalReserve[ TNObject.Find( terminalID ).gameObject.GetComponent<Terminal>() ] = player;
+
+    }
+
+    //Launch Event Listener
+	public bool RequestLaunch( IEvent evt ){
+		
+		RequestLaunch req = (RequestLaunch)evt;
+		
+		if ( req.carrier != this ) return false;
+		
+		tno.Send ("AttemptToLaunchTerminal", Target.Host, req.terminal.tno.uid, TNManager.player);
+		
+		return true;
+		
+	}
+	
+	[RFC]
+	protected virtual void AttemptToLaunchTerminal( uint terminalID, Netplayer player ){
+		
+		//Find the Terminal
+		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
+
+        if( terminalReserve[ terminal ] != player ) {
+
+            //The player who is currently requesting to launch the terminal is not the person who reserved it
+            return;
+
+        }
+		
+		//If the terminal is no longer docked (as in, someone else requested it first), just do nothing
+		if ( terminal && !dockedTerminals.Contains( terminal ) ){
+			
+			//TODO Send some sort of message back to the player requesting informing him the terminal is no longer here
+			return;
+			
+		}
+		
+		tno.Send ("LaunchTerminal", Target.All, terminalID, player);
+	}
+	
+	[RFC]
+	protected virtual void LaunchTerminal( uint terminalID, Netplayer player ){
+		
+		//Find the Terminal...again
+		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
+		
+		//If this is us
+		if (player == TNManager.player) {
+			//Reset all controls
+			ResetControls();
+		}
+		
+		RemovePilot (player);
+		
+		//Remove the Terminal
+        RemoveTerminal( terminal );
+		
+		terminal.OnLaunch( player, "" );//HACK, TODO
+
+        EventManager.instance.QueueEvent( new AllyLaunched( terminal, this ) );
+		
+	}
+	#endregion
 
 	#region Assignment
 #pragma warning disable 0649
@@ -159,68 +244,6 @@ public abstract class Carrier : Ship {
 		
 	}
 	#endregion
-
-	#region Launching Terminal
-	public bool RequestLaunch( IEvent evt ){
-		
-		RequestLaunch req = (RequestLaunch)evt;
-		
-		if ( req.carrier != this ) return false;
-		
-		tno.Send ("AttemptToLaunchTerminal", Target.Host, req.terminal.tno.uid, TNManager.player);
-		
-		return true;
-		
-	}
-	
-	[RFC]
-	protected virtual void AttemptToLaunchTerminal( uint terminalID, Netplayer player ){
-		
-		//Find the Terminal
-		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
-
-        if( terminalRequests[ terminal ] != player ) {
-
-            //The player who is currently requesting to launch the terminal is not the person who reserved it
-            return;
-
-        }
-		
-		//If the terminal is no longer docked (as in, someone else requested it first), just do nothing
-		if ( terminal && !dockedTerminals.Contains( terminal ) ){
-			
-			//TODO Send some sort of message back to the player requesting informing him the terminal is no longer here
-			return;
-			
-		}
-		
-		tno.Send ("LaunchTerminal", Target.All, terminalID, player);
-	}
-	
-	[RFC]
-	protected virtual void LaunchTerminal( uint terminalID, Netplayer player ){
-		
-		//Find the Terminal...again
-		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
-		
-		//If this is us
-		if (player == TNManager.player) {
-			//Reset all controls
-			ResetControls();
-		}
-		
-		RemovePilot (player);
-		
-		//Remove the Terminal
-        RemoveTerminal( terminal );
-		
-		terminal.OnLaunch( player, "" );//HACK, TODO
-
-        EventManager.instance.QueueEvent( new AllyLaunched( terminal, this ) );
-		
-	}
-	#endregion
-
 
 	protected virtual void ResetControls(){
 		observationStation.CleanUp();
