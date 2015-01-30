@@ -17,10 +17,14 @@ public class HUD : Singleton<HUD> {
 
 		DrawIndicators();
 
-        if( activeTerminal )  UpdateTerminalHUD();
+        if( activeTerminal ) UpdateTerminalHUD();
+        else if( activeCarrier ) UpdateCarrierHUD();
+        else throw new UnityException( "Neither Active Terminal nor Carrier is defined in HUD" );
 
-        if( activeCarrier ) UpdateCarrierHUD();
-
+        if( Input.GetButtonDown( "Launch Panel" ) && activeCarrier ) {
+            launchMenuPanel.SetActive( !launchMenuPanel.activeSelf );
+            Screen.lockCursor = !launchMenuPanel.activeSelf;
+        }
         if( launchMenuPanel ) UpdateLaunchMenu();
 
 	}
@@ -50,14 +54,17 @@ public class HUD : Singleton<HUD> {
             DisableTerminalHUD();
             EnableCarrierHUD( dockedEvent.carrier );
 
+            //TODO Populate the Ship Lists
+            PopulateShipList = true;
+
         } else {
 
             //Else disable the display box for that ally
             allyIndicatorList[dockedEvent.pilot].gameObject.SetActive( false );
 
-        }
+            //TODO Add newly docked terminal into list
 
-        // TODO Add this guy's name to the carrier's name list?
+        }
 
         return false;
 
@@ -81,12 +88,18 @@ public class HUD : Singleton<HUD> {
 
             }
 
+            launchMenuPanel.SetActive( false );
+            DisableCarrierHUD();
             EnableTerminalHUD( launchEvent.terminal );
+
+            //TODO Wipe the ship lists
 
         } else {
 
             //Else enable the display box for that ally
             allyIndicatorList[launchEvent.terminal.pilot].gameObject.SetActive( true );
+
+            //TODO Remove the launched terminal from lists
 
         }
 
@@ -402,6 +415,7 @@ public class HUD : Singleton<HUD> {
     private void EnableCarrierHUD( Carrier car ) {
 
         activeCarrier = car;
+        Debug.Log( activeCarrier.name );
 
     }
     private void DisableCarrierHUD() {
@@ -432,12 +446,37 @@ public class HUD : Singleton<HUD> {
     //The Drone progress bar
     [SerializeField, Group( "Launch Menu" )]
     private UITexture DroneProgressBar;
+
+    [SerializeField, Group( "Launch Menu" )]
+    private GameObject ShipSelectPrefab;
 #pragma warning restore 0649
 
     private ShipSelectButton selectedTerminal;
+    private bool PopulateShipList = false;
 
     void UpdateLaunchMenu() {
-        //TODO
+        if( PopulateShipList ) {
+            foreach( Terminal term in activeCarrier.getDockedTerminals() ) {
+                if( term is Interceptor ) {
+                    InsertSelection( InterceptorList, term );
+                }
+                //Else if Bomber, and FRAME, and Drones
+                Debug.Log( "Populated Once" );
+            }
+
+            PopulateShipList = false;
+            launchMenuTable.repositionNow = true;
+        }
+        //TODO update all terminals
+    }
+
+    void InsertSelection( GameObject list, Terminal term ) {
+        GameObject obj = (GameObject)Instantiate( ShipSelectPrefab );
+        obj.GetComponentInChildren<ShipSelectButton>().terminal = term;
+
+        obj.transform.parent = list.transform;
+        obj.transform.localScale = Vector3.one;
+        obj.transform.localPosition = Vector3.zero;
     }
 
     public void SelectTerminal( ShipSelectButton term ) {

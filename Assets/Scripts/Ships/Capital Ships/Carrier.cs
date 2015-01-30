@@ -34,6 +34,7 @@ public abstract class Carrier : Ship {
 
     //Our list of currently docked Terminals
 	private TNet.List<Terminal> dockedTerminals = new TNet.List<Terminal>();
+    public TNet.List<Terminal> getDockedTerminals() { return dockedTerminals; }
     //List of requests for terminals
     private Dictionary<Terminal, Netplayer> terminalReserve = new Dictionary<Terminal, Netplayer>();
 
