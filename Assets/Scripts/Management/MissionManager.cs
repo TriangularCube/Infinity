@@ -11,9 +11,13 @@ public class MissionManager : MonoBehaviour {
     //DEBUG Initialization
 	void Start () {
 
-		if( startingShip is Carrier )
-			((Carrier)startingShip).AssignDefault( TNManager.player );
-        else if( startingShip is Terminal ) {
+		if( startingShip is Carrier ){
+            Carrier startShip = (Carrier)startingShip;
+            
+            startShip.AssignDefault( TNManager.player );
+            EventManager.instance.QueueEvent( new AllyDocked( TNManager.player, startShip ) );
+
+        } else if( startingShip is Terminal ) {
             Terminal startShip = (Terminal)startingShip;
 
             startShip.gameObject.SetActive( false ); //Not turning the object will cause OnEnable to fire before we've assigned a pilot, thereby not turning on the Sync coroutine. This ends up not updating any variables.
