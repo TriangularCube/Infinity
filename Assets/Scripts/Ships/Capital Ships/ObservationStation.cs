@@ -7,7 +7,7 @@ public class ObservationStation : CapitalShipStation {
 
 	void Update(){
 
-		if ( Screen.lockCursor ) {
+		if ( Cursor.lockState == CursorLockMode.Locked ) {
 			//This is observation, so we're just going to let the player move the camera around
 			
 			//Camera Changes

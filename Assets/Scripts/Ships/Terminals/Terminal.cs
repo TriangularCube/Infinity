@@ -39,7 +39,7 @@ public abstract class Terminal : Ship {
 			//Activate the controls
 			control.Assign();
 			
-			Screen.lockCursor = true;
+			Cursor.lockState = CursorLockMode.Locked;
 		}
 
 		//TODO, DEBUG
@@ -215,7 +215,7 @@ public abstract class Terminal : Ship {
 		AssignPilot( toBeSeated, weaponSelection );
 
 		//TODO Add some forwards momentum
-		rigidbody.AddRelativeForce( Vector3.forward * 10, ForceMode.Impulse );
+		GetComponent<Rigidbody>().AddRelativeForce( Vector3.forward * 10, ForceMode.Impulse );
 
         //Set ourself to active
         gameObject.SetActive( true );
@@ -251,10 +251,13 @@ public abstract class Terminal : Ship {
 		pilot = null;
 
 		//Zero the velocity
-		rigidbody.velocity = Vector3.zero;
+		GetComponent<Rigidbody>().velocity = Vector3.zero;
 
 		//Disable the Terminal
 		gameObject.SetActive(false);
+
+        //Enable the dock button
+        button.gameObject.SetActive( true );
 
 	}
 	#endregion Launching and Docking

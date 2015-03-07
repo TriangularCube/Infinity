@@ -31,7 +31,11 @@ public class MissionManager : MonoBehaviour {
 
 		//DEBUG
 		if( Input.GetKeyDown( KeyCode.LeftControl ) ){
-			Screen.lockCursor = !Screen.lockCursor;
+            if( Cursor.lockState == CursorLockMode.Locked ) {
+                Cursor.lockState = CursorLockMode.None;
+            } else {
+                Cursor.lockState = CursorLockMode.Locked;
+            }
 		}
 
 	}

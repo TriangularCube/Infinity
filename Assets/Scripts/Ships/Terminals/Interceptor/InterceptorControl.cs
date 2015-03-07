@@ -5,7 +5,7 @@ public class InterceptorControl : TerminalControl {
 
 	void Update(){
 
-		if (Screen.lockCursor) {
+		if ( Cursor.lockState == CursorLockMode.Locked ) {
 
 			#region Rotation
 			//Get input to update lookVector
