@@ -1,6 +1,6 @@
 //------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright ï¿½ 2012-2014 Tasharen Entertainment
 //------------------------------------------
 
 using UnityEngine;
@@ -20,7 +20,7 @@ public class ColoredObject : MonoBehaviour
 
 	[RFC] void OnColor (Color c)
 	{
-		renderer.material.color = c;
+		GetComponent<Renderer>().material.color = c;
 	}
 
 	/// <summary>
@@ -31,8 +31,8 @@ public class ColoredObject : MonoBehaviour
 	{
 		Color color = Color.red;
 
-		if		(renderer.material.color == Color.red)	 color = Color.green;
-		else if (renderer.material.color == Color.green) color = Color.blue;
+		if		(GetComponent<Renderer>().material.color == Color.red)	 color = Color.green;
+		else if (GetComponent<Renderer>().material.color == Color.green) color = Color.blue;
 
 		TNObject tno = GetComponent<TNObject>();
 		tno.Send("OnColor", Target.AllSaved, color);

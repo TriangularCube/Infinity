@@ -1,6 +1,6 @@
 //----------------------------------------------
 //            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
+// Copyright © 2011-2015 Tasharen Entertainment
 //----------------------------------------------
 
 using UnityEditor;
@@ -242,7 +242,7 @@ public class UIPrefabTool : EditorWindow
 	/// Key used to save and load the data.
 	/// </summary>
 
-	string saveKey { get { return "NGUI " + Application.dataPath + " " + mTab; } }
+	string saveKey { get { return "NGUI " + Application.dataPath + "/Extensions " + mTab; } }
 
 	/// <summary>
 	/// Save all the items to Editor Prefs.
