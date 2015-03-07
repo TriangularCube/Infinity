@@ -26,6 +26,11 @@ public class ShipSelectButton : PimpedMonoBehaviour {
         }
     }
 
+    public void Disable() {
+        sprite.color = deselectedColor;
+        gameObject.GetComponent<Collider>().enabled = false;
+    }
+
     void Update() {
 
         //Update the display of this button based on the Terminal we're representing

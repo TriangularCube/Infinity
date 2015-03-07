@@ -22,10 +22,13 @@ public abstract class Terminal : Ship {
 
         isUnderRepair = false; //HACK, TODO
 
+        button = HUD.instance.RequestNewShipButton( this );
+
 		/*
 		//Disable ourselves if we're parented to something
 		if( transform.parent ){
 			gameObject.SetActive( false );
+            //Should probably do this in Carrier, and null the current owner
 		}
 		*/
 	}
@@ -276,6 +279,8 @@ public abstract class Terminal : Ship {
     }
 
     public bool isUnderRepair{ get; private set; }
+
+    private ShipSelectButton button;
     #endregion HUD Hooks
 
 

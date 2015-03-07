@@ -55,7 +55,7 @@ public class HUD : Singleton<HUD> {
             EnableCarrierHUD( dockedEvent.carrier );
 
             //TODO Populate the Ship Lists
-            PopulateShipList = true;
+            UpdateList = true;
 
         } else {
 
@@ -452,32 +452,68 @@ public class HUD : Singleton<HUD> {
 #pragma warning restore 0649
 
     private ShipSelectButton selectedTerminal;
-    private bool PopulateShipList = false;
+    private bool UpdateList = false;
 
-    void UpdateLaunchMenu() {
-        if( PopulateShipList ) {
+    public ShipSelectButton RequestNewShipButton( Terminal term ) {
+        
+        //Instantiate the button
+        GameObject button = Instantiate<GameObject>( ShipSelectPrefab );
+        GameObject list = null;
+
+        //Add the button to the correct Grid
+        if( term is Interceptor ) {
+            list = InterceptorList;
+        } //Else add other ship types
+
+        button.transform.parent = list.transform;
+        button.transform.localScale = Vector3.one;
+        button.transform.localPosition = Vector3.zero;
+        list.GetComponent<UIGrid>().repositionNow = true;
+
+        ShipSelectButton shipButton = button.GetComponent<ShipSelectButton>();
+        shipButton.terminal = term;
+
+        return shipButton;
+
+    }
+
+    private void ReorganizeLists() {
+        InterceptorList.GetComponent<UIGrid>().Reposition();
+        BomberList.GetComponent<UIGrid>().Reposition();
+        //Other lists as necessary
+    }
+
+    /*
+    private void PopulateList() {
+            Dictionary<Terminal, Netplayer> reserveList = activeCarrier.getReserveList();
+
             foreach( Terminal term in activeCarrier.getDockedTerminals() ) {
                 if( term is Interceptor ) {
-                    InsertSelection( InterceptorList, term );
+                    InsertSelection( InterceptorList, term, reserveList[term] != null );
                 }
                 //Else if Bomber, and FRAME, and Drones
+
                 Debug.Log( "Populated Once" );
             }
 
             PopulateShipList = false;
             launchMenuTable.repositionNow = true;
-        }
         //TODO update all terminals
     }
 
-    void InsertSelection( GameObject list, Terminal term ) {
+
+    private void InsertSelection( GameObject list, Terminal term, bool reserved ) {
         GameObject obj = (GameObject)Instantiate( ShipSelectPrefab );
         obj.GetComponentInChildren<ShipSelectButton>().terminal = term;
 
         obj.transform.parent = list.transform;
         obj.transform.localScale = Vector3.one;
         obj.transform.localPosition = Vector3.zero;
+
+        if( reserved ) obj.GetComponentInChildren<ShipSelectButton>().Disable();
     }
+     * 
+     * */
 
     public void SelectTerminal( ShipSelectButton term ) {
 

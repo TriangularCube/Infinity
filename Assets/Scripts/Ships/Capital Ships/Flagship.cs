@@ -5,7 +5,7 @@ using TNet;
 
 using Netplayer = TNet.Player;
 
-public abstract class Carrier : Ship {
+public abstract class Flagship : Ship {
 
 	protected override void Awake(){
 		base.Awake ();
@@ -13,6 +13,8 @@ public abstract class Carrier : Ship {
 		//Iterate through each of the children of the "Dock", and add it to the list of "Docked Ships"
 		foreach ( Transform child in transform.FindChild( "Dock" ) ) {
 			dockedTerminals.Add( child.gameObject.GetComponent<Terminal>() );
+            terminalReserve[child.gameObject.GetComponent<Terminal>()] = TNManager.player;
+            child.gameObject.SetActive( false );
 		}
 		//TODO Sort the Terminals we just added
 
@@ -37,6 +39,7 @@ public abstract class Carrier : Ship {
     public TNet.List<Terminal> getDockedTerminals() { return dockedTerminals; }
     //List of requests for terminals
     private Dictionary<Terminal, Netplayer> terminalReserve = new Dictionary<Terminal, Netplayer>();
+    public Dictionary<Terminal, Netplayer> getReserveList() { return terminalReserve; }
 
     private void AddTerminal( Terminal toAdd ) {
         dockedTerminals.Add( toAdd );
