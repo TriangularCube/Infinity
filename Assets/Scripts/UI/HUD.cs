@@ -23,9 +23,9 @@ public class HUD : Singleton<HUD> {
 
         if( Input.GetButtonDown( "Launch Panel" ) && activeCarrier ) {
             launchMenuPanel.SetActive( !launchMenuPanel.activeSelf );
-            Screen.lockCursor = !launchMenuPanel.activeSelf;
+            Cursor.lockState = launchMenuPanel.activeSelf ? CursorLockMode.None : CursorLockMode.Locked;
         }
-        if( launchMenuPanel ) UpdateLaunchMenu();
+        //if( launchMenuPanel ) UpdateLaunchMenu();
 
 	}
 
