@@ -11,18 +11,22 @@ public class MissionManager : MonoBehaviour {
     //DEBUG Initialization
 	void Start () {
 
-		if( startingShip is Carrier ){
-            Carrier startShip = (Carrier)startingShip;
+		if( startingShip is Flagship ){
+            Flagship startShip = (Flagship)startingShip;
             
             startShip.AssignDefault( TNManager.player );
-            EventManager.instance.QueueEvent( new AllyDocked( TNManager.player, startShip ) );
+            //EventManager.instance.QueueEvent( new AllyDocked( TNManager.player, startShip ) );
 
         } else if( startingShip is Terminal ) {
             Terminal startShip = (Terminal)startingShip;
 
-            startShip.gameObject.SetActive( false ); //Not turning the object will cause OnEnable to fire before we've assigned a pilot, thereby not turning on the Sync coroutine. This ends up not updating any variables.
+            startShip.gameObject.SetActive( false ); //Not turning off the object will cause OnEnable to fire before we've assigned a pilot, thereby not turning on the Sync coroutine. This ends up not updating any variables.
 			startShip.OnLaunch( TNManager.player, "" );
-            EventManager.instance.QueueEvent( new AllyLaunched( startShip, null ) );
+            
+            //DEBUG
+            //HUD.instance.AllyShipLaunched( startShip );
+
+            //EventManager.instance.QueueEvent( new AllyLaunched( startShip, null ) );
             //Screen.lockCursor = true;
         }
 	}
@@ -33,8 +37,10 @@ public class MissionManager : MonoBehaviour {
 		if( Input.GetKeyDown( KeyCode.LeftControl ) ){
             if( Cursor.lockState == CursorLockMode.Locked ) {
                 Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
             } else {
                 Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
             }
 		}
 
