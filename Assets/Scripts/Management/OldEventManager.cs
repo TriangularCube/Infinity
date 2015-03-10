@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Netplayer = TNet.Player;
 
 #region Setup
+/*
 public delegate bool DelegateEventHandler( IEvent evt );
 
 public interface IEvent{
@@ -88,9 +89,11 @@ public class AssignedShipRole : BaseEvent {
 	}
 
 }
+*/
 #endregion Events
 
-public class EventManager : Singleton<EventManager> {
+public class OldEventManager : Singleton<OldEventManager> {
+    /*
 
 	[SerializeField]
 	private bool LimitQueueProcesing = false;
@@ -211,4 +214,5 @@ public class EventManager : Singleton<EventManager> {
 		_instance = null;
 	
 	}
+    */
 }
