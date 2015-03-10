@@ -240,6 +240,7 @@ public abstract class Terminal : Ship {
 
             inDockingRange = inRange;
 
+            HUD.instance.DockingRangeChange( inRange );
         }
     }
 	
