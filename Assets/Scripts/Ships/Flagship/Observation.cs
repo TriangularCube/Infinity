@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class ObservationStation : CapitalShipStation {
+public class Observation : ShipControl {
 
 	Quaternion storedRotation = Quaternion.identity;
 
