@@ -7,7 +7,7 @@ using Netplayer = TNet.Player;
 public class HUD : Singleton<HUD> {
 	
 	void Start(){
-		SetupHUD();
+		//SetupHUD();
         SetupTerminalHUD();
 	}
 
@@ -18,17 +18,19 @@ public class HUD : Singleton<HUD> {
 		DrawIndicators();
 
         if( activeTerminal ) UpdateTerminalHUD();
-        else if( activeCarrier ) UpdateCarrierHUD();
-        else throw new UnityException( "Neither Active Terminal nor Carrier is defined in HUD" );
+        else if( onFlagship ) UpdateFlagshipHUD();
+        //else throw new UnityException( "Neither Active Terminal nor Carrier is defined in HUD" );
 
-        if( Input.GetButtonDown( "Launch Panel" ) && activeCarrier ) {
+        if( Input.GetButtonDown( "Launch Panel" ) && onFlagship ) {
             launchMenuPanel.SetActive( !launchMenuPanel.activeSelf );
+            Cursor.visible = launchMenuPanel;//Debug
             Cursor.lockState = launchMenuPanel.activeSelf ? CursorLockMode.None : CursorLockMode.Locked;
         }
         //if( launchMenuPanel ) UpdateLaunchMenu();
 
 	}
 
+    /*
     #region HUD Listeners
     private bool AllyDocked( IEvent evt ) {
 
@@ -126,7 +128,7 @@ public class HUD : Singleton<HUD> {
 
 
     [SerializeField, Group( "General HUD" )]
-	private Carrier flagship;
+	private Flagship flagship;
     [SerializeField, Group( "General HUD" )]
 	private AllyIndicator flagshipIndicator;
 
@@ -146,10 +148,11 @@ public class HUD : Singleton<HUD> {
 		}
 
         //Register our listeners
-        EventManager.instance.AddListener( "AllyDocked", AllyDocked );
-        EventManager.instance.AddListener( "AllyLaunched", AllyLaunched );
+        //EventManager.instance.AddListener( "AllyDocked", AllyDocked );
+        //EventManager.instance.AddListener( "AllyLaunched", AllyLaunched );
 
 	}
+    */
 
     private void SuppressHUD(){
 
@@ -255,10 +258,6 @@ public class HUD : Singleton<HUD> {
     #region Terminal HUD
     private void SetupTerminalHUD() {
 
-        //Register Listeners
-        EventManager.instance.AddListener( "EnteringDockingRange", TerminalEnteringDockingRange );
-        EventManager.instance.AddListener( "LeavingDockingRange", TerminalLeavingDockingRange );
-
         //Setup Position Refrences for Weapon Labels
         firstWeaponPosition = firstWeaponLabel.transform.position;
         secondWeaponPosition = secondWeaponLabel.transform.position;
@@ -296,6 +295,7 @@ public class HUD : Singleton<HUD> {
         UpdateTerminalWeaponStatus();
     }
 
+    /*
     #region Terminal Listeners
     private bool TerminalEnteringDockingRange( IEvent evt ) {
 
@@ -323,6 +323,7 @@ public class HUD : Singleton<HUD> {
         return false;
     }
     #endregion Terminal Listeners
+    */
 
     #region Terminal Weapons
     private TerminalWeapon[] weapons;
@@ -406,21 +407,16 @@ public class HUD : Singleton<HUD> {
     #endregion Terminal HUD
 
     #region Carrier HUD
-    private Carrier activeCarrier = null;
+    bool onFlagship = false;
 
-    private void UpdateCarrierHUD() {
+    private void UpdateFlagshipHUD() {
         //TODO
     }
 
-    private void EnableCarrierHUD( Carrier car ) {
-
-        activeCarrier = car;
-        Debug.Log( activeCarrier.name );
+    private void EnableFlagshipHUD() {
 
     }
-    private void DisableCarrierHUD() {
-
-        activeCarrier = null;
+    private void DisableFlagshipHUD() {
 
     }
     #endregion Carrier HUD
@@ -534,7 +530,7 @@ public class HUD : Singleton<HUD> {
     public void RequestTerminal() {
         if( !selectedTerminal ) return;
 
-        activeCarrier.RequestReserveTerminal( selectedTerminal.terminal );
+        //activeCarrier.RequestReserveTerminal( selectedTerminal.terminal );
     }
     #endregion Launch Menu
 }

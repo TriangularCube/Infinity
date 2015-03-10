@@ -18,7 +18,7 @@ public abstract class Terminal : Ship {
 	protected override void Awake () {
 		base.Awake ();
 
-		SetupDockingAndLaunching();
+		//SetupDockingAndLaunching();
 
         isUnderRepair = false; //HACK, TODO
 
@@ -164,11 +164,10 @@ public abstract class Terminal : Ship {
     #endregion Weapons
 
     #region Launching and Docking
-    //Reference of the carrier we're in range to dock into
-	private Carrier carrierToDockInto = null;
 	//A boolean to transfer across network
-	private bool inCarrierRange = false;
+	private bool inDockingRange = false;//DEBUG
 
+    /*
 	private void SetupDockingAndLaunching(){
 		if (TNManager.isHosting) {
 			
@@ -188,11 +187,12 @@ public abstract class Terminal : Ship {
 		if (edr.terminal != this) return false;
 
 		carrierToDockInto = edr.carrier;
-		inCarrierRange = true;
+		inDockingRange = true;
 
 		return false;
 
 	}
+
 
 	private bool LeavingDockingZone( IEvent evt ){
 
@@ -201,11 +201,12 @@ public abstract class Terminal : Ship {
 		if (ldr.terminal != this) return false;
 
 		carrierToDockInto = null;
-		inCarrierRange = false;
+		inDockingRange = false;
 
 		return false;
 
 	}
+    */
 	
 	public void OnLaunch( Netplayer toBeSeated, string weaponSelection ){
 		//Unparent ourself
@@ -228,9 +229,6 @@ public abstract class Terminal : Ship {
 	
 	public void AttemptRequestDock(){
 
-		//If we're not in docking range, do nothing
-		if (!inCarrierRange) return;
-
 		tno.Send( "RequestDock", Target.Host );
 
 	}
@@ -239,9 +237,9 @@ public abstract class Terminal : Ship {
 	protected void RequestDock(){
 		
 		//If we're somehow no longer in docking range in the time it took us to request docking, do nothing
-		if (!inCarrierRange) return;
+		if (!inDockingRange) return;
 		
-		carrierToDockInto.RequestDock (this);
+		Flagship.instance.RequestDock( tno.uid );
 		
 	}
 
