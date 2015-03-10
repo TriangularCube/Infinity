@@ -224,8 +224,24 @@ public abstract class Terminal : Ship {
         //Set ourself to active
         gameObject.SetActive( true );
 
+        if( pilot == TNManager.player ) {
+            HUD.instance.PlayerShipLaunched( this );
+        } else {
+            HUD.instance.AllyShipLaunched( this );
+        }
 	}
-    #endregion Listeners
+
+    [RFC]
+    public void IsInRangeToDock( bool inRange ) {
+        if( inRange != inDockingRange ) {
+            if( pilot != TNManager.player && TNManager.isHosting ) {
+                tno.Send( "IsInRangeToDock", pilot, inRange );
+            }
+
+            inDockingRange = inRange;
+
+        }
+    }
 	
 	public void AttemptRequestDock(){
 
