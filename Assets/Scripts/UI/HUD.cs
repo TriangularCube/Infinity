@@ -109,8 +109,47 @@ public class HUD : Singleton<HUD> {
 
     }
     #endregion HUD Listeners
+    */
 
-	#region General HUD
+    #region HUD Switch Interaction
+    public void AllyShipLaunched( Terminal term ) {
+        //Turn indicator on
+        GameObject indicator = Instantiate<GameObject>( allyTargetingPrefab );
+        indicator.transform.parent = HUDPanel.transform.FindChild( "Indicators" );
+        indicator.transform.localScale = Vector3.one;
+        indicator.transform.localPosition = Vector3.zero;
+
+        allyIndicatorList.Add( term.transform, indicator.GetComponent<AllyIndicator>() );
+    }
+
+    public void AllyShipDocked( Terminal term ) {
+        //Turn indicator off
+    }
+
+    public void PlayerShipLaunched( Terminal term ) {
+        //Turn all Flagship HUD off
+        launchMenuPanel.gameObject.SetActive( false );
+
+        //Turn Terminal HUD on
+        EnableTerminalHUD( term );
+    }
+
+    public void PlayerShipDocked() {
+        //Turn Terminal HUD off
+        DisableTerminalHUD();
+    }
+
+    //TODO
+    public void RoleAssigned( /*Some Role*/ ) {
+
+        //DEBUG
+        onFlagship = true;
+        flagshipIndicator.gameObject.SetActive( false );
+
+    }
+    #endregion HUD Switch Interaction
+
+    #region General HUD
 #pragma warning disable 0649
     private bool suppressHUD = false;
 	[SerializeField, Group( "General HUD" )]
@@ -165,9 +204,16 @@ public class HUD : Singleton<HUD> {
 	
 	private void DrawIndicators(){
 		//Update Flagship Indicator
-		if( flagship.gameObject.activeSelf ){
+		if( flagshipIndicator.gameObject.activeSelf ){
 			DrawIndicatorOnScreen( flagship.transform.position, flagshipIndicator );
 		}
+
+        //Draw Ally indicators
+        foreach( Transform ally in allyIndicatorList.Keys ){
+            //DrawIndicatorOnScreen( ally.position, allyIndicatorList[ally] );
+        }
+
+        //Draw other indicators
 	}
 
 	//This is the main process of determining if the target is off the screen, and draws the appropriate indicator at the proper location
@@ -378,6 +424,10 @@ public class HUD : Singleton<HUD> {
     }
     #endregion Terminal Weapons
 
+    public void DockingRangeChange( bool inRange ) {
+        dockingRangeIndicator.SetActive( inRange );
+    }
+
     private void EnableTerminalHUD( Terminal term ) {
 
         activeTerminal = term;
@@ -388,6 +438,8 @@ public class HUD : Singleton<HUD> {
         firstWeaponLabel.text = weapons[0].weaponName;
         secondWeaponLabel.text = weapons[1].weaponName;
         thirdWeaponLabel.text = weapons[2].weaponName;
+
+        TerminalHUD.SetActive( true );
 
     }
     private void DisableTerminalHUD() {
@@ -402,6 +454,8 @@ public class HUD : Singleton<HUD> {
         firstWeaponLabel.text = "Weapon 1";
         secondWeaponLabel.text = "Weapon 2";
         thirdWeaponLabel.text = "Weapon 3";
+
+        dockingRangeIndicator.SetActive( false );
 
     }
     #endregion Terminal HUD
