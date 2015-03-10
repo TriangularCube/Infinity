@@ -504,6 +504,10 @@ public class HUD : Singleton<HUD> {
     private ShipSelectButton selectedTerminal;
     private bool UpdateList = false;
 
+    /* Every ship will request a button be instantiated for it. The button will be disabled until the ship docks.
+     * Each ship will keep a reference to its own button, so that the Flagship will be able to iterate
+     * through it and turn on all buttons belonging ships currently docked.
+     */
     public ShipSelectButton RequestNewShipButton( Terminal term ) {
         
         //Instantiate the button
@@ -520,13 +524,16 @@ public class HUD : Singleton<HUD> {
         button.transform.localPosition = Vector3.zero;
         list.GetComponent<UIGrid>().repositionNow = true;
 
-        ShipSelectButton shipButton = button.GetComponent<ShipSelectButton>();
+        ShipSelectButton shipButton = button.GetComponentInChildren<ShipSelectButton>();
         shipButton.terminal = term;
+
+        button.SetActive( false );
 
         return shipButton;
 
     }
 
+    //Reorganizes the lists of Terminals when new buttons have been enabled/disabled.
     private void ReorganizeLists() {
         InterceptorList.GetComponent<UIGrid>().Reposition();
         BomberList.GetComponent<UIGrid>().Reposition();
