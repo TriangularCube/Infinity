@@ -5,9 +5,13 @@ using TNet;
 
 using Netplayer = TNet.Player;
 
-public abstract class Flagship : Ship {
+public class Flagship : Ship {
+
+    public static Flagship instance { get { return _instance;  } }
+    private static Flagship _instance;
 
 	protected override void Awake(){
+        _instance = this;
 		base.Awake ();
 
 		//Iterate through each of the children of the "Dock", and add it to the list of "Docked Ships"
@@ -17,8 +21,6 @@ public abstract class Flagship : Ship {
             child.gameObject.SetActive( false );
 		}
 		//TODO Sort the Terminals we just added
-
-		EventManager.instance.AddListener( "RequestLaunch", new DelegateEventHandler ( RequestLaunch ) );
 	}
 
 	public bool ContainsPlayer( Netplayer check ){
@@ -37,26 +39,17 @@ public abstract class Flagship : Ship {
     //Our list of currently docked Terminals
 	private TNet.List<Terminal> dockedTerminals = new TNet.List<Terminal>();
     public TNet.List<Terminal> getDockedTerminals() { return dockedTerminals; }
+
     //List of requests for terminals
     private Dictionary<Terminal, Netplayer> terminalReserve = new Dictionary<Terminal, Netplayer>();
-    public Dictionary<Terminal, Netplayer> getReserveList() { return terminalReserve; }
-
-    private void AddTerminal( Terminal toAdd ) {
-        dockedTerminals.Add( toAdd );
-        terminalReserve.Add( toAdd, null );
-    }
-
-    private void RemoveTerminal( Terminal toRemove ) {
-        dockedTerminals.Remove( toRemove );
-        terminalReserve.Remove( toRemove );
-    }
+    //public Dictionary<Terminal, Netplayer> getReserveList() { return terminalReserve; }
 
 
 	#region Docking Terminal
-	public void RequestDock( Terminal terminal ){
+	public void RequestDock( uint termID ){
 		
 		Debug.Log( "Requested to Dock" );
-		tno.Send( "DockTerminal", Target.All, terminal.tno.uid );
+		tno.Send( "DockTerminal", Target.All, termID );
 		
 	}
 
@@ -65,7 +58,6 @@ public abstract class Flagship : Ship {
 
 		//Find our GameObject
 		Terminal terminal = TNObject.Find( terminalID ).gameObject.GetComponent<Terminal>();
-		Debug.Log( "Found Object" );
 
 		//Pull out our pilot
 		Netplayer pilot = terminal.pilot;
@@ -77,14 +69,19 @@ public abstract class Flagship : Ship {
 		terminal.transform.position = launchPoint.position;
 		terminal.transform.rotation = launchPoint.rotation;
 
-        AddTerminal( terminal );
+        dockedTerminals.Add( terminal );
 
-		//Fire off an event telling relevant parties something's docked
-		EventManager.instance.QueueEvent( new AllyDocked( pilot, this ) );
+		//Tell all relevant parties something's docked
+        if( pilot == TNManager.player ) {
+            HUD.instance.PlayerShipDocked();
+        } else {
+            HUD.instance.AllyShipDocked( terminal );
+        }
 
 		//Assign the pilot to Default
 		AssignDefault( pilot );
 
+        if( pilot == TNManager.player ) Debug.Log( "Docking Complete" );
 	}
 	#endregion
 
@@ -114,6 +111,7 @@ public abstract class Flagship : Ship {
     }
 
     //Launch Event Listener
+    /*
 	public bool RequestLaunch( IEvent evt ){
 		
 		RequestLaunch req = (RequestLaunch)evt;
@@ -125,7 +123,8 @@ public abstract class Flagship : Ship {
 		return true;
 		
 	}
-	
+	*/
+    
 	[RFC]
 	protected virtual void AttemptToLaunchTerminal( uint terminalID, Netplayer player ){
 		
@@ -165,11 +164,12 @@ public abstract class Flagship : Ship {
 		RemovePilot (player);
 		
 		//Remove the Terminal
-        RemoveTerminal( terminal );
+        dockedTerminals.Remove( terminal );
+        if( terminalReserve.ContainsKey( terminal ) ) {
+            terminalReserve.Remove( terminal );
+        }
 		
 		terminal.OnLaunch( player, "" );//HACK, TODO
-
-        EventManager.instance.QueueEvent( new AllyLaunched( terminal, this ) );
 		
 	}
 	#endregion
@@ -177,9 +177,9 @@ public abstract class Flagship : Ship {
 	#region Assignment
 #pragma warning disable 0649
     [SerializeField]
-	private ObservationStation observationStation;
+	private Observation observation;
 	[SerializeField]
-	private CapitalShipStation navigation;
+	private Navigation navigation;
 #pragma warning restore 0649
 
 
@@ -206,11 +206,12 @@ public abstract class Flagship : Ship {
 		if (player == TNManager.player) {
 
 			ResetControls();
-			observationStation.Assign();
+			observation.Assign();
+            HUD.instance.RoleAssigned( /*Observation*/ ); //DEBUG, TODO
 
 		}
 		
-		EventManager.instance.QueueEvent (new AssignedShipRole (this, player, "Observation"));
+		//EventManager.instance.QueueEvent (new AssignedShipRole (this, player, "Observation"));
 	}
 
 	private void AssignNavigation( Netplayer player ){
@@ -220,13 +221,14 @@ public abstract class Flagship : Ship {
 
 			//If the player is already on the ship, meaning he is just changing roles
 			ResetControls();
-			navigation.Assign();
+			//navigation.Assign();
+            //HUD.instance.RoleAssigned( /*Navigation*/ );
 
 		}
 		
 		navigator = player;
 		
-		EventManager.instance.QueueEvent (new AssignedShipRole (this, player, "Navigation"));
+		//EventManager.instance.QueueEvent (new AssignedShipRole (this, player, "Navigation"));
 	}
 
 	//Removes a chosen pilot from any roles on the ship
@@ -246,11 +248,16 @@ public abstract class Flagship : Ship {
 			
 		}
 		
+        //Plus any other roles as applicable
 	}
 	#endregion
 
 	protected virtual void ResetControls(){
-		observationStation.CleanUp();
+		observation.CleanUp();
 		//navigation.CleanUp();
 	}
+
+    protected override void SendData() {
+        throw new System.NotImplementedException();
+    }
 }
