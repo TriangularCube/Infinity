@@ -175,10 +175,11 @@ public class HUD : Singleton<HUD> {
     [SerializeField, Group( "General HUD" )]
 	private GameObject allyTargetingPrefab;
 #pragma warning restore 0649
-    private Dictionary<Netplayer, AllyIndicator> allyIndicatorList = new Dictionary<Netplayer, AllyIndicator>();
-	private Dictionary<Netplayer, Transform> allyTransformList = new Dictionary<Netplayer, Transform>();
+
+    private Dictionary<Transform, AllyIndicator> allyIndicatorList = new Dictionary<Transform, AllyIndicator>();
 
 	//On Start
+    /*
 	private void SetupHUD(){
 
 		//TODO Initialize the players' terminal display boxes
