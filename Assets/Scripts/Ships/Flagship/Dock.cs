@@ -3,11 +3,6 @@ using System.Collections;
 
 public class Dock : MonoBehaviour {
 
-#pragma warning disable 0649
-    [SerializeField]
-	private Flagship flagship;
-#pragma warning restore 0649
-
     void Awake(){
 		//Debug.Log ("Awake on Dock");
 		

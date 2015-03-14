@@ -10,11 +10,6 @@ public abstract class Terminal : Ship {
 	[SerializeField]
 	protected TerminalControl control;
 
-/*  public bool ContainsPlayer ( Netplayer check ){
-		return pilot == check ? true : false;
-	}
-	*/
-
 	protected override void Awake () {
 		base.Awake ();
 
@@ -275,7 +270,7 @@ public abstract class Terminal : Ship {
 		gameObject.SetActive(false);
 
         //Enable the dock button
-        button.gameObject.SetActive( true );
+        button.SetButtonActive( true );
 
 	}
 	#endregion Launching and Docking
