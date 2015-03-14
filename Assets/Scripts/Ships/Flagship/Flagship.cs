@@ -17,7 +17,6 @@ public class Flagship : Ship {
 		//Iterate through each of the children of the "Dock", and add it to the list of "Docked Ships"
 		foreach ( Transform child in transform.FindChild( "Dock" ) ) {
 			dockedTerminals.Add( child.gameObject.GetComponent<Terminal>() );
-            terminalReserve[child.gameObject.GetComponent<Terminal>()] = TNManager.player;
             child.gameObject.SetActive( false );
 		}
 		//TODO Sort the Terminals we just added
@@ -39,10 +38,6 @@ public class Flagship : Ship {
     //Our list of currently docked Terminals
 	private TNet.List<Terminal> dockedTerminals = new TNet.List<Terminal>();
     public TNet.List<Terminal> getDockedTerminals() { return dockedTerminals; }
-
-    //List of requests for terminals
-    private Dictionary<Terminal, Netplayer> terminalReserve = new Dictionary<Terminal, Netplayer>();
-    //public Dictionary<Terminal, Netplayer> getReserveList() { return terminalReserve; }
 
 
 	#region Docking Terminal
@@ -85,58 +80,16 @@ public class Flagship : Ship {
 	}
 	#endregion
 
-	#region Launching Terminal
-    public void RequestReserveTerminal( Terminal toReserve ) {
-        if( !TNManager.isHosting ) {
-            tno.Send( "AttemptReserveTerminal", Target.Host, toReserve.tno.uid );
-        }
+	#region Launching Terminal 
+    public void RequestLaunchTerminal( uint termID ) {
+        tno.Send( "AttemptToLaunchTerminal", Target.Host, termID, TNManager.player );
     }
 
-    [RFC]
-    protected void AttemptReserveTerminal( uint terminalID, Netplayer player ) {
-        Terminal terminal = TNObject.Find( terminalID ).gameObject.GetComponent<Terminal>();
-
-        if( terminalReserve[ terminal ] != null ) {
-            //Already reserved by someone else
-            return;
-        }
-
-        tno.Send( "ReserveTerminal", Target.All, terminalID, player );
-    }
-
-    [RFC]
-    protected void ReserveTerminal( uint terminalID, Netplayer player ) {
-        terminalReserve[ TNObject.Find( terminalID ).gameObject.GetComponent<Terminal>() ] = player;
-
-    }
-
-    //Launch Event Listener
-    /*
-	public bool RequestLaunch( IEvent evt ){
-		
-		RequestLaunch req = (RequestLaunch)evt;
-		
-		if ( req.carrier != this ) return false;
-		
-		tno.Send ("AttemptToLaunchTerminal", Target.Host, req.terminal.tno.uid, TNManager.player);
-		
-		return true;
-		
-	}
-	*/
-    
 	[RFC]
 	protected virtual void AttemptToLaunchTerminal( uint terminalID, Netplayer player ){
 		
 		//Find the Terminal
 		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
-
-        if( terminalReserve[ terminal ] != player ) {
-
-            //The player who is currently requesting to launch the terminal is not the person who reserved it
-            return;
-
-        }
 		
 		//If the terminal is no longer docked (as in, someone else requested it first), just do nothing
 		if ( terminal && !dockedTerminals.Contains( terminal ) ){
@@ -165,9 +118,6 @@ public class Flagship : Ship {
 		
 		//Remove the Terminal
         dockedTerminals.Remove( terminal );
-        if( terminalReserve.ContainsKey( terminal ) ) {
-            terminalReserve.Remove( terminal );
-        }
 		
 		terminal.OnLaunch( player, "" );//HACK, TODO
 		
