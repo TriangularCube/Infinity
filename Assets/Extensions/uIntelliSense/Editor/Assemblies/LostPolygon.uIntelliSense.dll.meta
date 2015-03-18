@@ -1,5 +1,10 @@
 fileFormatVersion: 2
-guid: ac240bed9c2ac1544840cdf2f500d988
+guid: 5ebb00383d2004148bb5d61f60508b98
+labels:
+- code
+- script
+- intellisense
+- hint
 PluginImporter:
   serializedVersion: 1
   iconMap: {}
