@@ -15,19 +15,44 @@ public class Flagship : Ship {
 		base.Awake ();
 
 		//Iterate through each of the children of the "Dock", and add it to the list of "Docked Ships"
-		foreach ( Transform child in transform.FindChild( "Dock" ) ) {
+		foreach ( Transform child in dock ) {
 			dockedTerminals.Add( child.gameObject.GetComponent<Terminal>() );
             child.gameObject.SetActive( false );
 		}
 		//TODO Sort the Terminals we just added
 	}
 
-	public bool ContainsPlayer( Netplayer check ){
-		//throw new System.NotImplementedException ();
-		//DEBUG, TODO
-		return false;
-	}
+    #region Ship Operations
+    private void Update() {
 
+        //Station Control
+
+        //Attitude Control
+        AttitudeContrl();
+
+        //Fire Control...?
+
+    }
+
+    #region Station Control
+    private Quaternion targetLookDirection = Quaternion.identity;
+    private Vector3 targetAccelDirection = Vector3.zero;
+
+    private void StationControl() {
+        //NOTE: Using Forward Acceleration speed here as a placeholder. The Acceleration direction mechanism needs a serious overhaul.
+        rigidBody.velocity = Vector3.MoveTowards( rigidBody.velocity, targetAccelDirection * maxSpeed, forwardAcceleration * Time.deltaTime );
+    }
+
+    private void AttitudeContrl() {
+        //TODO Do some fancy attitude controls later.
+        rigidBody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetLookDirection, 2f ) );
+    }
+
+    #endregion Station Control
+
+    #endregion Ship Operations
+
+    #region Terminals
 #pragma warning disable 0649
     [SerializeField]
 	private Transform dock;
@@ -123,8 +148,9 @@ public class Flagship : Ship {
 		
 	}
 	#endregion
+    #endregion terminals
 
-	#region Assignment
+    #region Assignment
 #pragma warning disable 0649
     [SerializeField]
 	private Observation observation;
@@ -134,7 +160,7 @@ public class Flagship : Ship {
 
 
     //Our list of players currently in our Observation Deck
-	private TNet.List<Netplayer> playersInObservation = new TNet.List<Netplayer>();
+	private TNet.List<Netplayer> playersInObservation = new TNet.List<Netplayer>();//Is this list even useful?
 	
 	//Our currnet Navigator
 	private Netplayer navigator;
@@ -142,18 +168,18 @@ public class Flagship : Ship {
 
 	public void AssignDefault ( Netplayer pilot )
 	{
-		AssignObservation (pilot);
+		//AssignObservation( pilot );
 		
 		//Debug
-		//AssignNavigation (pilot);
+		AssignNavigation( pilot );
 	}
 
 	protected void AssignObservation( Netplayer player ){
 		
 		//Add the player to the list
-		playersInObservation.Add (player);
+		playersInObservation.Add( player );
 
-		if (player == TNManager.player) {
+		if( player == TNManager.player ) {
 
 			ResetControls();
 			observation.Assign();
@@ -171,8 +197,8 @@ public class Flagship : Ship {
 
 			//If the player is already on the ship, meaning he is just changing roles
 			ResetControls();
-			//navigation.Assign();
-            //HUD.instance.RoleAssigned( /*Navigation*/ );
+			navigation.Assign();
+            HUD.instance.RoleAssigned( /*Navigation*/ );
 
 		}
 		
@@ -200,12 +226,12 @@ public class Flagship : Ship {
 		
         //Plus any other roles as applicable
 	}
-	#endregion
 
-	protected virtual void ResetControls(){
+    protected virtual void ResetControls(){
 		observation.CleanUp();
 		//navigation.CleanUp();
 	}
+    #endregion Assignment
 
     protected override void SendData() {
         throw new System.NotImplementedException();
