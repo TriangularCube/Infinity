@@ -12,19 +12,26 @@ public abstract class Ship : TNBehaviour {
 	protected TNet.List<GameObject> trackingList = new TNet.List<GameObject>();
 	
 
-	#region Cache Transform
-	private Transform thisTransform;
-
-	protected virtual void Awake(){
-		thisTransform = base.transform;
-	}
-
+	#region Cache
+	private Transform _transform;
 	public new Transform transform{
 		get{
-			return thisTransform;
+			return _transform;
 		}
 	}
-	#endregion
+
+    private Rigidbody _rigidBody;
+    public Rigidbody rigidBody {
+        get {
+            return _rigidBody;
+        }
+    }
+
+    protected virtual void Awake() {
+		_transform = base.transform;
+        _rigidBody = GetComponent<Rigidbody>();
+	}
+	#endregion Cache
 
 	#region Ship Movement
 	[SerializeField, Group("Movement")]
