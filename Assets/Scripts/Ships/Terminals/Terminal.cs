@@ -28,38 +28,22 @@ public abstract class Terminal : Ship {
 		*/
 	}
 
-    private void AssignPilot( Netplayer player, string weaponSelection ){
-		pilot = player;
-
-		if (pilot == TNManager.player) {
-			//CameraControls.instance.SetTarget( transform, control );
-
-			//Activate the controls
-			control.Assign();
-			
-			Cursor.lockState = CursorLockMode.Locked;
-		}
-
-		//TODO, DEBUG
-		AssignWeapons( weaponSelection );
-	}
-
     void FixedUpdate() {
 
-        ApplyAttitudeControl();
+        AttitudeControl();
 
-        ApplyStationControl();
+        StationControl();
 
-        ApplyFireControl();
+        FireControl();
 
     }
 
     #region Station, Attitude, and Fire Controls
-    protected abstract void ApplyAttitudeControl();
+    protected abstract void AttitudeControl();
 
-    protected abstract void ApplyStationControl();
+    protected abstract void StationControl();
 
-    protected void ApplyFireControl() {
+    protected void FireControl() {
 
         if( fireWeapon ) {
             switch( currentWeapon ) {
@@ -159,50 +143,7 @@ public abstract class Terminal : Ship {
     #endregion Weapons
 
     #region Launching and Docking
-	//A boolean to transfer across network
-	private bool inDockingRange = false;//DEBUG
-
-    /*
-	private void SetupDockingAndLaunching(){
-		if (TNManager.isHosting) {
-			
-			//Register Listeners
-			EventManager.instance.AddListener ("EnteringDockingRange", EnteringDockingZone);
-			EventManager.instance.AddListener ("LeavingDockingRange", LeavingDockingZone);
-			
-		}
-	}
-
-    #region Listeners
-    //These listeners are only called on Host
-	private bool EnteringDockingZone( IEvent evt ){
-
-		EnteringDockingRange edr = (EnteringDockingRange)evt;
-
-		if (edr.terminal != this) return false;
-
-		carrierToDockInto = edr.carrier;
-		inDockingRange = true;
-
-		return false;
-
-	}
-
-
-	private bool LeavingDockingZone( IEvent evt ){
-
-		LeavingDockingRange ldr = (LeavingDockingRange)evt;
-
-		if (ldr.terminal != this) return false;
-
-		carrierToDockInto = null;
-		inDockingRange = false;
-
-		return false;
-
-	}
-    */
-	
+    #region Launching
 	public void OnLaunch( Netplayer toBeSeated, string weaponSelection ){
 		//Unparent ourself
 		transform.parent = null;
@@ -211,13 +152,28 @@ public abstract class Terminal : Ship {
         transform.localScale = Vector3.one;
 
 		//Assign the player to the pilot position
-		AssignPilot( toBeSeated, weaponSelection );
+        pilot = toBeSeated;
+        if( pilot == TNManager.player ) {
+            //Activate the controls
+            control.Assign();
 
-		//TODO Add some forwards momentum
-		GetComponent<Rigidbody>().AddRelativeForce( Vector3.forward * 10, ForceMode.Impulse );
+            HUD.instance.mouseLocked = true;
+        }
+        //TODO, DEBUG
+        AssignWeapons( weaponSelection );
+
+
+        //Reset the target vectors and rotations
+        targetLookDirection = transform.rotation;
+        targetLookDirectionToSync = targetLookDirection;
+        inputDirection = Vector3.zero;
+        inputDirectionSync = Vector3.zero;
 
         //Set ourself to active
         gameObject.SetActive( true );
+
+        //TODO Add some forwards momentum
+        //rigidBody.AddRelativeForce( Vector3.forward * 20, ForceMode.Impulse );
 
         if( pilot == TNManager.player ) {
             HUD.instance.PlayerShipLaunched( this );
@@ -225,6 +181,11 @@ public abstract class Terminal : Ship {
             HUD.instance.AllyShipLaunched( this );
         }
 	}
+    #endregion Launching
+
+    #region Docking
+    //A boolean to transfer across network
+    private bool inDockingRange = false;//DEBUG
 
     [RFC]
     public void IsInRangeToDock( bool inRange ) {
@@ -264,7 +225,7 @@ public abstract class Terminal : Ship {
 		pilot = null;
 
 		//Zero the velocity
-		GetComponent<Rigidbody>().velocity = Vector3.zero;
+		rigidBody.velocity = Vector3.zero;
 
 		//Disable the Terminal
 		gameObject.SetActive(false);
@@ -273,7 +234,8 @@ public abstract class Terminal : Ship {
         button.SetButtonActive( true );
 
 	}
-	#endregion Launching and Docking
+    #endregion Docking
+    #endregion Launching and Docking
 
     #region HUD Hooks
     public TerminalWeapon[] weaponSelection {
@@ -299,6 +261,7 @@ public abstract class Terminal : Ship {
         base.OnEnable();
 
         if( TNManager.player == pilot ) StartCoroutine( SyncToHost() );
+        //Debug.Break();
     }
 
     private IEnumerator SyncToHost() {

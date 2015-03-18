@@ -17,7 +17,6 @@ public abstract class TerminalControl : ShipControl {
 
 		if( Input.GetButtonDown( "Dock" ) ){
 			shipCore.AttemptRequestDock();
-			updateCamera = false;
 		}
 
 	}
