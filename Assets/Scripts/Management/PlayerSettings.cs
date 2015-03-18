@@ -4,6 +4,7 @@ using System.Collections;
 public enum InterceptorLookMode{ Locked, Free }
 public enum MechLookMode{ Locked, Free }
 
+//Default for now. To implement later
 public class Profile{
 
 	#region Interceptor
