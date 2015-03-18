@@ -233,7 +233,16 @@ public class Flagship : Ship {
 	}
     #endregion Assignment
 
+    #region Sync
     protected override void SendData() {
-        throw new System.NotImplementedException();
+        //TODO
+        tno.SendQuickly( 1, Target.Others, transform.position, transform.rotation );
     }
+
+    [RFC(2)]
+    public void UpdateNavigationControl( Vector3 moveVector, Quaternion lookVector ) {
+        targetLookDirection = lookVector;
+        targetAccelDirection = moveVector;
+    }
+    #endregion Sync
 }
