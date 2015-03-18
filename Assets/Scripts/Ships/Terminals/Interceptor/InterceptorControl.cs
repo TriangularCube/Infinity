@@ -5,11 +5,11 @@ public class InterceptorControl : TerminalControl {
 
 	void Update(){
 
-		if ( Cursor.lockState == CursorLockMode.Locked ) {
+		if ( HUD.instance.mouseLocked ) {
 
 			#region Rotation
 			//Get input to update lookVector
-			if (PlayerSettings.GetInterceptorLookMode () == InterceptorLookMode.Free) {
+			if( PlayerSettings.GetInterceptorLookMode() == InterceptorLookMode.Free ) {
 
 				//Camera Changes
 				lookRotation = Quaternion.AngleAxis( Input.GetAxis( "Mouse X" ), transform.up ) * lookRotation;

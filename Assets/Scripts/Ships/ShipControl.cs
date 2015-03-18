@@ -11,10 +11,14 @@ public abstract class ShipControl : PimpedMonoBehaviour {
 	}
 
 	protected Camera playerCamera = null;
-	protected bool updateCamera = false;
+
+    //A flag to make sure camera only updates after physics updates, and only once between physics updates
+	private bool updateCamera = false;
+
+    //The rotation the Camera will reference when updating after physics update
 	protected Quaternion lookRotation;
 
-	void OnEnable(){
+	protected virtual void OnEnable(){
 		lookRotation = _cameraPoint.rotation;
 	}
 
@@ -27,15 +31,13 @@ public abstract class ShipControl : PimpedMonoBehaviour {
 
 	protected void UpdateCamera(){
 		//If FixedUpdate ran this frame
-		if (updateCamera) {
+        if( !updateCamera ) return;
 			
-			//Update the camera. Since Update runs after internal physics updates, this means all movement would have been done by this time
-			playerCamera.transform.rotation = lookRotation;
-			playerCamera.transform.position = lookRotation * _cameraPoint.localPosition + transform.position;
+		//Update the camera. Since Update runs after internal physics updates, this means all movement would have been done by this time
+		playerCamera.transform.rotation = lookRotation;
+		playerCamera.transform.position = lookRotation * _cameraPoint.localPosition + transform.position;
 			
-			updateCamera = false;
-			
-		}
+		updateCamera = false;
 	}
 
 
@@ -55,8 +57,8 @@ public abstract class ShipControl : PimpedMonoBehaviour {
 
 		if (!enabled) return;
 
+        updateCamera = false;
 		playerCamera = null;
-
 		enabled = false;
 
 	}

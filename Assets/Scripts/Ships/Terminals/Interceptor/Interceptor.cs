@@ -12,7 +12,7 @@ public class Interceptor : Terminal {
 	private float boostAcceleration;
 #pragma warning restore 0649
 
-	protected override void ApplyStationControl(){
+	protected override void StationControl(){
 
 		//Calculate max magnitude change
 		float mag = 0f;
@@ -46,24 +46,19 @@ public class Interceptor : Terminal {
 
 		float currentMaxSpeed = isBoostActive ? maxBurstSpeed : maxSpeed;
 
-		GetComponent<Rigidbody>().velocity = Vector3.MoveTowards( GetComponent<Rigidbody>().velocity, targetLookDirection * inputDirection.normalized * currentMaxSpeed, mag * Time.deltaTime );
+		rigidBody.velocity = Vector3.MoveTowards( rigidBody.velocity, targetLookDirection * inputDirection.normalized * currentMaxSpeed, mag * Time.deltaTime );
 
 	}
 	#endregion Station Control
 
 	#region Attitude Control
-	protected override void ApplyAttitudeControl(){
+	protected override void AttitudeControl(){
 
 		//TODO Do some fancy attitude controls later.
-		GetComponent<Rigidbody>().MoveRotation( Quaternion.RotateTowards( transform.rotation, targetLookDirection, 5f ) );
+		rigidBody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetLookDirection, 5f ) );
 
 	}
 	#endregion Attitude Control
-
-	#region Boost
-	[SerializeField, Group("Boost")]
-	private int boostCharge = 360; //1 Boost unit is used per physics tick
-	#endregion Boost
 
 	#region Fire Control
 #pragma warning disable 0649
@@ -87,6 +82,11 @@ public class Interceptor : Terminal {
 	}
 
 	#endregion Fire Control
+
+	#region Boost
+	[SerializeField, Group("Boost")]
+	private int boostCharge = 360; //1 Boost unit is used per physics tick
+	#endregion Boost
 	#endregion Piloting
 
 	#region Sync
