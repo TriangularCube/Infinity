@@ -22,6 +22,12 @@ public class HUD : Singleton<HUD> {
 
     void Update(){
 
+        #if UNITY_EDITOR
+        if( Input.GetKeyDown( KeyCode.Escape ) ) {
+            mouseLocked = false;
+        }
+        #endif
+
 		//SuppressHUD();
 
 	}
@@ -100,6 +106,31 @@ public class HUD : Singleton<HUD> {
     public LaunchMenu getLaunchMenu() {
         return launchMenu;
     }
-   
 
+    #region Mouse
+    private bool _mouseLocked = false;
+    public bool mouseLocked {
+        get {
+            return _mouseLocked;
+        }
+
+        set {
+            if( value ) {
+                Cursor.lockState = CursorLockMode.Locked;
+                //Cursor.visible = false;
+                _mouseLocked = true;
+            } else {
+                Cursor.lockState = CursorLockMode.None;
+                //Cursor.visible = true;
+                _mouseLocked = false;
+            }
+        }
+    }
+
+    private void OnApplicationFocus( bool focus ) {
+        if( !focus ) {
+            mouseLocked = false;
+        }
+    }
+    #endregion Mouse
 }

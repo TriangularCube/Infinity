@@ -35,13 +35,7 @@ public class MissionManager : MonoBehaviour {
 
 		//DEBUG
 		if( Input.GetKeyDown( KeyCode.LeftControl ) ){
-            if( Cursor.lockState == CursorLockMode.Locked ) {
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
-            } else {
-                Cursor.lockState = CursorLockMode.Locked;
-                Cursor.visible = false;
-            }
+            HUD.instance.mouseLocked = !HUD.instance.mouseLocked;
 		}
 
 	}

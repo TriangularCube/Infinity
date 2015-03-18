@@ -5,9 +5,12 @@ public class LaunchMenu : PimpedMonoBehaviour {
 
     void Update() {
         if( Input.GetButtonDown( "Launch Panel" ) ) {
-            launchMenuPanel.SetActive( !launchMenuPanel.activeSelf );
-            Cursor.visible = launchMenuPanel;//Debug (This feature apparently isn't working at the moment
-            Cursor.lockState = launchMenuPanel.activeSelf ? CursorLockMode.None : CursorLockMode.Locked;
+            if( launchMenuPanel.activeSelf ) {
+                TurnMenuOff();
+            } else {
+                launchMenuPanel.SetActive( true );
+                HUD.instance.mouseLocked = false;
+            }
         }
     }
 
@@ -45,8 +48,7 @@ public class LaunchMenu : PimpedMonoBehaviour {
 
         //Deactivate panel
         launchMenuPanel.SetActive( false );
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
+        HUD.instance.mouseLocked = true;
 
         //Deselect Ship
         if( selectedTerminal ) {
@@ -133,6 +135,7 @@ public class LaunchMenu : PimpedMonoBehaviour {
 
     #endregion Ship Selection
 
+    //Hook for the ship launch button
     public void LaunchTerminal() {
         Debug.Log( "Launch Button Clicked" );
         //Fire off message to launch

@@ -7,7 +7,7 @@ public class Observation : ShipControl {
 
 	void Update(){
 
-		if ( Cursor.lockState == CursorLockMode.Locked ) {
+		if ( HUD.instance.mouseLocked ) {
 			//This is observation, so we're just going to let the player move the camera around
 			
 			//Camera Changes
