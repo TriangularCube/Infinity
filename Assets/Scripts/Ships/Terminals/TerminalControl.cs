@@ -2,16 +2,10 @@ using UnityEngine;
 using System.Collections;
 using TNet;
 
-public abstract class TerminalControl : ShipControl {
+public class TerminalControl : ShipControl {
 
 	[SerializeField]
 	protected Terminal shipCore;
-
-	public override void CleanUp ()
-	{
-		if (!enabled) return;
-		base.CleanUp ();
-	}
 
     void Update() {
 
@@ -106,6 +100,8 @@ public abstract class TerminalControl : ShipControl {
     protected override void OnEnable() {
         base.OnEnable();
 
+        targetLookDirectionToSync = transform.rotation;
+
         StartCoroutine( SyncToHost() );
     }
 
@@ -129,8 +125,11 @@ public abstract class TerminalControl : ShipControl {
 
     }
 
-    private void OnDisable() {
+    protected override void OnDisable() {
+        base.OnDisable();
+
         //Reset all variables on disable
+        targetLookDirectionToSync = Quaternion.identity;
         inputDirectionSync = Vector3.zero;
         breakButtonSync = false;
         boostSync = false;

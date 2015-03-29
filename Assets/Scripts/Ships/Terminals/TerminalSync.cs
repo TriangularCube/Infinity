@@ -30,11 +30,25 @@ public class TerminalSync : ShipSync {
     }
 
     protected override void SendData() {
-        throw new System.NotImplementedException();
+        tno.SendQuickly( 1, Target.Others, transform.position, transform.rotation, fireWeapon1, fireWeapon2, fireWeapon3 );
     }
 
-    [RFC( 2 )]
+    [RFC( 1 )]
+    private void RecieveSync( Vector3 position, Quaternion facing, bool fire1, bool fire2, bool fire3 ) {
+
+        //TODO Implement out of order handling
+        // TODO Do stuff with recieved sync data
+
+        // TODO Facing and Flight Input
+
+        // TODO Fire Weapon
+
+    }
+
+    [RFC( 2 )] //The rest of this is in TerminalControl
     protected void RecieveSyncOnHost( Quaternion lookDirection, Vector3 input, bool onBreak, bool boost, bool weapon1Fire, bool weapon2Fire, bool weapon3Fire ) {
+
+        if( !gameObject.activeSelf ) return; //Don't process if we're not active (probably due to being docked)
 
         targetLookDirection = lookDirection;
         inputDirection = input;

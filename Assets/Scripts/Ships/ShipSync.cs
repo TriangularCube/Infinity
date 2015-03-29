@@ -3,7 +3,8 @@ using System.Collections;
 
 public abstract class ShipSync : TNBehaviour {
 
-    protected virtual void OnEnable() {
+    protected override void OnEnable() {
+        base.OnEnable();
         if( TNManager.isHosting ) StartCoroutine( SyncData() );
     }
 

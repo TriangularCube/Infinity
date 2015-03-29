@@ -12,8 +12,8 @@ public class FlagshipSync : ShipSync {
 
     [RFC( 2 )]
     public void UpdateNavigationControl( Vector3 moveVector, Quaternion lookVector ) {
-        targetLookDirection = lookVector;
-        targetAccelDirection = moveVector;
+        //targetLookDirection = lookVector;
+        //targetAccelDirection = moveVector;
     }
     #endregion Sync
 

@@ -91,29 +91,4 @@ public class Interceptor : Terminal {
 	private int boostCharge = 360; //1 Boost unit is used per physics tick
 	#endregion Boost
 	#endregion Piloting
-
-    /*
-	#region Sync
-	protected override void SendData () {
-		//TODO Sync information
-
-		tno.SendQuickly( 1, Target.Others, transform.position, transform.rotation, currentWeapon, fireWeapon );
-		//TODO Sync Boost and Boost Charge
-	}
-
-	[RFC(1)]
-	private void RecieveSync( Vector3 position, Quaternion facing, int selectedWeapon, bool fire ){
-
-        //TODO Implement out of order handling
-		// TODO Do stuff with recieved sync data
-
-        // TODO Facing and Flight Input
-
-        currentWeapon = selectedWeapon;
-
-        // TODO Fire Weapon
-        
-	}
-	#endregion
-    */
 }

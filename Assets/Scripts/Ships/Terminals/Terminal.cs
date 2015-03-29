@@ -81,11 +81,6 @@ public abstract class Terminal : Ship {
         //TODO, DEBUG
         AssignWeapons( weaponSelection );
 
-
-        //Reset the target vectors and rotations
-        status.targetLookDirection = transform.rotation;
-        status.inputDirection = Vector3.zero;
-
         //Set ourself to active
         gameObject.SetActive( true );
 
@@ -106,7 +101,7 @@ public abstract class Terminal : Ship {
 
     [RFC]
     public void IsInRangeToDock( bool inRange ) {
-        if( inRange != inDockingRange ) return;
+        if( inRange == inDockingRange ) return;
 
         if( pilot != TNManager.player ) {
             tno.Send( "IsInRangeToDock", pilot, inRange );
@@ -120,7 +115,7 @@ public abstract class Terminal : Ship {
 
 	[RFC]
 	protected void RequestDock(){
-		
+
 		//If we're somehow no longer in docking range in the time it took us to request docking, do nothing
 		if (!inDockingRange) return;
 		
