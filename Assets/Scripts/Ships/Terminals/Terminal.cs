@@ -111,15 +111,12 @@ public abstract class Terminal : Ship {
         if( !weaponSwitchCooldown ) {
             if( switchToNextWeapon ) {
                 tno.Send( "SwitchWeapon", Target.Host, true );
-            }
-
-            if( switchToPrevWeapon ) {
+                //Do dead reckoning here
+            } else if( switchToPrevWeapon ) {
                 tno.Send( "SwitchWeapon", Target.Host, false );
+                //Do dead reckoning here
             }
 
-            if( switchToPrevWeapon || switchToNextWeapon ) {
-                StartCoroutine( WeaponSwitchCooldown() );
-            }
         }
         
         fireWeaponToSync = fireCurrentWeapon;
@@ -129,7 +126,7 @@ public abstract class Terminal : Ship {
     [RFC]
     protected void SwitchWeapon( bool direction ) {
 
-        //Debug.Log( ++currentWeapon > 3 );
+        if( TNManager.isHosting ) tno.Send( "SwitchWeapon", Target.Others, direction );
 
         if( direction ) {
             if( ++currentWeapon > 3 ) currentWeapon = 1;
@@ -137,7 +134,7 @@ public abstract class Terminal : Ship {
             if( --currentWeapon < 1 ) currentWeapon = 3;
         }
 
-        if( !TNManager.isHosting ) StartCoroutine( WeaponSwitchCooldown() );
+        StartCoroutine( WeaponSwitchCooldown() );
 
     }
     #endregion Weapons
