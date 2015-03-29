@@ -3,11 +3,6 @@ using System.Collections;
 
 public class Navigation : ShipControl {
 
-    private TNObject tno;
-    void Awake() {
-        tno = GetComponent<TNObject>();
-    }
-
     private bool isFreelook = true;
     private Quaternion targetShipFacing = Quaternion.identity;
 

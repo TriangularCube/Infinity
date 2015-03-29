@@ -17,7 +17,7 @@ public class Observation : ShipControl {
 		}
 
 		//TODO Optimize this
-		lookRotation = _cameraPoint.rotation * storedRotation;
+		lookRotation = cameraPoint.rotation * storedRotation;
 
 		UpdateCamera();
 

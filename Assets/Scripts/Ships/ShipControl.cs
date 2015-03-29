@@ -3,12 +3,7 @@
 public abstract class ShipControl : TNBehaviour {
 
 	[SerializeField]
-	protected Transform _cameraPoint;
-	public Transform cameraPoint{
-		get{
-			return _cameraPoint;
-		}
-	}
+	protected Transform cameraPoint;
 
 	protected Camera playerCamera = null;
 
@@ -18,8 +13,9 @@ public abstract class ShipControl : TNBehaviour {
     //The rotation the Camera will reference when updating after physics update
 	protected Quaternion lookRotation;
 
-	protected virtual void OnEnable(){
-		lookRotation = _cameraPoint.rotation;
+	protected override void OnEnable(){
+        base.OnEnable();
+		lookRotation = cameraPoint.rotation;
 	}
 
 	void FixedUpdate(){
@@ -35,7 +31,7 @@ public abstract class ShipControl : TNBehaviour {
 			
 		//Update the camera. Since Update runs after internal physics updates, this means all movement would have been done by this time
 		playerCamera.transform.rotation = lookRotation;
-		playerCamera.transform.position = lookRotation * _cameraPoint.localPosition + transform.position;
+		playerCamera.transform.position = lookRotation * cameraPoint.localPosition + transform.position;
 			
 		updateCamera = false;
 	}
