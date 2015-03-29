@@ -130,9 +130,6 @@ public abstract class Terminal : Ship {
 
 	public void DockPrep(){
 
-		//Cleanup the control
-		control.CleanUp ();
-
 		//Unseat the pilot
 		pilot = null;
 

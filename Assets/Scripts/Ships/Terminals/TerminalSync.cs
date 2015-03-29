@@ -46,4 +46,21 @@ public class TerminalSync : ShipSync {
         fireWeapon3 = weapon3Fire;
 
     }
+
+    void OnDisable() {
+        targetLookDirection = Quaternion.identity;
+        inputDirection = Vector3.zero;
+        breakButton = false;
+        isBoostActive = false;
+
+        fireWeapon1 = false;
+        fireWeapon2 = false;
+        fireWeapon3 = false;
+    }
+
+    protected override void OnEnable() {
+        base.OnEnable();
+
+        targetLookDirection = transform.rotation;//Align the look rotation on launch
+    }
 }

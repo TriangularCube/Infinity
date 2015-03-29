@@ -242,8 +242,8 @@ public class Flagship : Ship {
 	}
 
     protected virtual void ResetControls(){
-		observation.CleanUp();
-		//navigation.CleanUp();
+        observation.enabled = false;
+        navigation.enabled = false;
 	}
     #endregion Assignment
 }

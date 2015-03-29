@@ -53,9 +53,7 @@ public abstract class ShipControl : TNBehaviour {
 	}
 
 	//Do this to clean up the object in preparation for deactivation or destruction
-	public virtual void CleanUp(){
-
-		if (!enabled) return;
+	protected virtual void OnDisable(){
 
         updateCamera = false;
 		playerCamera = null;
