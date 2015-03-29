@@ -44,20 +44,6 @@ public abstract class Ship : TNBehaviour {
 	#endregion
 
 	#region Sync
-	protected override void OnEnable(){
-		base.OnEnable ();
-
-		if( TNManager.isHosting) StartCoroutine( Sync () );
-	}
-
-	private IEnumerator Sync(){
-		while (true) {
-			SendData();
-
-			yield return new WaitForSeconds (1f / SessionManager.instance.maxNetworkUpdatesPerSecond);
-		}
-	}
-
-	protected abstract void SendData ();
+	
 	#endregion
 }

@@ -89,6 +89,7 @@ public class Interceptor : Terminal {
 	#endregion Boost
 	#endregion Piloting
 
+    /*
 	#region Sync
 	protected override void SendData () {
 		//TODO Sync information
@@ -111,4 +112,5 @@ public class Interceptor : Terminal {
         
 	}
 	#endregion
+    */
 }

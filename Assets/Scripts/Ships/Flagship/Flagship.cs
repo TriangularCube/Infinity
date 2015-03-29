@@ -247,6 +247,7 @@ public class Flagship : Ship {
 	}
     #endregion Assignment
 
+    /*
     #region Sync
     protected override void SendData() {
         //TODO
@@ -259,4 +260,5 @@ public class Flagship : Ship {
         targetAccelDirection = moveVector;
     }
     #endregion Sync
+    */
 }

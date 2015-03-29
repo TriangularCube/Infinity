@@ -10,12 +10,13 @@ public abstract class Terminal : Ship {
 	[SerializeField]
 	protected TerminalControl control;
 
+    [SerializeField]
+    protected TerminalSync sync;
+
 	protected override void Awake () {
 		base.Awake ();
 
 		//SetupDockingAndLaunching();
-
-        isUnderRepair = false; //HACK, TODO
 
         button = HUD.instance.RequestNewShipButton( this );
 
@@ -102,8 +103,8 @@ public abstract class Terminal : Ship {
 
     protected abstract void AssignWeapons( string weaponSelection );
 
-    protected int currentWeapon = 1;
-    protected bool fireWeapon; //The variables synced from the Host
+    protected int currentWeapon { get { return sync.currentWeapon; } set { sync.currentWeapon = value; } }
+    protected bool fireWeapon { get { return sync.fireWeapon; } } //The variables synced from the Host
     private bool fireWeaponToSync; //The variables to sync to the Host
 
     public void UpdateFireControl( bool switchToNextWeapon, bool switchToPrevWeapon, bool fireCurrentWeapon ) {
@@ -247,7 +248,7 @@ public abstract class Terminal : Ship {
         }
     }
 
-    public bool isUnderRepair{ get; private set; }
+
 
     private ShipSelectButton button;
     #endregion HUD Hooks
@@ -273,18 +274,6 @@ public abstract class Terminal : Ship {
     private void SendDataToHost() {
 
         tno.SendQuickly( 2, Target.Host, targetLookDirectionToSync, inputDirectionSync, breakButtonSync, boostSync, fireWeaponToSync );
-
-    }
-
-    [RFC(2)]
-    protected void RecieveSyncOnHost( Quaternion lookDirection, Vector3 input, bool onBreak, bool boost, bool fireCurrentWeapon ){
-
-        targetLookDirection = lookDirection;
-        inputDirection = input;
-        breakButton = onBreak;
-        isBoostActive = boost;
-
-        fireWeapon = fireCurrentWeapon;
 
     }
     #endregion Sync To Host
