@@ -5,4 +5,5 @@ public class FlagshipHUD : PimpedMonoBehaviour {
 
     [SerializeField]
     GameObject observationDisplay, navigationDisplay;
+
 }
