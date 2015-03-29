@@ -22,14 +22,18 @@ public class Flagship : Ship {
 		//TODO Sort the Terminals we just added
 	}
 
-    #region Ship Operations
-    private void Update() {
+    [SerializeField]
+    private Transform directionIndicator;
 
+    #region Ship Operations
+    private void FixedUpdate() {
         //Station Control
 
         //Attitude Control
         AttitudeContrl();
+    }
 
+    private void Update() {
         //Fire Control...?
 
     }
