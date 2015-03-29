@@ -11,7 +11,7 @@ public abstract class Terminal : Ship {
 	protected TerminalControl control;
 
     [SerializeField]
-    protected TerminalSync sync;
+    protected TerminalSync status;
 
 	protected override void Awake () {
 		base.Awake ();
@@ -46,103 +46,24 @@ public abstract class Terminal : Ship {
 
     protected void FireControl() {
 
-        if( fireWeapon ) {
-            switch( currentWeapon ) {
-                case 1:
-                    weapon1.Fire();
-                    break;
-                case 2:
-                    weapon2.Fire();
-                    break;
-                case 3:
-                    weapon3.Fire();
-                    break;
-            }
-        }
-    }
+        if( status.fireWeapon1 ) weapon1.Fire();
 
+        if( status.fireWeapon2 ) weapon2.Fire();
 
-    //Our vector to rotate towards, which happens to also be our free look vector
-    protected Quaternion targetLookDirection = Quaternion.identity;
-    private Quaternion targetLookDirectionToSync = Quaternion.identity;
-    public void UpdateLookVector( Quaternion newQuat ) {
-        targetLookDirectionToSync = newQuat;
-    }
+        if( status.fireWeapon3 ) weapon3.Fire();
 
-    protected bool isBoostActive = false;
-    private bool boostSync = false;
-    public void UpdateBurst( bool burst ) {
-        boostSync = burst;
-    }
-
-    protected Vector3 inputDirection = Vector3.zero; //A normalized input vector
-    protected bool breakButton = false;
-
-    private Vector3 inputDirectionSync = Vector3.zero;
-    private bool breakButtonSync = false;
-
-    public void UpdateInputAndBreak( Vector3 newInput, bool newBreak ) {
-        inputDirectionSync = newInput;
-        breakButtonSync = newBreak;
     }
     #endregion
 
     #region Weapons
-    private bool weaponSwitchCooldown = false;
-    [SerializeField]
-    //Weapon Switch cooldown time
-    private float weaponSwitchCooldownTime = 0.3f;
-
-    private IEnumerator WeaponSwitchCooldown() {
-        weaponSwitchCooldown = true;
-        yield return new WaitForSeconds( weaponSwitchCooldownTime );
-        weaponSwitchCooldown = false;
-    }
-
     protected TerminalWeapon weapon1, weapon2, weapon3;
 
     protected abstract void AssignWeapons( string weaponSelection );
-
-    protected int currentWeapon { get { return sync.currentWeapon; } set { sync.currentWeapon = value; } }
-    protected bool fireWeapon { get { return sync.fireWeapon; } } //The variables synced from the Host
-    private bool fireWeaponToSync; //The variables to sync to the Host
-
-    public void UpdateFireControl( bool switchToNextWeapon, bool switchToPrevWeapon, bool fireCurrentWeapon ) {
-
-        if( !weaponSwitchCooldown ) {
-            if( switchToNextWeapon ) {
-                tno.Send( "SwitchWeapon", Target.Host, true );
-                //Do dead reckoning here
-            } else if( switchToPrevWeapon ) {
-                tno.Send( "SwitchWeapon", Target.Host, false );
-                //Do dead reckoning here
-            }
-
-        }
-        
-        fireWeaponToSync = fireCurrentWeapon;
-
-    }
-
-    [RFC]
-    protected void SwitchWeapon( bool direction ) {
-
-        if( TNManager.isHosting ) tno.Send( "SwitchWeapon", Target.Others, direction );
-
-        if( direction ) {
-            if( ++currentWeapon > 3 ) currentWeapon = 1;
-        } else {
-            if( --currentWeapon < 1 ) currentWeapon = 3;
-        }
-
-        StartCoroutine( WeaponSwitchCooldown() );
-
-    }
     #endregion Weapons
 
     #region Launching and Docking
     #region Launching
-	public void OnLaunch( Netplayer toBeSeated, string weaponSelection ){
+    public void OnLaunch( Netplayer toBeSeated, string weaponSelection ){
 		//Unparent ourself
 		transform.parent = null;
 		
@@ -162,10 +83,8 @@ public abstract class Terminal : Ship {
 
 
         //Reset the target vectors and rotations
-        targetLookDirection = transform.rotation;
-        targetLookDirectionToSync = targetLookDirection;
-        inputDirection = Vector3.zero;
-        inputDirectionSync = Vector3.zero;
+        status.targetLookDirection = transform.rotation;
+        status.inputDirection = Vector3.zero;
 
         //Set ourself to active
         gameObject.SetActive( true );
@@ -187,22 +106,17 @@ public abstract class Terminal : Ship {
 
     [RFC]
     public void IsInRangeToDock( bool inRange ) {
-        if( inRange != inDockingRange ) {
-            if( pilot != TNManager.player && TNManager.isHosting ) {
-                tno.Send( "IsInRangeToDock", pilot, inRange );
-            }
+        if( inRange != inDockingRange ) return;
 
-            inDockingRange = inRange;
-
-            HUD.instance.DockingRangeChange( inRange );
+        if( pilot != TNManager.player ) {
+            tno.Send( "IsInRangeToDock", pilot, inRange );
+            return;
         }
+
+        inDockingRange = inRange;
+
+        HUD.instance.DockingRangeChange( inRange );
     }
-	
-	public void AttemptRequestDock(){
-
-		tno.Send( "RequestDock", Target.Host );
-
-	}
 
 	[RFC]
 	protected void RequestDock(){
@@ -242,39 +156,12 @@ public abstract class Terminal : Ship {
         }
     }
 
-    public int selectedWeapon {
-        get {
-            return currentWeapon;
-        }
-    }
-
-
+    //DEBUG
+    public int selectedWeapon { get { return control.selectedWeapon; } }
 
     private ShipSelectButton button;
     #endregion HUD Hooks
 
 
-    #region Sync To Host
-    protected override void OnEnable() {
-        base.OnEnable();
-
-        if( TNManager.player == pilot ) StartCoroutine( SyncToHost() );
-        //Debug.Break();
-    }
-
-    private IEnumerator SyncToHost() {
-
-        while( true ) {
-            SendDataToHost();
-            yield return new WaitForSeconds( 1f / SessionManager.instance.maxNetworkUpdatesPerSecond );
-        }
-
-    }
-
-    private void SendDataToHost() {
-
-        tno.SendQuickly( 2, Target.Host, targetLookDirectionToSync, inputDirectionSync, breakButtonSync, boostSync, fireWeaponToSync );
-
-    }
-    #endregion Sync To Host
+    
 }
