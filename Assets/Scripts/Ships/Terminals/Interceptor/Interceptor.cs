@@ -12,12 +12,15 @@ public class Interceptor : Terminal {
 	private float boostAcceleration;
 #pragma warning restore 0649
 
+    //DEBUG
+    Vector3 inputDirection { get { return status.inputDirection; } }
+
 	protected override void StationControl(){
 
 		//Calculate max magnitude change
 		float mag = 0f;
 
-		if (!isBoostActive) {
+		if (!status.isBoostActive) {
 			Vector3 forceVector = Vector3.zero;
 
 			//Process the left and right thrust
@@ -44,9 +47,9 @@ public class Interceptor : Terminal {
 			mag = boostAcceleration;
 		}
 
-		float currentMaxSpeed = isBoostActive ? maxBurstSpeed : maxSpeed;
+		float currentMaxSpeed = status.isBoostActive ? maxBurstSpeed : maxSpeed;
 
-		rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, targetLookDirection * inputDirection.normalized * currentMaxSpeed, mag * Time.deltaTime );
+		rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, status.targetLookDirection * inputDirection.normalized * currentMaxSpeed, mag * Time.deltaTime );
 
 	}
 	#endregion Station Control
@@ -55,7 +58,7 @@ public class Interceptor : Terminal {
 	protected override void AttitudeControl(){
 
 		//TODO Do some fancy attitude controls later.
-		rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetLookDirection, 5f ) );
+		rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, status.targetLookDirection, 5f ) );
 
 	}
 	#endregion Attitude Control

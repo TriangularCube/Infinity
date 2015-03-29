@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public abstract class ShipSync : PimpedMonoBehaviour {
+public abstract class ShipSync : TNBehaviour {
 
     protected virtual void OnEnable() {
         if( TNManager.isHosting ) StartCoroutine( SyncData() );

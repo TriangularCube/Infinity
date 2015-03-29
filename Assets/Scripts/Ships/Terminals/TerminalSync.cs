@@ -2,16 +2,25 @@
 using System.Collections;
 using TNet;
 
-public abstract class TerminalSync : ShipSync {
+public class TerminalSync : ShipSync {
 
     [SerializeField]
     private Terminal core;
 
-    //The current weapon this terminal has selected
-    public int currentWeapon = 1;
+    //Our vector to rotate towards, which happens to also be our free look vector
+    public Quaternion targetLookDirection = Quaternion.identity;
+
+    //A normalized input vector
+    public Vector3 inputDirection = Vector3.zero;
+
+    //Whether we are applying Breaks
+    public bool breakButton = false;
+
+    //Boost Status
+    public bool isBoostActive = false;
 
     //The state of the trigger
-    public bool fireWeapon = false;
+    public bool fireWeapon1 = false, fireWeapon2 = false, fireWeapon3 = false;
 
     //Whether this Terminal is currently under repairs
     public bool isUnderRepair { get; private set; }
@@ -20,15 +29,21 @@ public abstract class TerminalSync : ShipSync {
         isUnderRepair = false; //HACK, TODO
     }
 
+    protected override void SendData() {
+        throw new System.NotImplementedException();
+    }
+
     [RFC( 2 )]
-    protected void RecieveSyncOnHost( Quaternion lookDirection, Vector3 input, bool onBreak, bool boost, bool fireCurrentWeapon ) {
+    protected void RecieveSyncOnHost( Quaternion lookDirection, Vector3 input, bool onBreak, bool boost, bool weapon1Fire, bool weapon2Fire, bool weapon3Fire ) {
 
         targetLookDirection = lookDirection;
         inputDirection = input;
         breakButton = onBreak;
         isBoostActive = boost;
-
-        fireWeapon = fireCurrentWeapon;
+        
+        fireWeapon1 = weapon1Fire;
+        fireWeapon2 = weapon2Fire;
+        fireWeapon3 = weapon3Fire;
 
     }
 }

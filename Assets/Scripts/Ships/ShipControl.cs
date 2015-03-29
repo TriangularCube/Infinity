@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public abstract class ShipControl : PimpedMonoBehaviour {
+public abstract class ShipControl : TNBehaviour {
 
 	[SerializeField]
 	protected Transform _cameraPoint;
