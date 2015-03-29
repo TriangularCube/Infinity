@@ -22,8 +22,10 @@ public class Flagship : Ship {
 		//TODO Sort the Terminals we just added
 	}
 
+#pragma warning disable 0649
     [SerializeField]
     private Transform directionIndicator;
+#pragma warning restore 0649
 
     #region Ship Operations
     private void FixedUpdate() {
@@ -76,8 +78,7 @@ public class Flagship : Ship {
 
 	#region Docking Terminal
 	public void RequestDock( uint termID ){
-		
-		Debug.Log( "Requested to Dock" );
+
 		tno.Send( "DockTerminal", Target.All, termID );
 		
 	}
@@ -112,8 +113,6 @@ public class Flagship : Ship {
 
 		//Assign the pilot to Default
 		AssignDefault( pilot );
-
-        if( pilot == TNManager.player ) Debug.Log( "Docking Complete" );
 	}
 	#endregion
 
