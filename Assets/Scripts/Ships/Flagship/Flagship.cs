@@ -36,6 +36,11 @@ public class Flagship : Ship {
     private void Update() {
         //Fire Control...?
 
+        //Change the direction control indicator
+        if( directionIndicator && rigidbody.velocity != Vector3.zero ) {
+            directionIndicator.rotation = Quaternion.LookRotation( rigidbody.velocity );
+        }
+
     }
 
     #region Station Control
@@ -98,6 +103,9 @@ public class Flagship : Ship {
 		//Tell all relevant parties something's docked
         if( pilot == TNManager.player ) {
             HUD.instance.PlayerShipDocked();
+
+            //Turn the direction indicator on (This is really a HUD operation, but for sake of simplicity of code it is here)
+            directionIndicator.gameObject.SetActive( true );
         } else {
             HUD.instance.AllyShipDocked( terminal );
         }
@@ -141,6 +149,8 @@ public class Flagship : Ship {
 		if (player == TNManager.player) {
 			//Reset all controls
 			ResetControls();
+
+            directionIndicator.gameObject.SetActive( false );
 		}
 		
 		RemovePilot (player);
