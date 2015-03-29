@@ -24,15 +24,16 @@ public abstract class TerminalWeapon : TNBehaviour {
     public abstract int reserve { get; }
 
     #region Heat Handling
-    protected float _currentHeat = 0f;
-    /* <summery>
-     * The current heat value as a percentage of max Heat Capacity
+    /* <summery> The current heat value as a percentage of max Heat Capacity
      */ 
+    protected float _currentHeat = 0f;
     public float currentHeat { get { return _currentHeat / heatCapacity; } } //This returns a percentage
 
+    //Overheat Handling
     protected bool _overHeated = false;
     public bool isOverHeated { get { return _overHeated; } }
 
+    //Heat stats
     [SerializeField]
     protected float heatCapacity = 100f;
     [SerializeField]
@@ -40,6 +41,8 @@ public abstract class TerminalWeapon : TNBehaviour {
     [SerializeField]
     protected float heatSinkPerTick = 2f;
 
+
+    //Called to process heat sink
     protected static void HeatSink( ref float currentHeat, float heatSink, ref bool overHeat ) {
 
         if( currentHeat == 0f ) {
@@ -57,10 +60,13 @@ public abstract class TerminalWeapon : TNBehaviour {
 
     }
 
+
+    //Called to process heat generation
     protected static void HeatHandling( ref float currentHeat, float heatToAdd, float maxHeat, ref bool overHeat ) {
 
-        currentHeat = Mathf.Clamp( currentHeat + heatToAdd, 0f, maxHeat );
-        if( currentHeat == maxHeat ) {
+        currentHeat += heatToAdd;
+        if( currentHeat >= maxHeat ) {
+            currentHeat = maxHeat;
             overHeat = true;
         }
 

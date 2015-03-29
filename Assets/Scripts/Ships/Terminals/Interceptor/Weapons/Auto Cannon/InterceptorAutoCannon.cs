@@ -8,7 +8,7 @@ public class InterceptorAutoCannon : TerminalWeapon {
         get { return reserveAmmunition; }
     }
 
-    public int reserveAmmunition = 500;
+    private int reserveAmmunition = 500;
 
 #pragma warning disable 0649
     [SerializeField]
