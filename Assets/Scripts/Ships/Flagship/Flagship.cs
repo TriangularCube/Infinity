@@ -40,12 +40,12 @@ public class Flagship : Ship {
 
     private void StationControl() {
         //NOTE: Using Forward Acceleration speed here as a placeholder. The Acceleration direction mechanism needs a serious overhaul.
-        rigidBody.velocity = Vector3.MoveTowards( rigidBody.velocity, targetAccelDirection * maxSpeed, forwardAcceleration * Time.deltaTime );
+        rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, targetAccelDirection * maxSpeed, forwardAcceleration * Time.deltaTime );
     }
 
     private void AttitudeContrl() {
         //TODO Do some fancy attitude controls later.
-        rigidBody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetLookDirection, 2f ) );
+        rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetLookDirection, 2f ) );
     }
 
     #endregion Station Control

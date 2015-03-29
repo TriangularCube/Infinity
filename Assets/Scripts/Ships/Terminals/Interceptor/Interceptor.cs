@@ -46,7 +46,7 @@ public class Interceptor : Terminal {
 
 		float currentMaxSpeed = isBoostActive ? maxBurstSpeed : maxSpeed;
 
-		rigidBody.velocity = Vector3.MoveTowards( rigidBody.velocity, targetLookDirection * inputDirection.normalized * currentMaxSpeed, mag * Time.deltaTime );
+		rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, targetLookDirection * inputDirection.normalized * currentMaxSpeed, mag * Time.deltaTime );
 
 	}
 	#endregion Station Control
@@ -55,7 +55,7 @@ public class Interceptor : Terminal {
 	protected override void AttitudeControl(){
 
 		//TODO Do some fancy attitude controls later.
-		rigidBody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetLookDirection, 5f ) );
+		rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetLookDirection, 5f ) );
 
 	}
 	#endregion Attitude Control

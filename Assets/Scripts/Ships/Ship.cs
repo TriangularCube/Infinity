@@ -21,7 +21,7 @@ public abstract class Ship : TNBehaviour {
 	}
 
     private Rigidbody _rigidBody;
-    public Rigidbody rigidBody {
+    public new Rigidbody rigidbody {
         get {
             return _rigidBody;
         }

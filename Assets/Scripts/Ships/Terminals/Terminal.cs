@@ -225,7 +225,7 @@ public abstract class Terminal : Ship {
 		pilot = null;
 
 		//Zero the velocity
-		rigidBody.velocity = Vector3.zero;
+		rigidbody.velocity = Vector3.zero;
 
 		//Disable the Terminal
 		gameObject.SetActive(false);
