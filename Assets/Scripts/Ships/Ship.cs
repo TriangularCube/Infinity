@@ -42,8 +42,4 @@ public abstract class Ship : TNBehaviour {
 	[SerializeField, Group("Movement")]
 	protected float forwardAcceleration, backwardAcceleration, sideAcceleration, verticalAcceration;
 	#endregion
-
-	#region Sync
-	
-	#endregion
 }

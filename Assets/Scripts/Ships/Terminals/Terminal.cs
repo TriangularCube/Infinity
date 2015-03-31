@@ -16,8 +16,6 @@ public abstract class Terminal : Ship {
 	protected override void Awake () {
 		base.Awake ();
 
-		//SetupDockingAndLaunching();
-
         button = HUD.instance.RequestNewShipButton( this );
 
 		/*
@@ -46,11 +44,11 @@ public abstract class Terminal : Ship {
 
     protected void FireControl() {
 
-        if( status.fireWeapon1 ) weapon1.Fire();
+        if( status.weapon1Fire ) weapon1.Fire();
 
-        if( status.fireWeapon2 ) weapon2.Fire();
+        if( status.weapon2Fire ) weapon2.Fire();
 
-        if( status.fireWeapon3 ) weapon3.Fire();
+        if( status.weapon3Fire ) weapon3.Fire();
 
     }
     #endregion
@@ -84,8 +82,10 @@ public abstract class Terminal : Ship {
         //Set ourself to active
         gameObject.SetActive( true );
 
-        //TODO Add some forwards momentum
-        //rigidBody.AddRelativeForce( Vector3.forward * 20, ForceMode.Impulse );
+        //Setup Launch Momentum and Attitude
+        status.targetLookDirection = transform.rotation;
+
+        rigidbody.AddRelativeForce( Vector3.forward * 20, ForceMode.Impulse );
 
         if( pilot == TNManager.player ) {
             HUD.instance.PlayerShipLaunched( this );

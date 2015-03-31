@@ -28,6 +28,7 @@ public abstract class TNBehaviour : PimpedMonoBehaviour
 	{
 		if (Application.isPlaying)
 		{
+            //Debug.Log( tno );
 			tno.rebuildMethodList = true;
 		}
 	}

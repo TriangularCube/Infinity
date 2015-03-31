@@ -60,7 +60,7 @@ public class Navigation : ShipControl {
     private IEnumerator SyncToHost() {
         while( true ) {
             //Do Stuff
-            tno.SendQuickly( 2, TNet.Target.Host, Vector3.zero, targetShipFacing );//TODO Not done yet
+            tno.SendQuickly( 2, TNet.Target.Host, Vector3.zero, targetShipFacing );//Sent to FlagshipSync
 
             yield return new WaitForSeconds( 1f / SessionManager.instance.maxNetworkUpdatesPerSecond );
         }

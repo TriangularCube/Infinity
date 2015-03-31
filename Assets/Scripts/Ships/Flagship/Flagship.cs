@@ -1,6 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 using TNet;
 
 using Netplayer = TNet.Player;
@@ -32,7 +30,7 @@ public class Flagship : Ship {
         //Station Control
 
         //Attitude Control
-        AttitudeContrl();
+        AttitudeControl();
     }
 
     private void Update() {
