@@ -23,6 +23,9 @@ public class Flagship : Ship {
 #pragma warning disable 0649
     [SerializeField]
     private Transform directionIndicator;
+
+    [SerializeField]
+    private FlagshipSync status;
 #pragma warning restore 0649
 
     #region Ship Operations
@@ -43,21 +46,18 @@ public class Flagship : Ship {
 
     }
 
-    #region Station Control
-    private Quaternion targetLookDirection = Quaternion.identity;
-    private Vector3 targetAccelDirection = Vector3.zero;
-
+    #region Station and Attitude Control
     private void StationControl() {
-        //NOTE: Using Forward Acceleration speed here as a placeholder. The Acceleration direction mechanism needs a serious overhaul.
-        rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, targetAccelDirection * maxSpeed, forwardAcceleration * Time.deltaTime );
+        //NOTE: Using Forward Acceleration speed here as a placeholder. The Acceleration direction mechanism needs a serious overhaul. TODO
+        rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, status.targetAccelDirection * maxSpeed, forwardAcceleration * Time.deltaTime );
     }
 
-    private void AttitudeContrl() {
+    private void AttitudeControl() {
         //TODO Do some fancy attitude controls later.
-        rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, targetLookDirection, 2f ) );
+        rigidbody.MoveRotation( Quaternion.RotateTowards( transform.rotation, status.targetLookDirection, 2f ) );
     }
 
-    #endregion Station Control
+    #endregion Station and attitude Control
 
     #endregion Ship Operations
 
