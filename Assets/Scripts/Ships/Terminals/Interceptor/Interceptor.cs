@@ -73,13 +73,19 @@ public class Interceptor : Terminal {
 
 		//The following are DEBUG functionality TODO, HACK
 
+        //TODO Parse the weapon selections and enable appropriate weapons
 		weapon1 = autoCannon;
+        weapon2 = plasmaGun;
+        weapon3 = bombLauncher;
+
+        //Link the weapons' statuses and enable them
+        weapon1.WeaponStatLink( status.weapon1 );
 		weapon1.gameObject.SetActive( true );
 
-		weapon2 = plasmaGun;
+        weapon2.WeaponStatLink( status.weapon2 );
 		weapon2.gameObject.SetActive( true );
 
-		weapon3 = bombLauncher;
+        weapon3.WeaponStatLink( status.weapon3 );
 		weapon3.gameObject.SetActive( true );
 
 	}

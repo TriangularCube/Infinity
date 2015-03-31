@@ -41,6 +41,7 @@ public class TerminalControl : ShipControl {
             boostSync = Input.GetButton( "Boost" );
             breakButtonSync = Input.GetButton( "Break" );
 
+            //TODO Weapon Selection needs to be overhauled
             #region Weapon Switching and Firing
             if( !weaponSwitchCooldown ) {
                 if( Input.GetAxis( "Mouse ScrollWheel" ) > 0f ) {

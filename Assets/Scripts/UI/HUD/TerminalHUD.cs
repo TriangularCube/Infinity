@@ -7,28 +7,22 @@ public class TerminalHUD : PimpedMonoBehaviour {
     [SerializeField]
     private GameObject terminalHUD;
 
-    private Terminal activeTerminal = null;
+    private TerminalStat activeTerminal = null;
 #pragma warning restore 0649
 
     private void Update() {
         UpdateTerminalWeaponStatus();
     }
 
-    private void Awake() {
-        SetupWeapons();
-    }
-
     #region Enable and Disable
-    public void EnableTerminalHUD( Terminal term ) {
+    public void EnableTerminalHUD( TerminalStat term ) {
 
         activeTerminal = term;
 
-        weapons = activeTerminal.weaponSelection;
-
         //Set the weapon name labels
-        firstWeaponLabel.text = weapons[0].weaponName;
-        secondWeaponLabel.text = weapons[1].weaponName;
-        thirdWeaponLabel.text = weapons[2].weaponName;
+        firstWeaponLabel.text = activeTerminal.weapon1.name;
+        secondWeaponLabel.text = activeTerminal.weapon2.name;
+        thirdWeaponLabel.text = activeTerminal.weapon3.name;
 
         terminalHUD.SetActive( true );
 
@@ -41,9 +35,6 @@ public class TerminalHUD : PimpedMonoBehaviour {
         terminalHUD.SetActive( false );
 
         activeTerminal = null;
-        weapons = null;
-
-        selectedWeapon = 1;
 
         firstWeaponLabel.text = "Weapon 1";
         secondWeaponLabel.text = "Weapon 2";
@@ -82,26 +73,17 @@ public class TerminalHUD : PimpedMonoBehaviour {
 
     [SerializeField, Group( "Weapons" )]
     private Transform WeaponSelectionLabel;
+
+    [SerializeField, Group( "Weapons" )]
+    private GameObject selection1, selection2, selection3;
 #pragma warning restore 0649
 
-
-    private Vector3 firstWeaponPosition;
-    private Vector3 secondWeaponPosition;
-    private Vector3 thirdWeaponPosition;
-
-    private void SetupWeapons() {
-        //Setup Position Refrences for Weapon Labels
-        firstWeaponPosition = firstWeaponLabel.transform.position;
-        secondWeaponPosition = secondWeaponLabel.transform.position;
-        thirdWeaponPosition = thirdWeaponLabel.transform.position;
-    }
-
-
-    private TerminalWeapon[] weapons;
-    private int selectedWeapon = 1;
+    //private TerminalWeapon[] weapons;
+    //private int selectedWeapon = 1;
 
     private void UpdateTerminalWeaponStatus() {
 
+        /*
         if( selectedWeapon != activeTerminal.selectedWeapon ) {
 
             selectedWeapon = activeTerminal.selectedWeapon;
@@ -121,28 +103,29 @@ public class TerminalHUD : PimpedMonoBehaviour {
             }
 
         }
+        */
 
-        firstWeaponAmmoCounter.text = weapons[0].reserve.ToString();
-        secondWeaponAmmoCounter.text = weapons[1].reserve.ToString();
-        thirdWeaponAmmoCounter.text = weapons[2].reserve.ToString();
+        firstWeaponAmmoCounter.text = activeTerminal.weapon1.ammo.ToString();
+        secondWeaponAmmoCounter.text = activeTerminal.weapon2.ammo.ToString();
+        thirdWeaponAmmoCounter.text = activeTerminal.weapon3.ammo.ToString();
 
-        if( weapons[0].isOverHeated )
+        if( activeTerminal.weapon1.overheat )
             firstWeaponHeatDisplay.color = overheated;
         else
             firstWeaponHeatDisplay.color = notOverheated;
-        firstWeaponHeatDisplay.fillAmount = weapons[0].currentHeat;
+        firstWeaponHeatDisplay.fillAmount = activeTerminal.weapon1.heatPercent;
 
-        if( weapons[1].isOverHeated )
+        if( activeTerminal.weapon2.overheat )
             secondWeaponHeatDisplay.color = overheated;
         else
             secondWeaponHeatDisplay.color = notOverheated;
-        secondWeaponHeatDisplay.fillAmount = weapons[1].currentHeat;
+        secondWeaponHeatDisplay.fillAmount = activeTerminal.weapon2.heatPercent;
 
-        if( weapons[2].isOverHeated )
+        if( activeTerminal.weapon3.overheat )
             thirdWeaponHeatDisplay.color = overheated;
         else
             thirdWeaponHeatDisplay.color = notOverheated;
-        thirdWeaponHeatDisplay.fillAmount = weapons[2].currentHeat;
+        thirdWeaponHeatDisplay.fillAmount = activeTerminal.weapon3.heatPercent;
 
 
 

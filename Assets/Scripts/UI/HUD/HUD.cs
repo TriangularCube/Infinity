@@ -73,7 +73,7 @@ public class HUD : Singleton<HUD> {
         launchMenu.enabled = false;
 
         //Turn Terminal HUD on
-        terminalHUD.EnableTerminalHUD( term );
+        terminalHUD.EnableTerminalHUD( term.status );
     }
 
     public void PlayerShipDocked() {

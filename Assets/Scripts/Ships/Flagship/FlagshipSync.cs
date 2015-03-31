@@ -2,7 +2,7 @@
 using System.Collections;
 using TNet;
 
-public class FlagshipSync : ShipSync {
+public class FlagshipSync : ShipStat {
 
     //DATA
     public Quaternion targetLookDirection = Quaternion.identity;

@@ -11,7 +11,7 @@ public abstract class Terminal : Ship {
 	protected TerminalControl control;
 
     [SerializeField]
-    protected TerminalSync status;
+    public TerminalStat status;
 
 	protected override void Awake () {
 		base.Awake ();
@@ -33,25 +33,13 @@ public abstract class Terminal : Ship {
 
         StationControl();
 
-        FireControl();
-
     }
 
-    #region Station, Attitude, and Fire Controls
+    #region Station and Attitude Controls
     protected abstract void AttitudeControl();
 
     protected abstract void StationControl();
-
-    protected void FireControl() {
-
-        if( status.weapon1Fire ) weapon1.Fire();
-
-        if( status.weapon2Fire ) weapon2.Fire();
-
-        if( status.weapon3Fire ) weapon3.Fire();
-
-    }
-    #endregion
+    #endregion Station and Attitude controls
 
     #region Weapons
     protected TerminalWeapon weapon1, weapon2, weapon3;
@@ -86,6 +74,9 @@ public abstract class Terminal : Ship {
         status.targetLookDirection = transform.rotation;
 
         rigidbody.AddRelativeForce( Vector3.forward * 20, ForceMode.Impulse );
+
+        //Disable the Launch Menu Button
+        button.SetButtonActive( false );
 
         if( pilot == TNManager.player ) {
             HUD.instance.PlayerShipLaunched( this );
@@ -133,6 +124,15 @@ public abstract class Terminal : Ship {
 
 		//Disable the Terminal
 		gameObject.SetActive(false);
+
+        //Disable all Weapons
+        weapon1.gameObject.SetActive( false );
+        weapon2.gameObject.SetActive( false );
+        weapon3.gameObject.SetActive( false );
+
+        weapon1 = null;
+        weapon2 = null;
+        weapon3 = null;
 
         //Enable the dock button
         button.SetButtonActive( true );
