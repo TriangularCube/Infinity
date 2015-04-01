@@ -30,7 +30,7 @@ public abstract class TerminalWeapon : PimpedMonoBehaviour {
     [SerializeField]
     protected float maxHeat = 100f;
     [SerializeField]
-    protected float heatSinkPerTick = 2f;
+    protected float heatSinkPerSecond = 2f;
 
     //Called to process heat sink
     protected static void HeatSink( ref float heat, float heatSink, ref bool overHeat ) {
@@ -39,7 +39,7 @@ public abstract class TerminalWeapon : PimpedMonoBehaviour {
             return;
         }
 
-        heat -= heatSink;
+        heat -= heatSink * Time.fixedDeltaTime;
 
         if( heat <= 0f ){
 
