@@ -83,31 +83,13 @@ public class TerminalHUD : PimpedMonoBehaviour {
 
     private void UpdateTerminalWeaponStatus() {
 
-        /*
-        if( selectedWeapon != activeTerminal.selectedWeapon ) {
+        selection1.SetActive( activeTerminal.weapon1.selected );
+        selection2.SetActive( activeTerminal.weapon2.selected );
+        selection3.SetActive( activeTerminal.weapon3.selected );
 
-            selectedWeapon = activeTerminal.selectedWeapon;
-
-            switch( selectedWeapon ) {
-                case 1:
-                    WeaponSelectionLabel.position = firstWeaponPosition;
-                    break;
-                case 2:
-                    WeaponSelectionLabel.position = secondWeaponPosition;
-                    break;
-                case 3:
-                    WeaponSelectionLabel.position = thirdWeaponPosition;
-                    break;
-                default:
-                    throw new UnityException( "Weapon Selection is not the three weapons" );
-            }
-
-        }
-        */
-
-        firstWeaponAmmoCounter.text = activeTerminal.weapon1.ammo.ToString();
-        secondWeaponAmmoCounter.text = activeTerminal.weapon2.ammo.ToString();
-        thirdWeaponAmmoCounter.text = activeTerminal.weapon3.ammo.ToString();
+        firstWeaponAmmoCounter.text = activeTerminal.weapon1.ammoDisplay;
+        secondWeaponAmmoCounter.text = activeTerminal.weapon2.ammoDisplay;
+        thirdWeaponAmmoCounter.text = activeTerminal.weapon3.ammoDisplay;
 
         if( activeTerminal.weapon1.overheat )
             firstWeaponHeatDisplay.color = overheated;
@@ -126,7 +108,6 @@ public class TerminalHUD : PimpedMonoBehaviour {
         else
             thirdWeaponHeatDisplay.color = notOverheated;
         thirdWeaponHeatDisplay.fillAmount = activeTerminal.weapon3.heatPercent;
-
 
 
     }

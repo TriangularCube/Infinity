@@ -8,6 +8,14 @@ public class TerminalWeaponStat {
     public string name = "Generic Weapon";
     public bool fire = false;
     public int ammo = -1;
+    public string ammoDisplay {
+        get {
+            if( ammo == -1 )
+                return "-";
+            else
+                return ammo.ToString();
+        }
+    }
     public float heatPercent = 0f;
     public bool overheat = false;
 
@@ -99,6 +107,8 @@ public class TerminalStat : ShipStat {
         weapon1.Reset();
         weapon2.Reset();
         weapon3.Reset();
+
+        weapon1.selected = true;
     }
 
 }

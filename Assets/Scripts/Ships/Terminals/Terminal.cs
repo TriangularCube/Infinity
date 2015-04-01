@@ -10,7 +10,6 @@ public abstract class Terminal : Ship {
 	[SerializeField]
 	protected TerminalControl control;
 
-    [SerializeField]
     public TerminalStat status;
 
 	protected override void Awake () {
@@ -142,15 +141,6 @@ public abstract class Terminal : Ship {
     #endregion Launching and Docking
 
     #region HUD Hooks
-    public TerminalWeapon[] weaponSelection {
-        get {
-            return new TerminalWeapon[] { weapon1, weapon2, weapon3 };
-        }
-    }
-
-    //DEBUG
-    public int selectedWeapon { get { return control.selectedWeapon; } }
-
     private ShipSelectButton button;
     #endregion HUD Hooks
 

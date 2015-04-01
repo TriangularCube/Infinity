@@ -16,7 +16,13 @@ public class InterceptorAutoCannon : TerminalWeapon {
     private float coolDown = 0.1f;
     private bool isOnCooldown = false;
 
-    private void Fire() {
+    IEnumerator Cooldown() {
+        isOnCooldown = true;
+        yield return new WaitForSeconds( coolDown );
+        isOnCooldown = false;
+    }
+
+    void FixedUpdate() {
         if( !stat.overheat && stat.ammo > 0 && !isOnCooldown && stat.fire ) {
 
             Instantiate( AmmoObject, transform.position, transform.rotation );
@@ -27,18 +33,9 @@ public class InterceptorAutoCannon : TerminalWeapon {
             HeatHandling( ref currentHeat, heatGeneratedPerShot, maxHeat, ref stat.overheat );
             stat.heatPercent = currentHeat / maxHeat;
             StartCoroutine( Cooldown() );
-        }
-    }
+        } else
+            HeatSink( ref currentHeat, heatSinkPerSecond, ref stat.overheat );
 
-    IEnumerator Cooldown() {
-        isOnCooldown = true;
-        yield return new WaitForSeconds( coolDown );
-        isOnCooldown = false;
-    }
-
-    void FixedUpdate() {
-        Fire();//TODO Streamline this
-        if( stat.overheat || stat.ammo == 0 || (!stat.fire && !isOnCooldown) ) HeatSink( ref currentHeat, heatSinkPerTick, ref stat.overheat );
         stat.heatPercent = currentHeat / maxHeat;
     }
 
