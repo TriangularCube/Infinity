@@ -14,82 +14,71 @@ public class TerminalControl : ShipControl {
 
     void Update() {
 
-        if( HUD.instance.mouseLocked ) {
+        //Resolve Docking Request
+        if( GetInput.Dock() ) {
+            tno.Send( "RequestDock", Target.Host );
+        }
 
-            //Resolve Docking Request
-            if( Input.GetButtonDown( "Dock" ) ) {
-                tno.Send( "RequestDock", Target.Host );
-            }
+        #region Rotation
+        //Get input to update lookVector
+        if( PlayerSettings.GetInterceptorLookMode() == InterceptorLookMode.Free ) {
 
-            #region Rotation
-            //Get input to update lookVector
-            if( PlayerSettings.GetInterceptorLookMode() == InterceptorLookMode.Free ) {
+            //Camera Changes
+            lookRotation = Quaternion.AngleAxis( GetInput.MouseX(), transform.up ) * lookRotation;
+            lookRotation = lookRotation * Quaternion.AngleAxis( GetInput.MouseY(), Vector3.right );
+            lookRotation = lookRotation * Quaternion.AngleAxis( GetInput.Roll(), Vector3.forward );
 
-                //Camera Changes
-                lookRotation = Quaternion.AngleAxis( Input.GetAxis( "Mouse X" ), transform.up ) * lookRotation;
-                lookRotation = lookRotation * Quaternion.AngleAxis( Input.GetAxis( "Mouse Y" ), Vector3.right );
-                lookRotation = lookRotation * Quaternion.AngleAxis( Input.GetAxis( "Roll" ), Vector3.forward );
-
-                targetLookDirectionToSync = lookRotation;
-
-            } else {
-                //TODO Flight input for Locked type
-
-                //Probably something to do with Screen Spaces
-            }
-            #endregion
-
-            #region Station
-            //Input Direction
-            inputDirectionSync = new Vector3( Input.GetAxis( "Thrust X" ), Input.GetAxis( "Thrust Y" ), Input.GetAxis( "Thrust Z" ) );
-
-            //Boost and Break
-            boostSync = Input.GetButton( "Boost" );
-            breakButtonSync = Input.GetButton( "Break" );
-            #endregion Station
-
-            //TODO Weapon Selection needs to be overhauled
-            #region Weapon Switching and Firing
-            //If any of the select button is released, and none of the buttons are currently being pressed, we can assume the player's finished selecting
-            if( Input.GetButtonUp( "Select 1" ) || Input.GetButtonUp( "Select 2" ) || Input.GetButtonUp( "Select 3" ) ) {
-                if( !Input.GetButton( "Select 1" ) && !Input.GetButton( "Select 2" ) && !Input.GetButton( "Select 3" ) ) {
-                    isSelectingWeapons = false;
-                }
-            }
-
-            if( Input.GetButtonDown( "Select 1" ) || Input.GetButtonDown( "Select 2" ) || Input.GetButtonDown( "Select 3" ) ) {
-                if( !isSelectingWeapons ) {
-                    weapon1.selected = false;
-                    weapon2.selected = false;
-                    weapon3.selected = false;
-
-                    isSelectingWeapons = true;
-                }
-
-                if( Input.GetButtonDown( "Select 1" ) ) weapon1.selected = true;
-                if( Input.GetButtonDown( "Select 2" ) ) weapon2.selected = true;
-                if( Input.GetButtonDown( "Select 3" ) ) weapon3.selected = true;
-            }
-
-            if( Input.GetButton( "Fire" ) ) {
-                if( weapon1.selected ) weapon1.fire = true;
-                if( weapon2.selected ) weapon2.fire = true;
-                if( weapon3.selected ) weapon3.fire = true;
-            } else {
-                weapon1.fire = false;
-                weapon2.fire = false;
-                weapon3.fire = false;
-            }
-            #endregion Weapon Switching and Firing
+            targetLookDirectionToSync = lookRotation;
 
         } else {
+            //TODO Flight input for Locked type
 
-            //If mouse is not locked pass through zeroed values
-            boostSync = false;
-            breakButtonSync = false;
-            inputDirectionSync = Vector3.zero;
-
+            //Probably something to do with Screen Spaces
         }
+        #endregion
+
+        #region Station
+        //Input Direction
+        inputDirectionSync = new Vector3( Input.GetAxis( "Thrust X" ), Input.GetAxis( "Thrust Y" ), Input.GetAxis( "Thrust Z" ) );
+
+        //Boost and Break
+        boostSync = Input.GetButton( "Boost" );
+        breakButtonSync = Input.GetButton( "Break" );
+        #endregion Station
+
+        //TODO Weapon Selection needs to be overhauled
+        #region Weapon Switching and Firing
+        //If any of the select button is released, and none of the buttons are currently being pressed, we can assume the player's finished selecting
+        if( GetInput.DeselectWeapon( 1 ) || GetInput.DeselectWeapon( 2 ) || GetInput.DeselectWeapon( 3 ) ) {
+            if( !GetInput.SelectWeaponHeld( 1 ) && !GetInput.SelectWeaponHeld( 2 ) && !GetInput.SelectWeaponHeld( 3 ) ) {
+                isSelectingWeapons = false;
+            }
+        }
+
+        if( GetInput.SelectWeapon( 1 ) || GetInput.SelectWeapon( 2 ) || GetInput.SelectWeapon( 3 ) ) {
+            if( !isSelectingWeapons ) {
+                weapon1.selected = false;
+                weapon2.selected = false;
+                weapon3.selected = false;
+
+                isSelectingWeapons = true;
+            }
+
+            if( GetInput.SelectWeapon( 1 ) ) weapon1.selected = true;
+            if( GetInput.SelectWeapon( 2 ) ) weapon2.selected = true;
+            if( GetInput.SelectWeapon( 3 ) ) weapon3.selected = true;
+        }
+
+        if( GetInput.Fire() ) {
+            if( weapon1.selected ) weapon1.fire = true;
+            if( weapon2.selected ) weapon2.fire = true;
+            if( weapon3.selected ) weapon3.fire = true;
+        } else {
+            weapon1.fire = false;
+            weapon2.fire = false;
+            weapon3.fire = false;
+        }
+        #endregion Weapon Switching and Firing
 
         UpdateCamera();
     }
