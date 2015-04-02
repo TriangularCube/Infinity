@@ -2,6 +2,9 @@
 using System.Collections;
 using TNet;
 
+#if UNITY_EDITOR
+[System.Serializable]
+#endif
 public class TerminalWeaponStat {
     public bool selected = false;
 
