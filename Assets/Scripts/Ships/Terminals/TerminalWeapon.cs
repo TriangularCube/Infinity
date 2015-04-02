@@ -65,6 +65,7 @@ public abstract class TerminalWeapon : PimpedMonoBehaviour {
 
     void OnDisable() {
         stat = null;
+        currentHeat = 0f;
     }
 
 }
