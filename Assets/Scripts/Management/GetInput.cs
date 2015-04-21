@@ -131,7 +131,7 @@ public class GetInput {
         return Input.GetKey( activeProfile.boost );
     }
 
-    public static bool SelectWeapon( int sel ) {
+    public static bool SelectWeaponKeyDown( int sel ) {
         if( notMouseLocked ) return false;
         switch( sel ) {
             case 1:
@@ -146,7 +146,7 @@ public class GetInput {
         
     }
 
-    public static bool DeselectWeapon( int sel ) {
+    public static bool SelectWeaponKeyUp( int sel ) {
         if( notMouseLocked ) return false;
         switch( sel ) {
             case 1:
@@ -161,7 +161,7 @@ public class GetInput {
 
     }
 
-    public static bool SelectWeaponHeld( int sel ) {
+    public static bool SelectWeaponKeyHeld( int sel ) {
         if( notMouseLocked ) return false;
         switch( sel ) {
             case 1:

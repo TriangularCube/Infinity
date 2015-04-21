@@ -21,7 +21,7 @@ public class TerminalControl : ShipControl {
 
         #region Rotation
         //Get input to update lookVector
-        if( PlayerSettings.GetInterceptorLookMode() == InterceptorLookMode.Free ) {
+        if( PlayerSettings.currentProfile.interceptorLookMode == InterceptorLookMode.Free ) {
 
             //Camera Changes
             lookRotation = Quaternion.AngleAxis( GetInput.MouseX(), transform.up ) * lookRotation;
@@ -49,13 +49,13 @@ public class TerminalControl : ShipControl {
         //TODO Weapon Selection needs to be overhauled
         #region Weapon Switching and Firing
         //If any of the select button is released, and none of the buttons are currently being pressed, we can assume the player's finished selecting
-        if( GetInput.DeselectWeapon( 1 ) || GetInput.DeselectWeapon( 2 ) || GetInput.DeselectWeapon( 3 ) ) {
-            if( !GetInput.SelectWeaponHeld( 1 ) && !GetInput.SelectWeaponHeld( 2 ) && !GetInput.SelectWeaponHeld( 3 ) ) {
+        if( GetInput.SelectWeaponKeyUp( 1 ) || GetInput.SelectWeaponKeyUp( 2 ) || GetInput.SelectWeaponKeyUp( 3 ) ) {
+            if( !GetInput.SelectWeaponKeyHeld( 1 ) && !GetInput.SelectWeaponKeyHeld( 2 ) && !GetInput.SelectWeaponKeyHeld( 3 ) ) {
                 isSelectingWeapons = false;
             }
         }
 
-        if( GetInput.SelectWeapon( 1 ) || GetInput.SelectWeapon( 2 ) || GetInput.SelectWeapon( 3 ) ) {
+        if( GetInput.SelectWeaponKeyDown( 1 ) || GetInput.SelectWeaponKeyDown( 2 ) || GetInput.SelectWeaponKeyDown( 3 ) ) {
             if( !isSelectingWeapons ) {
                 weapon1.selected = false;
                 weapon2.selected = false;
@@ -64,9 +64,9 @@ public class TerminalControl : ShipControl {
                 isSelectingWeapons = true;
             }
 
-            if( GetInput.SelectWeapon( 1 ) ) weapon1.selected = true;
-            if( GetInput.SelectWeapon( 2 ) ) weapon2.selected = true;
-            if( GetInput.SelectWeapon( 3 ) ) weapon3.selected = true;
+            if( GetInput.SelectWeaponKeyDown( 1 ) ) weapon1.selected = true;
+            if( GetInput.SelectWeaponKeyDown( 2 ) ) weapon2.selected = true;
+            if( GetInput.SelectWeaponKeyDown( 3 ) ) weapon3.selected = true;
         }
 
         if( GetInput.Fire() ) {
