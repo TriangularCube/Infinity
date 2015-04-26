@@ -5,10 +5,18 @@ public class Splash : MonoBehaviour {
 
 	//TODO
 
-    public bool takeInput = false;
+    bool takeInput = false;
 
     public void StartSplash() {
         //TODO Start splash
+        Invoke( "TakeInput", 3 );
+    }
+
+    [SerializeField]
+    private UITweener alphaTween;
+
+    void TakeInput() {
+        alphaTween.enabled = true;
         takeInput = true;
     }
 
@@ -27,6 +35,7 @@ public class Splash : MonoBehaviour {
         yield return null;
 
         gameObject.SetActive( false );
+        //Reset Splash Animations
         TitleMenuManager.instance.SplashComplete();
     }
 

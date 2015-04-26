@@ -16,11 +16,48 @@ public class TitleMenuManager : Singleton<TitleMenuManager> {
     public void SplashComplete() {
 
         if( PlayerSettings.currentProfile == null ) {
-            profileScreen.StartProfileSelect();
+            StartProfilePage();
         } else {
-            //Go to main menu
+            StartMainMenu();
         }
 
     }
+
+    public void StartProfilePage() {
+        profileScreen.StartProfileSelect();
+    }
+
+    [SerializeField]
+    private MainMenu mainMenu;
+
+    public void StartMainMenu() {
+        mainMenu.EngageMainMenu();
+    }
+
+    [SerializeField]
+    private MultiplayerScreen multiplayer;
+
+    public void StartMultiplayer() {
+        multiplayer.StartMultiplayerScreen();
+    }
+
+    [SerializeField]
+    private Connect connect;
+
+    public void StartConnect() {
+        connect.StartConnect();
+    }
+
+
+    //On Connect to something
+    void OnNetworkConnect( bool success, string msg ) {
+        if( success ) {
+            TNManager.JoinChannel( 1, "Lobby", false, 6, "" );
+        } else {
+            Debug.LogError( msg );
+        }
+    }
+
+
 
 }
