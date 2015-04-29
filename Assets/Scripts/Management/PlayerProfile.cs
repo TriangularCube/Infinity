@@ -18,6 +18,11 @@ public class PlayerProfile {
     public MechLookMode mechLookMode { private set; get; }
     #endregion
 
+    #region Saved Games
+    //TODO Overhaul the Save Game System to allow multiple saves per profile. Allow choosing of save games before hosting
+    private SaveGame save;
+    #endregion
+
     private PlayerProfile() {}
 
     public static PlayerProfile newPlayerProfile() {

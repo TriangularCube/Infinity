@@ -12,8 +12,8 @@ public class CheckStuff : MonoBehaviour {
     }
 
     public void Check() {
-        TNManager.StartUDP( 4411 );
-        Debug.Log( TNManager.canUseUDP );
+        TNManager.Disconnect();
+        Application.LoadLevel( "Opening" );
     }
 
 }
