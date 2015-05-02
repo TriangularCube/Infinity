@@ -15,7 +15,7 @@ public class SessionManager : TNSingleton<SessionManager> {
 
 	protected override void Awake(){
 
-		//If we're not the only instance of this, that means we're didn't start on this scene. Destroy this instance.
+		//If we're not the only instance of this, that means we're didn't start on this scene. Destroy this instance. Purely for testing purposes
 		if (instance != null) {
 
 			Debug.Log( "Destroying this instance of Session Manager" );
@@ -30,6 +30,16 @@ public class SessionManager : TNSingleton<SessionManager> {
 	//TODO Saved game load
 
 	//TODO Deal with players connecting and disconnecting.
+    [SerializeField, Group( "Players" )]
+    private GameObject playerPrefab;
+
+    [SerializeField, Group( "Players" )]
+    private GameObject playerTable;
+
+    public void OnNetworkPlayerJoin( Netplayer newPlayer ) {
+        NGUITools.AddChild( playerTable, playerPrefab );
+        playerTable.GetComponent<UITable>().repositionNow = true;
+    }
 
 	//TODO Mission Select
 
