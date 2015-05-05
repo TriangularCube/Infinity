@@ -33,11 +33,11 @@ ehthumbs.db
 Thumbs.db
 
 # ==== #
-UnityVS
+# UnityVS #
 # ==== #
 Assets/Extensions/UnityVS/*
 
 # == #
-Misc
+# Other #
 # == #
 UpgradeLog.htm
