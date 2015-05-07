@@ -7,10 +7,7 @@ public class TerminalControl : ShipControl {
 	[SerializeField]
 	protected Terminal shipCore;
 
-    private bool isSelectingWeapons = false;
-    private TerminalWeaponStat weapon1 { get { return shipCore.status.weapon1; } }
-    private TerminalWeaponStat weapon2 { get { return shipCore.status.weapon2; } }
-    private TerminalWeaponStat weapon3 { get { return shipCore.status.weapon3; } }
+
 
     void Update() {
 
@@ -19,7 +16,7 @@ public class TerminalControl : ShipControl {
             tno.Send( "RequestDock", Target.Host );
         }
 
-        #region Rotation
+        #region Attitude Control
         //Get input to update lookVector
         if( PlayerSettings.currentProfile.interceptorLookMode == InterceptorLookMode.Free ) {
 
@@ -37,7 +34,7 @@ public class TerminalControl : ShipControl {
         }
         #endregion
 
-        #region Station
+        #region Station Control
         //Input Direction
         inputDirectionSync = new Vector3( GetInput.ThrustX(), GetInput.ThrustY(), GetInput.ThrustZ() );
 
@@ -47,7 +44,32 @@ public class TerminalControl : ShipControl {
         #endregion Station Control
 
         //TODO Weapon Selection needs to be overhauled
-        #region Weapon Switching and Firing
+        WeaponSwitch();
+        WeaponFire();
+
+        UpdateCamera();
+    }
+
+    #region Weapon Switching and Firing
+
+    private bool isSelectingWeapons = false;
+    private TerminalWeaponStat weapon1 { get { return shipCore.status.weapon1; } }
+    private TerminalWeaponStat weapon2 { get { return shipCore.status.weapon2; } }
+    private TerminalWeaponStat weapon3 { get { return shipCore.status.weapon3; } }
+
+    protected virtual void WeaponFire() {
+        if( GetInput.Fire() ) {
+            if( weapon1.selected ) weapon1.fire = true;
+            if( weapon2.selected ) weapon2.fire = true;
+            if( weapon3.selected ) weapon3.fire = true;
+        } else {
+            weapon1.fire = false;
+            weapon2.fire = false;
+            weapon3.fire = false;
+        }
+    }
+
+    protected virtual void WeaponSwitch() {
         //If any of the select button is released, and none of the buttons are currently being pressed, we can assume the player's finished selecting
         if( GetInput.SelectWeaponKeyUp( 1 ) || GetInput.SelectWeaponKeyUp( 2 ) || GetInput.SelectWeaponKeyUp( 3 ) ) {
             if( !GetInput.SelectWeaponKeyHeld( 1 ) && !GetInput.SelectWeaponKeyHeld( 2 ) && !GetInput.SelectWeaponKeyHeld( 3 ) ) {
@@ -68,20 +90,8 @@ public class TerminalControl : ShipControl {
             if( GetInput.SelectWeaponKeyDown( 2 ) ) weapon2.selected = true;
             if( GetInput.SelectWeaponKeyDown( 3 ) ) weapon3.selected = true;
         }
-
-        if( GetInput.Fire() ) {
-            if( weapon1.selected ) weapon1.fire = true;
-            if( weapon2.selected ) weapon2.fire = true;
-            if( weapon3.selected ) weapon3.fire = true;
-        } else {
-            weapon1.fire = false;
-            weapon2.fire = false;
-            weapon3.fire = false;
-        }
-        #endregion Weapon Switching and Firing
-
-        UpdateCamera();
     }
+    #endregion Weapon Switching and Firing
 
     #region Sync To Host
     protected override void OnEnable() {

@@ -25,7 +25,7 @@ public class PlayerProfile {
 
     private PlayerProfile() {}
 
-    public static PlayerProfile newPlayerProfile() {
+    public static PlayerProfile newDefaultPlayerProfile() {
         
         PlayerProfile npp = new PlayerProfile();
         npp.name = "New001";

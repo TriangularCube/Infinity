@@ -25,6 +25,9 @@ public class SessionManager : TNSingleton<SessionManager> {
 		}
 		base.Awake ();
 		DontDestroyOnLoad( this );
+
+        //DEBUG FUNCTIONALITY
+        PlayerSettings.currentProfile = PlayerProfile.newDefaultPlayerProfile();
 	}
 
 	//TODO Saved game load
