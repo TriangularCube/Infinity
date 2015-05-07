@@ -8,7 +8,7 @@ public class Navigation : ShipControl {
 
     void Update() {
 
-        if( Input.GetButtonDown( "Look" ) && isFreelook ) {
+        if( GetInput.Look() && isFreelook ) {
 
             //TODO Take into account explosion forces that auto-move the ship
 
@@ -16,7 +16,7 @@ public class Navigation : ShipControl {
             lookRotation = targetShipFacing;//DEBUG
 
             isFreelook = false;
-        } else if( Input.GetButtonUp( "Look" ) && !isFreelook ) {
+        } else if( GetInput.LookUp() && !isFreelook ) {
             isFreelook = true;
         }
 

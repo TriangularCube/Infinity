@@ -185,6 +185,11 @@ public class GetInput {
         return Input.GetKey( activeProfile.look );
     }
 
+    public static bool LookUp() {
+        if( notMouseLocked ) return false;
+        return Input.GetKeyUp( activeProfile.look );
+    }
+
     public static bool Dock() {
         return Input.GetKeyDown( activeProfile.dock );
     }

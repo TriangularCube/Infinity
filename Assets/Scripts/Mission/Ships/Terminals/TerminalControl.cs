@@ -39,12 +39,12 @@ public class TerminalControl : ShipControl {
 
         #region Station
         //Input Direction
-        inputDirectionSync = new Vector3( Input.GetAxis( "Thrust X" ), Input.GetAxis( "Thrust Y" ), Input.GetAxis( "Thrust Z" ) );
+        inputDirectionSync = new Vector3( GetInput.ThrustX(), GetInput.ThrustY(), GetInput.ThrustZ() );
 
         //Boost and Break
-        boostSync = Input.GetButton( "Boost" );
-        breakButtonSync = Input.GetButton( "Break" );
-        #endregion Station
+        boostSync = GetInput.Boost();
+        breakButtonSync = GetInput.Break();
+        #endregion Station Control
 
         //TODO Weapon Selection needs to be overhauled
         #region Weapon Switching and Firing

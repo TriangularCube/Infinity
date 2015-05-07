@@ -4,7 +4,7 @@ using System.Collections;
 public class LaunchMenu : PimpedMonoBehaviour {
 
     void Update() {
-        if( Input.GetButtonDown( "Launch Panel" ) ) {
+        if( GetInput.LaunchMenu() ) {
             if( launchMenuPanel.activeSelf ) {
                 TurnMenuOff();
             } else {
