@@ -57,4 +57,12 @@ public abstract class ShipControl : TNBehaviour {
 
 	}
 
+    protected static Quaternion RotationProcess( Quaternion input, Vector3 up ) {
+        input = Quaternion.AngleAxis( GetInput.MouseX(), up ) * input;
+        input = input * Quaternion.AngleAxis( GetInput.MouseY(), Vector3.right );
+        input = input * Quaternion.AngleAxis( GetInput.Roll(), Vector3.forward );
+
+        return input;
+    }
+
 }

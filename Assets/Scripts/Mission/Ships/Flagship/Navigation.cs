@@ -27,15 +27,11 @@ public class Navigation : ShipControl {
                 //GetComponent<Rigidbody>().MoveRotation( transform.rotation * Quaternion.AngleAxis( Time.deltaTime * 1f, transform.right ) );
 
                 //Camera Changes
-                lookRotation = Quaternion.AngleAxis( Input.GetAxis( "Mouse X" ), transform.up ) * lookRotation;
-                lookRotation = lookRotation * Quaternion.AngleAxis( Input.GetAxis( "Mouse Y" ), Vector3.right );
-                lookRotation = lookRotation * Quaternion.AngleAxis( Input.GetAxis( "Roll" ), Vector3.forward );
+                lookRotation = RotationProcess( lookRotation, transform.up );
 
                 //Debug.Log( lookRotation );
             } else {
-                targetShipFacing = Quaternion.AngleAxis( Input.GetAxis( "Mouse X" ), transform.up ) * targetShipFacing;
-                targetShipFacing = targetShipFacing * Quaternion.AngleAxis( Input.GetAxis( "Mouse Y" ), Vector3.right );
-                targetShipFacing = targetShipFacing * Quaternion.AngleAxis( Input.GetAxis( "Roll" ), Vector3.forward );
+                targetShipFacing = RotationProcess( targetShipFacing, transform.up );
 
                 lookRotation = targetShipFacing;//DEBUG...?
             }

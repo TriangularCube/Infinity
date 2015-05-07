@@ -21,9 +21,7 @@ public class TerminalControl : ShipControl {
         if( PlayerSettings.currentProfile.interceptorLookMode == InterceptorLookMode.Free ) {
 
             //Camera Changes
-            lookRotation = Quaternion.AngleAxis( GetInput.MouseX(), transform.up ) * lookRotation;
-            lookRotation = lookRotation * Quaternion.AngleAxis( GetInput.MouseY(), Vector3.right );
-            lookRotation = lookRotation * Quaternion.AngleAxis( GetInput.Roll(), Vector3.forward );
+            lookRotation = RotationProcess( lookRotation, transform.up );
 
             targetLookDirectionToSync = lookRotation;
 
