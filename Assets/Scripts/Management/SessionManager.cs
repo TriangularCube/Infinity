@@ -26,27 +26,13 @@ public class SessionManager : TNSingleton<SessionManager> {
 		base.Awake ();
 		DontDestroyOnLoad( this );
 
-        //DEBUG FUNCTIONALITY
-        PlayerSettings.currentProfile = PlayerProfile.newDefaultPlayerProfile();
 	}
+
+    //Mission Selection, for persistence
 
 	//TODO Saved game load
 
-	//TODO Deal with players connecting and disconnecting.
-    [SerializeField, Group( "Players" )]
-    private GameObject playerPrefab;
 
-    [SerializeField, Group( "Players" )]
-    private GameObject playerTable;
-
-    public void OnNetworkPlayerJoin( Netplayer newPlayer ) {
-        NGUITools.AddChild( playerTable, playerPrefab );
-        playerTable.GetComponent<UITable>().repositionNow = true;
-    }
-
-	//TODO Mission Select
-
-	//TODO Ready notificaiton, Start Mission
 
 	//TODO After Mission end, do stuff
 }
