@@ -182,7 +182,7 @@ public class Flagship : Ship {
 		//AssignObservation( pilot );
 		
 		//Debug
-		AssignNavigation( pilot );
+		AssignObservation( pilot );
 	}
 
 	protected void AssignObservation( Netplayer player ){
