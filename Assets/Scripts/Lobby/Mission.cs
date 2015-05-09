@@ -6,7 +6,7 @@ public class Mission : MonoBehaviour {
     public string name = "Default Mission Name";
 
     void OnClick() {
-        LobbyManager.instance.SelectMission( name, this );
+        LobbyManager.instance.SelectMission( this );
     }
 
 }

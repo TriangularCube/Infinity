@@ -12,6 +12,15 @@ public class LobbyManager : TNSingleton<LobbyManager> {
         PlayerSettings.currentProfile = PlayerProfile.newDefaultPlayerProfile();
     }
 
+    public void Exit() {
+        //Play Animations and stuff
+        TNManager.Disconnect();
+        //Debug.Log( TNServerInstance.isActive );
+        if( TNServerInstance.isActive ) TNServerInstance.Stop();
+        Destroy( SessionManager.instance.gameObject );
+        Application.LoadLevel( 2 );
+    }
+
     //TODO Deal with players connecting and disconnecting.
     [SerializeField, Group( "Players" )]
     private GameObject playerPrefab;
@@ -29,8 +38,8 @@ public class LobbyManager : TNSingleton<LobbyManager> {
     //TODO Mission Select
     private Mission selectedMission = null;
 
-    public void SelectMission( string missionName, Mission mission ) {
-        Debug.Log( "Mission " + missionName + " selected" );
+    public void SelectMission( Mission mission ) {
+        Debug.Log( "Mission " + mission.name + " selected" );
         if( !TNManager.isHosting ) return; //Do nothing if we're not hosting
         //Do Stuff
 
@@ -39,4 +48,11 @@ public class LobbyManager : TNSingleton<LobbyManager> {
 
     //TODO Ready notificaiton, Start Mission
 
+    [SerializeField]
+    private UISprite startButton;
+
+    public void StartMission() {
+        //All sorts of checks and stuff should go here
+        TNManager.LoadLevel( "Test Scene 1" );
+    }
 }

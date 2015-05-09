@@ -8,6 +8,9 @@ public class TitleMenuManager : Singleton<TitleMenuManager> {
 
     private void Start() {
         splash.StartSplash();
+
+        //DEBUG Functionality
+        Debug.Log( TNServerInstance.isActive );
     }
 
     [SerializeField]
