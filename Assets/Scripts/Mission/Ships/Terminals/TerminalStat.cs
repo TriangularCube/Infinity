@@ -69,7 +69,7 @@ public class TerminalStat : ShipStat {
     }
 
     [RFC(1)] //TODO Seriously incomplete
-    private void RecieveSync( Vector3 position, Quaternion facing, bool fire1, bool fire2, bool fire3 ) {
+    public void RecieveSync( Vector3 position, Quaternion facing, bool fire1, bool fire2, bool fire3 ) {
 
         //TODO Implement out of order handling
         // TODO Do stuff with recieved sync data
