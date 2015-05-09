@@ -14,7 +14,7 @@ public class Connect : MonoBehaviour {
     public void ConnectToHost() {
         Debug.Log( "Connecting to: " + ipAddress.text );
         //TODO Validate IP Address
-        TNManager.Connect( ipAddress.text );
+        TNManager.Connect( ipAddress.text, 4400 );
     }
 
 

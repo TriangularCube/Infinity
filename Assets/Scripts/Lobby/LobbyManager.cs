@@ -6,10 +6,18 @@ using Netplayer = TNet.Player;
 
 public class LobbyManager : TNSingleton<LobbyManager> {
 
+    [SerializeField]
+    private UILabel hostIPLabel;
+
     protected override void Awake() {
         base.Awake();
         //DEBUG FUNCTIONALITY
         PlayerSettings.currentProfile = PlayerProfile.newDefaultPlayerProfile();
+
+        if( TNManager.isHosting ) {
+            hostIPLabel.gameObject.SetActive( true );
+            hostIPLabel.text = TNet.Tools.localAddress.ToString();
+        }
     }
 
     public void Exit() {
@@ -55,4 +63,6 @@ public class LobbyManager : TNSingleton<LobbyManager> {
         //All sorts of checks and stuff should go here
         TNManager.LoadLevel( "Test Scene 1" );
     }
+
+
 }
