@@ -26,6 +26,8 @@ public class SessionManager : TNSingleton<SessionManager> {
 		base.Awake ();
 		DontDestroyOnLoad( this );
 
+        //DEBUG FUNCTIONALITY
+        PlayerSettings.currentProfile = PlayerProfile.newDefaultPlayerProfile();
 	}
 
     //Mission Selection, for persistence

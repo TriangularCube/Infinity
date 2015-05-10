@@ -23,7 +23,8 @@ public abstract class Terminal : Ship {
 			gameObject.SetActive( false );
             //Should probably do this in Carrier, and null the current owner
 		}
-		*/
+        */
+		
 	}
 
     void FixedUpdate() {

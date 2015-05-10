@@ -11,14 +11,16 @@ public class Flagship : Ship {
 	protected override void Awake(){
         _instance = this;
 		base.Awake ();
-
-		//Iterate through each of the children of the "Dock", and add it to the list of "Docked Ships"
-		foreach ( Transform child in dock ) {
-			dockedTerminals.Add( child.gameObject.GetComponent<Terminal>() );
-            child.gameObject.SetActive( false );
-		}
-		//TODO Sort the Terminals we just added
 	}
+
+    void Start() {
+        //Iterate through each of the children of the "Dock", and add it to the list of "Docked Ships"
+        foreach( Transform child in dock ) {
+            dockedTerminals.Add( child.gameObject.GetComponent<Terminal>() );
+            child.gameObject.SetActive( false );
+        }
+        //TODO Sort the Terminals we just added
+    }
 
 #pragma warning disable 0649
     [SerializeField]
@@ -120,8 +122,9 @@ public class Flagship : Ship {
     }
 
 	[RFC]
-	protected virtual void AttemptToLaunchTerminal( uint terminalID, Netplayer player ){
-		
+	public virtual void AttemptToLaunchTerminal( uint terminalID, Netplayer player ){
+
+        Debug.Log( TNObject.Find( terminalID ) );
 		//Find the Terminal
 		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
 		

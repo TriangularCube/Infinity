@@ -15,7 +15,7 @@ public class MissionManager : MonoBehaviour {
             Flagship startShip = (Flagship)startingShip;
             
             startShip.AssignDefault( TNManager.player );
-            //EventManager.instance.QueueEvent( new AllyDocked( TNManager.player, startShip ) );
+            HUD.instance.PlayerShipDocked();
 
         } else if( startingShip is Terminal ) {
             Terminal startShip = (Terminal)startingShip;

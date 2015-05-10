@@ -11,8 +11,7 @@ public class LobbyManager : TNSingleton<LobbyManager> {
 
     protected override void Awake() {
         base.Awake();
-        //DEBUG FUNCTIONALITY
-        PlayerSettings.currentProfile = PlayerProfile.newDefaultPlayerProfile();
+
 
         if( TNManager.isHosting ) {
             hostIPLabel.gameObject.SetActive( true );
