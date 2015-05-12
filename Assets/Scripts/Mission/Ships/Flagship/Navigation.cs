@@ -5,6 +5,7 @@ public class Navigation : ShipControl {
 
     private bool isFreelook = true;
     private Quaternion targetShipFacing = Quaternion.identity;
+    private Vector3 targetMoveVector = Vector3.zero;
 
     void Update() {
 
@@ -20,28 +21,28 @@ public class Navigation : ShipControl {
             isFreelook = true;
         }
 
-        if( HUD.instance.mouseLocked ) {
-            if( isFreelook ) {
+        if( isFreelook ) {
 
-                //BUG The first time after assigning to navigation, lookRotation will not update
-                //GetComponent<Rigidbody>().MoveRotation( transform.rotation * Quaternion.AngleAxis( Time.deltaTime * 1f, transform.right ) );
+            //BUG The first time after assigning to navigation, lookRotation will not update
+            //GetComponent<Rigidbody>().MoveRotation( transform.rotation * Quaternion.AngleAxis( Time.deltaTime * 1f, transform.right ) );
 
-                //Camera Changes
-                lookRotation = RotationProcess( lookRotation, transform.up );
+            //Camera Changes
+            lookRotation = RotationProcess( lookRotation, transform.up );
 
-                //Debug.Log( lookRotation );
-            } else {
-                targetShipFacing = RotationProcess( targetShipFacing, transform.up );
+            //Debug.Log( lookRotation );
+        } else {
+            targetShipFacing = RotationProcess( targetShipFacing, transform.up );
 
-                lookRotation = targetShipFacing;//DEBUG...?
-            }
-
-            UpdateCamera();
-
-            //Movement updates
+            lookRotation = targetShipFacing;//DEBUG...?
         }
 
 
+        //Movement updates
+        Vector3 inputVector = new Vector3( GetInput.ThrustX(), GetInput.ThrustY(), GetInput.ThrustZ() );
+        targetMoveVector = lookRotation * inputVector;
+
+
+        UpdateCamera();
 
     }
 
@@ -56,7 +57,7 @@ public class Navigation : ShipControl {
     private IEnumerator SyncToHost() {
         while( true ) {
             //Do Stuff
-            tno.SendQuickly( 2, TNet.Target.Host, Vector3.zero, targetShipFacing );//Sent to FlagshipSync
+            tno.SendQuickly( 2, TNet.Target.Host, targetMoveVector, targetShipFacing );//Sent to FlagshipSync
 
             yield return new WaitForSeconds( 1f / SessionManager.instance.maxNetworkUpdatesPerSecond );
         }

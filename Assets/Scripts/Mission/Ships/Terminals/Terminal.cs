@@ -12,20 +12,18 @@ public abstract class Terminal : Ship {
 
     public TerminalStat status;
 
-	protected override void Awake () {
-		base.Awake ();
+    private void Start() {
+        bool isInFlagship = false;
 
-        button = HUD.instance.RequestNewShipButton( this );
-
-		/*
-		//Disable ourselves if we're parented to something
-		if( transform.parent ){
-			gameObject.SetActive( false );
+        //Disable ourselves if we're parented to something
+        if( transform.parent ) {
+            gameObject.SetActive( false );
+            isInFlagship = true;
             //Should probably do this in Carrier, and null the current owner
-		}
-        */
-		
-	}
+        }
+
+        button = HUD.instance.RequestNewShipButton( this, isInFlagship );
+    }
 
     void FixedUpdate() {
 

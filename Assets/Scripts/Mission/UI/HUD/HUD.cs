@@ -92,8 +92,8 @@ public class HUD : Singleton<HUD> {
 
     }
 
-    public ShipSelectButton RequestNewShipButton( Terminal term ) {
-        return launchMenu.RequestNewShipButton( term );
+    public ShipSelectButton RequestNewShipButton( Terminal term, bool isEnabled ) {
+        return launchMenu.RequestNewShipButton( term, isEnabled );
     }
 
     public void DockingRangeChange( bool inRange ) {

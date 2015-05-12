@@ -49,7 +49,7 @@ public class Interceptor : Terminal {
 
 		float currentMaxSpeed = status.isBoostActive ? maxBurstSpeed : maxSpeed;
 
-		rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, status.targetLookDirection * inputDirection.normalized * currentMaxSpeed, mag * Time.deltaTime );
+		rigidbody.velocity = Vector3.MoveTowards( rigidbody.velocity, status.targetLookDirection * inputDirection.normalized * currentMaxSpeed, forwardAcceleration * Time.deltaTime );
 
 	}
 	#endregion Station Control

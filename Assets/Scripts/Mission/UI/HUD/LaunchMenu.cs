@@ -9,6 +9,7 @@ public class LaunchMenu : PimpedMonoBehaviour {
                 TurnMenuOff();
             } else {
                 launchMenuPanel.SetActive( true );
+                interceptorGrid.repositionNow = true;
                 HUD.instance.mouseLocked = false;
             }
         }
@@ -65,7 +66,7 @@ public class LaunchMenu : PimpedMonoBehaviour {
      * Each ship will keep a reference to its own button, so that the Flagship will be able to iterate
      * through it and turn on all buttons belonging ships currently docked.
      */
-    public ShipSelectButton RequestNewShipButton( Terminal term ) {
+    public ShipSelectButton RequestNewShipButton( Terminal term, bool isEnabled ) {
 
         //Instantiate the button
         GameObject button = Instantiate<GameObject>( shipSelectPrefab );
@@ -79,7 +80,7 @@ public class LaunchMenu : PimpedMonoBehaviour {
         button.transform.parent = list.transform;
         button.transform.localScale = Vector3.one;
         button.transform.localPosition = Vector3.zero;
-        button.SetActive( false );
+        button.SetActive( isEnabled );
 
         ShipSelectButton shipButton = button.GetComponent<ShipSelectButton>();
         shipButton.terminal = term;
