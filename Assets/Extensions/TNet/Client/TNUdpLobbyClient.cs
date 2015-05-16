@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System.Net;
@@ -32,7 +32,7 @@ public class TNUdpLobbyClient : TNLobbyClient
 #endif
 	}
 
-	void OnEnable()
+	void Start()
 	{
 		if (mRequest == null)
 		{
@@ -88,7 +88,7 @@ public class TNUdpLobbyClient : TNLobbyClient
 		else if (mReEnable)
 		{
 			mReEnable = false;
-			OnEnable();
+			Start();
 		}
 	}
 
@@ -101,7 +101,7 @@ public class TNUdpLobbyClient : TNLobbyClient
 		Buffer buffer;
 		IPEndPoint ip;
 		bool changed = false;
-		long time = System.DateTime.Now.Ticks / 10000;
+		long time = System.DateTime.UtcNow.Ticks / 10000;
 
 		// Receive and process UDP packets one at a time
 		while (mUdp != null && mUdp.ReceivePacket(out buffer, out ip))

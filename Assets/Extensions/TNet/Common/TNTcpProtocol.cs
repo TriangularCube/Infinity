@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System;
@@ -48,8 +48,11 @@ public class TcpProtocol : Player
 	/// How long to allow this player to go without packets before disconnecting them.
 	/// This value is in milliseconds, so 1000 means 1 second.
 	/// </summary>
-
-	public long timeoutTime = 10000;
+#if UNITY_EDITOR
+	public long timeoutTime = 60000;
+#else
+	public long timeoutTime = 20000;
+#endif
 
 	// Incoming and outgoing queues
 	Queue<Buffer> mIn = new Queue<Buffer>();
@@ -74,7 +77,20 @@ public class TcpProtocol : Player
 	/// Whether the connection is currently active.
 	/// </summary>
 
-	public bool isConnected { get { return stage == Stage.Connected; } }
+	public bool isConnected { get { return stage == Stage.Connected && mSocket != null && mSocket.Connected; } }
+
+	/// <summary>
+	/// Socket used for communication.
+	/// </summary>
+
+	public Socket socket { get { return mSocket; } }
+
+	/// <summary>
+	/// Whether the socket is currently connected. A socket can be connected while verifying the connection.
+	/// In most cases you should use 'isConnected' instead.
+	/// </summary>
+
+	public bool isSocketConnected { get { return mSocket != null && mSocket.Connected; } }
 
 	/// <summary>
 	/// Whether we are currently trying to establish a new connection.
@@ -99,7 +115,9 @@ public class TcpProtocol : Player
 			if (mNoDelay != value)
 			{
 				mNoDelay = value;
+#if !UNITY_WINRT
 				mSocket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, mNoDelay);
+#endif
 			}
 		}
 	}
@@ -123,6 +141,10 @@ public class TcpProtocol : Player
 	public void Connect (IPEndPoint externalIP, IPEndPoint internalIP)
 	{
 		Disconnect();
+		data = null;
+
+		Buffer.Recycle(mIn);
+		Buffer.Recycle(mOut);
 
 		// Some routers, like Asus RT-N66U don't support NAT Loopback, and connecting to an external IP
 		// will connect to the router instead. So if it's a local IP, connect to it first.
@@ -156,7 +178,7 @@ public class TcpProtocol : Player
 					mSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 					mConnecting.Add(mSocket);
 				}
-				
+
 				IAsyncResult result = mSocket.BeginConnect(tcpEndPoint, OnConnectResult, mSocket);
 				Thread th = new Thread(CancelConnect);
 				th.Start(result);
@@ -189,7 +211,7 @@ public class TcpProtocol : Player
 	void CancelConnect (object obj)
 	{
 		IAsyncResult result = (IAsyncResult)obj;
-
+#if !UNITY_WINRT
 		if (result != null && !result.AsyncWaitHandle.WaitOne(3000, true))
 		{
 			try
@@ -203,7 +225,7 @@ public class TcpProtocol : Player
 					lock (mConnecting)
 					{
 						// Last active connection attempt
-						if (mConnecting.size > 0 && mConnecting[mConnecting.size-1] == sock)
+						if (mConnecting.size > 0 && mConnecting[mConnecting.size - 1] == sock)
 						{
 							mSocket = null;
 
@@ -219,6 +241,7 @@ public class TcpProtocol : Player
 			}
 			catch (System.Exception) { }
 		}
+#endif
 	}
 
 	/// <summary>
@@ -242,7 +265,9 @@ public class TcpProtocol : Player
 
 			try
 			{
+#if !UNITY_WINRT
 				sock.EndConnect(result);
+#endif
 			}
 			catch (System.Exception ex)
 			{
@@ -291,8 +316,6 @@ public class TcpProtocol : Player
 
 	public void Disconnect (bool notify)
 	{
-		if (!isConnected) return;
-
 		try
 		{
 			lock (mConnecting)
@@ -304,7 +327,10 @@ public class TcpProtocol : Player
 					if (sock != null) sock.Close();
 				}
 			}
-			if (mSocket != null) Close(notify || mSocket.Connected);
+			if (mSocket != null)
+			{
+				Close(notify || mSocket.Connected);
+			}
 		}
 		catch (System.Exception)
 		{
@@ -317,11 +343,16 @@ public class TcpProtocol : Player
 	/// Close the connection.
 	/// </summary>
 
-	public void Close (bool notify)
+	public void Close (bool notify) { lock (mOut) CloseNotThreadSafe(notify); }
+
+	/// <summary>
+	/// Close the connection.
+	/// </summary>
+
+	void CloseNotThreadSafe (bool notify)
 	{
+		Buffer.Recycle(mOut);
 		stage = Stage.NotConnected;
-		name = "Guest";
-		data = null;
 
 		if (mReceiveBuffer != null)
 		{
@@ -355,9 +386,15 @@ public class TcpProtocol : Player
 
 	public void Release ()
 	{
-		Close(false);
-		Buffer.Recycle(mIn);
-		Buffer.Recycle(mOut);
+		lock (mOut)
+		{
+			lock (mIn)
+			{
+				CloseNotThreadSafe(false);
+				Buffer.Recycle(mIn);
+			}
+		}
+		data = null;
 	}
 
 	/// <summary>
@@ -402,6 +439,9 @@ public class TcpProtocol : Player
 		if (mSocket != null && mSocket.Connected)
 		{
 			buffer.BeginReading();
+//#if UNITY_EDITOR
+//            UnityEngine.Debug.Log("Sending: " + (Packet)buffer.PeekByte(4));
+//#endif
 
 			lock (mOut)
 			{
@@ -409,21 +449,28 @@ public class TcpProtocol : Player
 
 				if (mOut.Count == 1)
 				{
+					// If it's the first packet, let's begin the send process
 					try
 					{
-						// If it's the first packet, let's begin the send process
+#if !UNITY_WINRT
 						mSocket.BeginSend(buffer.buffer, buffer.position, buffer.size, SocketFlags.None, OnSend, buffer);
+#endif
 					}
 					catch (System.Exception ex)
 					{
 						Error(ex.Message);
-						Close(false);
-						Release();
+						CloseNotThreadSafe(false);
 					}
 				}
 			}
 		}
-		else buffer.Recycle();
+		else
+		{
+#if UNITY_EDITOR
+			UnityEngine.Debug.LogWarning("No valid socket");
+#endif
+			buffer.Recycle();
+		}
 	}
 
 	/// <summary>
@@ -434,10 +481,30 @@ public class TcpProtocol : Player
 	{
 		if (stage == Stage.NotConnected) return;
 		int bytes;
-		
+
 		try
 		{
+#if !UNITY_WINRT
 			bytes = mSocket.EndSend(result);
+			Buffer buff = (Buffer)result.AsyncState;
+
+			// If not everything was sent...
+			if (bytes != buff.size)
+			{
+				try
+				{
+					// Advance the position and send the rest
+					buff.position = buff.position + bytes;
+					mSocket.BeginSend(buff.buffer, buff.position, buff.size, SocketFlags.None, OnSend, buff);
+					return;
+				}
+				catch (Exception ex)
+				{
+					Error(ex.Message);
+					CloseNotThreadSafe(false);
+				}
+			}
+#endif
 		}
 		catch (System.Exception ex)
 		{
@@ -451,26 +518,25 @@ public class TcpProtocol : Player
 		{
 			// The buffer has been sent and can now be safely recycled
 			mOut.Dequeue().Recycle();
-
+#if !UNITY_WINRT
 			if (bytes > 0 && mSocket != null && mSocket.Connected)
 			{
-				// If there is another packet to send out, let's send it
-				Buffer next = (mOut.Count == 0) ? null : mOut.Peek();
+				// Nothing else left -- just exit
+				if (mOut.Count == 0) return;
 
-				if (next != null)
+				try
 				{
-					try
-					{
-						mSocket.BeginSend(next.buffer, next.position, next.size, SocketFlags.None, OnSend, next);
-					}
-					catch (Exception ex)
-					{
-						Error(ex.Message);
-						Close(false);
-					}
+					Buffer next = mOut.Peek();
+					mSocket.BeginSend(next.buffer, next.position, next.size, SocketFlags.None, OnSend, next);
+				}
+				catch (Exception ex)
+				{
+					Error(ex.Message);
+					CloseNotThreadSafe(false);
 				}
 			}
-			else Close(true);
+			else CloseNotThreadSafe(true);
+#endif
 		}
 	}
 
@@ -498,15 +564,16 @@ public class TcpProtocol : Player
 			stage = Stage.Verifying;
 
 			// Save the timestamp
-			lastReceivedTime = DateTime.Now.Ticks / 10000;
-
-			// Save the address
-			tcpEndPoint = (IPEndPoint)mSocket.RemoteEndPoint;
+			lastReceivedTime = DateTime.UtcNow.Ticks / 10000;
 
 			// Queue up the read operation
 			try
 			{
-				mSocket.BeginReceive(mTemp, 0, mTemp.Length, SocketFlags.None, OnReceive, null);
+				// Save the address
+				tcpEndPoint = (IPEndPoint)mSocket.RemoteEndPoint;
+#if !UNITY_WINRT
+				mSocket.BeginReceive(mTemp, 0, mTemp.Length, SocketFlags.None, OnReceive, mSocket);
+#endif
 			}
 			catch (System.Exception ex)
 			{
@@ -542,18 +609,23 @@ public class TcpProtocol : Player
 	{
 		if (stage == Stage.NotConnected) return;
 		int bytes = 0;
+		Socket socket = (Socket)result.AsyncState;
 
 		try
 		{
-			bytes = mSocket.EndReceive(result);
+#if !UNITY_WINRT
+			bytes = socket.EndReceive(result);
+#endif
+			if (socket != mSocket) return;
 		}
 		catch (System.Exception ex)
 		{
+			if (socket != mSocket) return;
 			Error(ex.Message);
 			Disconnect(true);
 			return;
 		}
-		lastReceivedTime = DateTime.Now.Ticks / 10000;
+		lastReceivedTime = DateTime.UtcNow.Ticks / 10000;
 
 		if (bytes == 0)
 		{
@@ -565,8 +637,10 @@ public class TcpProtocol : Player
 
 			try
 			{
+#if !UNITY_WINRT
 				// Queue up the next read operation
-				mSocket.BeginReceive(mTemp, 0, mTemp.Length, SocketFlags.None, OnReceive, null);
+				mSocket.BeginReceive(mTemp, 0, mTemp.Length, SocketFlags.None, OnReceive, mSocket);
+#endif
 			}
 			catch (System.Exception ex)
 			{
@@ -588,6 +662,8 @@ public class TcpProtocol : Player
 			// Create a new packet buffer
 			mReceiveBuffer = Buffer.Create();
 			mReceiveBuffer.BeginWriting(false).Write(mTemp, 0, bytes);
+			mExpected = 0;
+			mOffset = 0;
 		}
 		else
 		{
@@ -604,6 +680,7 @@ public class TcpProtocol : Player
 
 				if (mExpected < 0 || mExpected > 16777216)
 				{
+					// HTTP Get: 542393671
 					Close(true);
 					return false;
 				}
@@ -633,7 +710,8 @@ public class TcpProtocol : Player
 				Buffer temp = Buffer.Create();
 
 				// Extract the packet and move past its size component
-				temp.BeginWriting(false).Write(mReceiveBuffer.buffer, mOffset, realSize);
+				BinaryWriter bw = temp.BeginWriting(false);
+				bw.Write(mReceiveBuffer.buffer, mOffset, realSize);
 				temp.BeginReading(4);
 
 				// This packet is now ready to be processed
@@ -679,7 +757,10 @@ public class TcpProtocol : Player
 		{
 			if (reader.ReadInt32() == version)
 			{
-				id = uniqueID ? Interlocked.Increment(ref mPlayerCounter) : 0;
+				lock (mLock)
+				{
+					id = uniqueID ? ++mPlayerCounter : 0;
+				}
 				name = reader.ReadString();
 
 				if (buffer.size > 1)
@@ -693,17 +774,19 @@ public class TcpProtocol : Player
 				else data = null;
 
 				stage = TcpProtocol.Stage.Connected;
-
+#if STANDALONE
+				if (id != 0) Tools.Print("[" + id + "] " + name + " has connected");
+#endif
 				BinaryWriter writer = BeginSend(Packet.ResponseID);
 				writer.Write(version);
 				writer.Write(id);
+				writer.Write((Int64)(System.DateTime.UtcNow.Ticks / 10000));
 				EndSend();
 				return true;
 			}
 			else
 			{
 				BinaryWriter writer = BeginSend(Packet.ResponseID);
-				writer.Write(version);
 				writer.Write(0);
 				EndSend();
 				Close(false);
@@ -722,7 +805,7 @@ public class TcpProtocol : Player
 		{
 			int serverVersion = reader.ReadInt32();
 
-			if (serverVersion == version)
+			if (serverVersion != 0 && serverVersion == version)
 			{
 				id = reader.ReadInt32();
 				stage = Stage.Connected;
@@ -731,7 +814,7 @@ public class TcpProtocol : Player
 			else
 			{
 				id = 0;
-				Error("Version mismatch! Server is running protocol version " + serverVersion + " while you are on version " + version);
+				Error("Version mismatch! Server is running a different protocol version!");
 				Close(false);
 				return false;
 			}

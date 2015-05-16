@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System;
@@ -29,8 +29,8 @@ public class Channel
 	public class CreatedObject
 	{
 		public int playerID;
-		public ushort objectID;
-		public uint uniqueID;
+		public ushort objectIndex;
+		public uint objectID;
 		public byte type;
 		public Buffer buffer;
 	}
@@ -84,21 +84,30 @@ public class Channel
 	{
 		destroyedObjects.Clear();
 
-		if (p == host) host = null;
-
 		if (players.Remove(p))
 		{
+			// When the host leaves, clear the host (it gets changed in SendLeaveChannel)
+			if (p == host) host = null;
+
 			// Remove all of the non-persistent objects that were created by this player
 			for (int i = created.size; i > 0; )
 			{
 				Channel.CreatedObject obj = created[--i];
 
-				if (obj.type == 2 && obj.playerID == p.id)
+				if (obj.playerID == p.id)
 				{
-					if (obj.buffer != null) obj.buffer.Recycle();
-					created.RemoveAt(i);
-					destroyedObjects.Add(obj.uniqueID);
-					DestroyObjectRFCs(obj.uniqueID);
+					if (obj.type == 2)
+					{
+						if (obj.buffer != null) obj.buffer.Recycle();
+						created.RemoveAt(i);
+						destroyedObjects.Add(obj.objectID);
+						DestroyObjectRFCs(obj.objectID);
+					}
+					else if (players.size != 0)
+					{
+						// The same operation happens on the client as well
+						obj.playerID = players[0].id;
+					}
 				}
 			}
 
@@ -121,24 +130,24 @@ public class Channel
 	/// Remove an object with the specified unique identifier.
 	/// </summary>
 
-	public bool DestroyObject (uint uniqueID)
+	public bool DestroyObject (uint objectID)
 	{
-		if (!destroyed.Contains(uniqueID))
+		if (!destroyed.Contains(objectID))
 		{
 			for (int i = 0; i < created.size; ++i)
 			{
 				Channel.CreatedObject obj = created[i];
 
-				if (obj.uniqueID == uniqueID)
+				if (obj.objectID == objectID)
 				{
 					if (obj.buffer != null) obj.buffer.Recycle();
 					created.RemoveAt(i);
-					DestroyObjectRFCs(uniqueID);
+					DestroyObjectRFCs(objectID);
 					return true;
 				}
 			}
-			destroyed.Add(uniqueID);
-			DestroyObjectRFCs(uniqueID);
+			destroyed.Add(objectID);
+			DestroyObjectRFCs(objectID);
 			return true;
 		}
 		return false;
@@ -171,7 +180,10 @@ public class Channel
 	public void CreateRFC (uint inID, string funcName, Buffer buffer)
 	{
 		if (closed || buffer == null) return;
-		buffer.MarkAsUsed();
+
+		Buffer b = Buffer.Create();
+		b.BeginWriting(false).Write(buffer.buffer, buffer.position, buffer.size);
+		b.BeginReading();
 
 		for (int i = 0; i < rfcs.size; ++i)
 		{
@@ -180,14 +192,14 @@ public class Channel
 			if (r.uid == inID && r.functionName == funcName)
 			{
 				if (r.buffer != null) r.buffer.Recycle();
-				r.buffer = buffer;
+				r.buffer = b;
 				return;
 			}
 		}
 
 		RFC rfc = new RFC();
 		rfc.uid = inID;
-		rfc.buffer = buffer;
+		rfc.buffer = b;
 		rfc.functionName = funcName;
 		rfcs.Add(rfc);
 	}
@@ -210,6 +222,11 @@ public class Channel
 		}
 	}
 
+	// Cached to reduce memory allocations
+	List<uint> mCleanedOBJs = new List<uint>();
+	List<CreatedObject> mCreatedOBJs = new List<CreatedObject>();
+	List<RFC> mCreatedRFCs = new List<RFC>();
+
 	/// <summary>
 	/// Save the channel's data into the specified file.
 	/// </summary>
@@ -223,15 +240,51 @@ public class Channel
 		writer.Write(password);
 		writer.Write(persistent);
 		writer.Write(playerLimit);
-		writer.Write(rfcs.size);
 
+		// Record which objects are temporary and which ones are not
+		for (int i = 0; i < created.size; ++i)
+		{
+			CreatedObject co = created[i];
+
+			if (co.type == 1)
+			{
+				mCreatedOBJs.Add(co);
+				mCleanedOBJs.Add(co.objectID);
+			}
+		}
+
+		// Record all RFCs that don't belong to temporary objects
 		for (int i = 0; i < rfcs.size; ++i)
 		{
 			RFC rfc = rfcs[i];
+			uint objID = rfc.objectID;
+
+			if (objID < 32768)
+			{
+				mCreatedRFCs.Add(rfc);
+			}
+			else
+			{
+				for (int b = 0; b < mCleanedOBJs.size; ++b)
+				{
+					if (mCleanedOBJs.buffer[b] == objID)
+					{
+						mCreatedRFCs.Add(rfc);
+						break;
+					}
+				}
+			}
+		}
+
+		writer.Write(mCreatedRFCs.size);
+
+		for (int i = 0; i < mCreatedRFCs.size; ++i)
+		{
+			RFC rfc = mCreatedRFCs[i];
 			writer.Write(rfc.uid);
 			if (rfc.functionID == 0) writer.Write(rfc.functionName);
 			writer.Write(rfc.buffer.size);
-			
+
 			if (rfc.buffer.size > 0)
 			{
 				rfc.buffer.BeginReading();
@@ -239,16 +292,16 @@ public class Channel
 			}
 		}
 
-		writer.Write(created.size);
+		writer.Write(mCreatedOBJs.size);
 
-		for (int i = 0; i < created.size; ++i)
+		for (int i = 0; i < mCreatedOBJs.size; ++i)
 		{
-			CreatedObject co = created[i];
+			CreatedObject co = mCreatedOBJs[i];
 			writer.Write(co.playerID);
-			writer.Write(co.uniqueID);
 			writer.Write(co.objectID);
+			writer.Write(co.objectIndex);
 			writer.Write(co.buffer.size);
-			
+
 			if (co.buffer.size > 0)
 			{
 				co.buffer.BeginReading();
@@ -258,6 +311,10 @@ public class Channel
 
 		writer.Write(destroyed.size);
 		for (int i = 0; i < destroyed.size; ++i) writer.Write(destroyed[i]);
+
+		mCleanedOBJs.Clear();
+		mCreatedOBJs.Clear();
+		mCreatedRFCs.Clear();
 	}
 
 	/// <summary>
@@ -305,10 +362,12 @@ public class Channel
 		{
 			CreatedObject co = new CreatedObject();
 			co.playerID = reader.ReadInt32();
-			co.uniqueID = reader.ReadUInt32();
-			co.objectID = reader.ReadUInt16();
+			co.objectID = reader.ReadUInt32();
+			co.objectIndex = reader.ReadUInt16();
+			co.type = 1;
 			Buffer b = Buffer.Create();
 			b.BeginWriting(false).Write(reader.ReadBytes(reader.ReadInt32()));
+			b.BeginReading();
 			co.buffer = b;
 			created.Add(co);
 		}

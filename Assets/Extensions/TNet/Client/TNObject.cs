@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System.IO;
@@ -20,28 +20,12 @@ public sealed class TNObject : MonoBehaviour
 {
 	static int mDummyID = 0;
 
-	/// <summary>
-	/// Remote function calls that can't be executed immediately get stored,
-	/// and will be executed when an appropriate Object ID gets added.
-	/// </summary>
-
-	class DelayedCall
-	{
-		public uint objID;
-		public byte funcID;
-		public string funcName;
-		public object[] parameters;
-	}
-
 	// List of network objs to iterate through
 	static List<TNObject> mList = new List<TNObject>();
 
 	// List of network objs to quickly look up
 	static System.Collections.Generic.Dictionary<uint, TNObject> mDictionary =
 		new System.Collections.Generic.Dictionary<uint, TNObject>();
-
-	// List of delayed calls -- calls that could not execute at the time of the call
-	static List<DelayedCall> mDelayed = new List<DelayedCall>();
 
 	/// <summary>
 	/// Unique Network Identifier. All TNObjects have them and is how messages arrive at the correct destination.
@@ -68,10 +52,10 @@ public sealed class TNObject : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Whether the TNObject has a parent.
+	/// TNObject's parent, if it has any.
 	/// </summary>
 
-	public bool hasParent { get { return mParent != null; } }
+	public TNObject parent { get { return mParent; } }
 
 	/// <summary>
 	/// When set to 'true', it will cause the list of remote function calls to be rebuilt next time they're needed.
@@ -92,6 +76,23 @@ public sealed class TNObject : MonoBehaviour
 	[System.NonSerialized] TNObject mParent = null;
 
 	/// <summary>
+	/// When objects get destroyed, they immediately get marked as such so that no RFCs go out between the destroy call
+	/// and the response coming back from the server.
+	/// </summary>
+	
+	[System.NonSerialized] public bool hasBeenDestroyed = false;
+
+	public delegate void OnDestroyCallback ();
+
+	/// <summary>
+	/// If you want to know when this object is getting destroyed, subscribe to this delegate.
+	/// This delegate is guaranteed to be called before OnDestroy() notifications get sent out.
+	/// This is useful if you want parts of the object to remain behind (such as buggy Unity 4 cloth).
+	/// </summary>
+
+	[System.NonSerialized] public OnDestroyCallback onDestroy;
+
+	/// <summary>
 	/// Whether this object belongs to the player.
 	/// </summary>
 
@@ -101,26 +102,42 @@ public sealed class TNObject : MonoBehaviour
 	/// ID of the player that owns this object.
 	/// </summary>
 
-	public int ownerID
+	public int ownerID { get { return (mParent != null) ? mParent.ownerID : mOwner; } }
+
+	/// <summary>
+	/// Destroy this game object on all connected clients and remove it from the server.
+	/// </summary>
+
+	[ContextMenu("Destroy")]
+	public void DestroySelf ()
 	{
-		get
+		if (!hasBeenDestroyed)
 		{
-			return (mParent != null) ? mParent.ownerID : mOwner;
-		}
-		set
-		{
-			if (mParent != null)
+			hasBeenDestroyed = true;
+
+			if (TNManager.isConnected)
 			{
-				mParent.ownerID = value;
+				Invoke("EnsureDestroy", 5f);
+				TNManager.BeginSend(Packet.RequestDestroy).Write(uid);
+				TNManager.EndSend();
 			}
-			else if (mOwner != value)
+			else
 			{
-				Send("SetOwner", Target.All, value);
+				if (onDestroy != null) onDestroy();
+				Object.Destroy(gameObject);
 			}
 		}
 	}
 
-	[RFC] void SetOwner (int val) { mOwner = val; }
+	/// <summary>
+	/// If this function is still here in 5 seconds then something went wrong, so force-destroy the object.
+	/// </summary>
+
+	void EnsureDestroy ()
+	{
+		if (onDestroy != null) onDestroy();
+		Object.Destroy(gameObject);
+	}
 
 	/// <summary>
 	/// Remember the object's ownership, for convenience.
@@ -133,12 +150,23 @@ public sealed class TNObject : MonoBehaviour
 			id = ++mDummyID;
 
 		mOwner = TNManager.objectOwnerID;
-		if (TNManager.GetPlayer(mOwner) == null)
+
+		if (TNManager.players.size == 0)
+		{
+			mOwner = TNManager.playerID;
+		}
+		else if (TNManager.GetPlayer(mOwner) == null)
+		{
+#if UNITY_EDITOR
+			// This shouldn't happen anymore with the latest server/client version
+			Debug.LogWarning("Object is missing its owner, " + mOwner, this);
+#endif
 			mOwner = TNManager.hostID;
+		}
 	}
 
 	/// <summary>
-	/// Automatically transfer the ownership.
+	/// Automatically transfer the ownership. The same action happens on the server.
 	/// </summary>
 
 	void OnNetworkPlayerLeave (Player p) { if (p != null && mOwner == p.id) mOwner = TNManager.hostID; }
@@ -267,25 +295,7 @@ public sealed class TNObject : MonoBehaviour
 				return;
 			}
 		}
-		else
-		{
-			Register();
-
-			// Have there been any delayed function calls for this object? If so, execute them now.
-			for (int i = 0; i < mDelayed.size; )
-			{
-				DelayedCall dc = mDelayed[i];
-
-				if (dc.objID == uid)
-				{
-					if (!string.IsNullOrEmpty(dc.funcName)) Execute(dc.funcName, dc.parameters);
-					else Execute(dc.funcID, dc.parameters);
-					mDelayed.RemoveAt(i);
-					continue;
-				}
-				++i;
-			}
-		}
+		else Register();
 	}
 
 	/// <summary>
@@ -332,8 +342,14 @@ public sealed class TNObject : MonoBehaviour
 	public bool Execute (byte funcID, params object[] parameters)
 	{
 		if (mParent != null) return mParent.Execute(funcID, parameters);
-		if (rebuildMethodList) RebuildMethodList();
-		return UnityTools.ExecuteAll(mRFCs, funcID, parameters);
+		if (UnityTools.ExecuteAll(mRFCs, funcID, parameters)) return true;
+
+		if (rebuildMethodList)
+		{
+			RebuildMethodList();
+			return UnityTools.ExecuteAll(mRFCs, funcID, parameters);
+		}
+		return false;
 	}
 
 	/// <summary>
@@ -343,8 +359,31 @@ public sealed class TNObject : MonoBehaviour
 	public bool Execute (string funcName, params object[] parameters)
 	{
 		if (mParent != null) return mParent.Execute(funcName, parameters);
-		if (rebuildMethodList) RebuildMethodList();
-		return UnityTools.ExecuteAll(mRFCs, funcName, parameters);
+		if (UnityTools.ExecuteAll(mRFCs, funcName, parameters)) return true;
+
+		if (rebuildMethodList)
+		{
+			RebuildMethodList();
+			return UnityTools.ExecuteAll(mRFCs, funcName, parameters);
+		}
+		return false;
+	}
+
+	// Delete objects that had orphaned RFC calls due to improper sends
+	static List<uint> mDelete = new List<uint>();
+
+	/// <summary>
+	/// Clean up orphaned RFCs.
+	/// </summary>
+
+	static void CleanupOrphanedRFCs ()
+	{
+		for (int i = 0; i < mDelete.size; ++i)
+		{
+			TNManager.BeginSend(Packet.RequestDestroy).Write(mDelete[i]);
+			TNManager.EndSend();
+		}
+		mDelete.Clear();
 	}
 
 	/// <summary>
@@ -357,25 +396,32 @@ public sealed class TNObject : MonoBehaviour
 
 		if (obj != null)
 		{
-			if (!obj.Execute(funcID, parameters))
+			if (obj.Execute(funcID, parameters)) return;
+
+			if (obj.rebuildMethodList)
 			{
-#if UNITY_EDITOR
-				Debug.LogError("Unable to execute function with ID of '" + funcID + "'. Make sure there is a script that can receive this call.\n" +
-					"GameObject: " + GetHierarchy(obj.gameObject), obj.gameObject);
-#endif
+				obj.RebuildMethodList();
+				if (obj.Execute(funcID, parameters)) return;
 			}
-		}
-		else if (TNManager.isInChannel)
-		{
-			DelayedCall dc = new DelayedCall();
-			dc.objID = objID;
-			dc.funcID = funcID;
-			dc.parameters = parameters;
-			mDelayed.Add(dc);
+
+#if UNITY_EDITOR
+			Debug.LogError("[TNet] Unable to execute function with ID of '" + funcID + "'. Make sure there is a script that can receive this call.\n" +
+				"GameObject: " + GetHierarchy(obj.gameObject), obj.gameObject);
+#endif
 		}
 #if UNITY_EDITOR
-		else Debug.LogError("Trying to execute a function " + funcID + " on TNObject #" + objID +
-			" before it has been created.");
+		else if (TNManager.isJoiningChannel)
+		{
+			Debug.Log("[TNet] Trying to execute RFC #" + funcID + " on TNObject #" + objID + " before it has been created.");
+			mDelete.Add(objID);
+		}
+		else
+		{
+			Debug.LogWarning("[TNet] Trying to execute RFC #" + funcID + " on TNObject #" + objID + " before it has been created.");
+			mDelete.Add(objID);
+		}
+#else
+		else mDelete.Add(objID);
 #endif
 	}
 
@@ -389,24 +435,26 @@ public sealed class TNObject : MonoBehaviour
 
 		if (obj != null)
 		{
-			if (!obj.Execute(funcName, parameters))
+			if (obj.Execute(funcName, parameters)) return;
+
+			if (obj.rebuildMethodList)
 			{
-#if UNITY_EDITOR
-				Debug.LogError("Unable to execute function '" + funcName + "'. Did you forget an [RFC] prefix, perhaps?\n" +
-					"GameObject: " + GetHierarchy(obj.gameObject), obj.gameObject);
-#endif
+				obj.RebuildMethodList();
+				if (obj.Execute(funcName, parameters)) return;
 			}
-		}
-		else if (TNManager.isInChannel)
-		{
-			DelayedCall dc = new DelayedCall();
-			dc.objID = objID;
-			dc.funcName = funcName;
-			dc.parameters = parameters;
-			mDelayed.Add(dc);
+			
+#if UNITY_EDITOR
+			Debug.LogError("[TNet] Unable to execute function '" + funcName + "'. Did you forget an [RFC] prefix, perhaps?\n" +
+				"GameObject: " + GetHierarchy(obj.gameObject), obj.gameObject);
+#endif
 		}
 #if UNITY_EDITOR
-		else Debug.LogError("Trying to execute a function '" + funcName + "' on TNObject #" + objID +
+		else if (TNManager.isJoiningChannel)
+		{
+			Debug.Log("[TNet] Trying to execute a function '" + funcName + "' on TNObject #" + objID +
+				" before it has been created.");
+		}
+		else Debug.LogWarning("[TNet] Trying to execute a function '" + funcName + "' on TNObject #" + objID +
 			" before it has been created.");
 #endif
 	}
@@ -455,9 +503,25 @@ public sealed class TNObject : MonoBehaviour
 
 	/// <summary>
 	/// Send a remote function call.
+	/// Note that you should not use this version of the function if you care about performance (as it's much slower than others),
+	/// or if players can have duplicate names, as only one of them will actually receive this message.
+	/// </summary>
+
+	public void Send (byte rfcID, string targetName, params object[] objs) { SendRFC(rfcID, null, targetName, true, objs); }
+
+	/// <summary>
+	/// Send a remote function call.
 	/// </summary>
 
 	public void Send (string rfcName, Target target, params object[] objs) { SendRFC(0, rfcName, target, true, objs); }
+
+	/// <summary>
+	/// Send a remote function call.
+	/// Note that you should not use this version of the function if you care about performance (as it's much slower than others),
+	/// or if players can have duplicate names, as only one of them will actually receive this message.
+	/// </summary>
+
+	public void Send (string rfcName, string targetName, params object[] objs) { SendRFC(0, rfcName, targetName, true, objs); }
 
 	/// <summary>
 	/// Send a remote function call.
@@ -465,7 +529,7 @@ public sealed class TNObject : MonoBehaviour
 
 	public void Send (byte rfcID, Player target, params object[] objs)
 	{
-		if (target != null) SendRFC(rfcID, null, target, true, objs);
+		if (target != null) SendRFC(rfcID, null, target.id, true, objs);
 		else SendRFC(rfcID, null, Target.All, true, objs);
 	}
 
@@ -475,9 +539,21 @@ public sealed class TNObject : MonoBehaviour
 
 	public void Send (string rfcName, Player target, params object[] objs)
 	{
-		if (target != null) SendRFC(0, rfcName, target, true, objs);
+		if (target != null) SendRFC(0, rfcName, target.id, true, objs);
 		else SendRFC(0, rfcName, Target.All, true, objs);
 	}
+
+	/// <summary>
+	/// Send a remote function call.
+	/// </summary>
+
+	public void Send (byte rfcID, int playerID, params object[] objs) { SendRFC(rfcID, null, playerID, true, objs); }
+
+	/// <summary>
+	/// Send a remote function call.
+	/// </summary>
+
+	public void Send (string rfcName, int playerID, params object[] objs) { SendRFC(0, rfcName, playerID, true, objs); }
 
 	/// <summary>
 	/// Send a remote function call via UDP (if possible).
@@ -497,7 +573,7 @@ public sealed class TNObject : MonoBehaviour
 
 	public void SendQuickly (byte rfcID, Player target, params object[] objs)
 	{
-		if (target != null) SendRFC(rfcID, null, target, false, objs);
+		if (target != null) SendRFC(rfcID, null, target.id, false, objs);
 		else SendRFC(rfcID, null, Target.All, false, objs);
 	}
 
@@ -505,7 +581,7 @@ public sealed class TNObject : MonoBehaviour
 	/// Send a remote function call via UDP (if possible).
 	/// </summary>
 
-	public void SendQuickly (string rfcName, Player target, params object[] objs) { SendRFC(0, rfcName, target, false, objs); }
+	public void SendQuickly (string rfcName, Player target, params object[] objs) { SendRFC(0, rfcName, target.id, false, objs); }
 
 	/// <summary>
 	/// Send a broadcast to the entire LAN. Does not require an active connection.
@@ -559,11 +635,22 @@ public sealed class TNObject : MonoBehaviour
 #if UNITY_EDITOR
 		if (!Application.isPlaying) return;
 #endif
+		if (hasBeenDestroyed) return;
+
+		// Clean up orphaned RFCs first
+		if (mDelete.size != 0 && TNManager.isHosting && !TNManager.isJoiningChannel) CleanupOrphanedRFCs();
+
+		// Some very odd special case... sending a string[] as the only parameter
+		// results in objs[] being a string[] instead, when it should be object[string[]].
+		if (objs != null && objs.GetType() != typeof(object[]))
+			objs = new object[] { objs };
+
 		bool executeLocally = false;
+		bool connected = TNManager.isConnected;
 
 		if (target == Target.Broadcast)
 		{
-			if (TNManager.isConnected)
+			if (connected)
 			{
 				BinaryWriter writer = TNManager.BeginSend(Packet.Broadcast);
 				writer.Write(GetUID(uid, rfcID));
@@ -578,7 +665,7 @@ public sealed class TNObject : MonoBehaviour
 			// We're the host, and the packet should be going to the host -- just echo it locally
 			executeLocally = true;
 		}
-		else if (TNManager.isInChannel)
+		else if (!connected || TNManager.isInChannel)
 		{
 			// We want to echo UDP-based packets locally instead of having them bounce through the server
 			if (!reliable)
@@ -595,12 +682,15 @@ public sealed class TNObject : MonoBehaviour
 				}
 			}
 
-			byte packetID = (byte)((int)Packet.ForwardToAll + (int)target);
-			BinaryWriter writer = TNManager.BeginSend(packetID);
-			writer.Write(GetUID(uid, rfcID));
-			if (rfcID == 0) writer.Write(rfcName);
-			writer.WriteArray(objs);
-			TNManager.EndSend(reliable);
+			if (connected)
+			{
+				byte packetID = (byte)((int)Packet.ForwardToAll + (int)target);
+				BinaryWriter writer = TNManager.BeginSend(packetID);
+				writer.Write(GetUID(uid, rfcID));
+				if (rfcID == 0) writer.Write(rfcName);
+				writer.WriteArray(objs);
+				TNManager.EndSend(reliable);
+			}
 		}
 		else if (!TNManager.isConnected && (target == Target.All || target == Target.AllSaved))
 		{
@@ -616,21 +706,50 @@ public sealed class TNObject : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Send a new remote function call to the specified player.
+	/// Send a new RFC call to the specified target.
 	/// </summary>
 
-	void SendRFC (byte rfcID, string rfcName, Player target, bool reliable, params object[] objs)
+	void SendRFC (byte rfcID, string rfcName, string targetName, bool reliable, params object[] objs)
 	{
-		if (TNManager.isConnected)
+#if UNITY_EDITOR
+		if (!Application.isPlaying) return;
+#endif
+		if (hasBeenDestroyed || string.IsNullOrEmpty(targetName)) return;
+
+		if (targetName == TNManager.playerName)
 		{
-			BinaryWriter writer = TNManager.BeginSend(Packet.ForwardToPlayer);
-			writer.Write(target.id);
+			if (rfcID != 0) Execute(rfcID, objs);
+			else Execute(rfcName, objs);
+		}
+		else
+		{
+			BinaryWriter writer = TNManager.BeginSend(Packet.ForwardByName);
+			writer.Write(targetName);
 			writer.Write(GetUID(uid, rfcID));
 			if (rfcID == 0) writer.Write(rfcName);
 			writer.WriteArray(objs);
 			TNManager.EndSend(reliable);
 		}
-		else if (target == TNManager.player)
+	}
+
+	/// <summary>
+	/// Send a new remote function call to the specified player.
+	/// </summary>
+
+	void SendRFC (byte rfcID, string rfcName, int target, bool reliable, params object[] objs)
+	{
+		if (hasBeenDestroyed) return;
+
+		if (TNManager.isConnected)
+		{
+			BinaryWriter writer = TNManager.BeginSend(Packet.ForwardToPlayer);
+			writer.Write(target);
+			writer.Write(GetUID(uid, rfcID));
+			if (rfcID == 0) writer.Write(rfcName);
+			writer.WriteArray(objs);
+			TNManager.EndSend(reliable);
+		}
+		else if (target == TNManager.playerID)
 		{
 			if (rfcID != 0) Execute(rfcID, objs);
 			else Execute(rfcName, objs);
@@ -643,6 +762,7 @@ public sealed class TNObject : MonoBehaviour
 
 	void BroadcastToLAN (int port, byte rfcID, string rfcName, params object[] objs)
 	{
+		if (hasBeenDestroyed) return;
 		BinaryWriter writer = TNManager.BeginSend(Packet.ForwardToAll);
 		writer.Write(GetUID(uid, rfcID));
 		if (rfcID == 0) writer.Write(rfcName);

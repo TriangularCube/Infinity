@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 namespace TNet
@@ -180,7 +180,8 @@ public enum Packet
 	/// Always the first packet to arrive from the server.
 	/// If the protocol version didn't match the client, a disconnect may follow.
 	/// int32: Protocol ID.
-	/// int32: Player ID.
+	/// int32: Player ID (only if the protocol ID matched).
+	/// int64: Server time in milliseconds (only if the protocol ID matched).
 	/// </summary>
 
 	ResponseID,
@@ -324,7 +325,7 @@ public enum Packet
 	/// Arbitrary amount of data follows.
 	/// </summary>
 
-	ForwardToAll,
+	ForwardToAll, // 38, 0x26
 
 	/// <summary>
 	/// Echo the packet to everyone in the room and everyone who joins later.
@@ -332,7 +333,7 @@ public enum Packet
 	/// Arbitrary amount of data follows.
 	/// </summary>
 
-	ForwardToAllSaved,
+	ForwardToAllSaved, // 39, 0x27
 
 	/// <summary>
 	/// Echo the packet to everyone in the room except the sender. Interpreting the packet is up to the client.
@@ -340,7 +341,7 @@ public enum Packet
 	/// Arbitrary amount of data follows.
 	/// </summary>
 
-	ForwardToOthers,
+	ForwardToOthers, // 40, 0x28
 
 	/// <summary>
 	/// Echo the packet to everyone in the room (except the sender) and everyone who joins later.
@@ -348,7 +349,7 @@ public enum Packet
 	/// Arbitrary amount of data follows.
 	/// </summary>
 
-	ForwardToOthersSaved,
+	ForwardToOthersSaved, // 41, 0x29
 
 	/// <summary>
 	/// Echo the packet to the room's host. Interpreting the packet is up to the client.
@@ -356,7 +357,7 @@ public enum Packet
 	/// Arbitrary amount of data follows.
 	/// </summary>
 
-	ForwardToHost,
+	ForwardToHost, // 42, 0x2A
 
 	/// <summary>
 	/// Echo the packet to the specified player.
@@ -365,7 +366,7 @@ public enum Packet
 	/// Arbitrary amount of data follows.
 	/// </summary>
 
-	ForwardToPlayer,
+	ForwardToPlayer, // 43, 0x2B
 
 	/// <summary>
 	/// Echo the packet to the specified player and everyone who joins later.
@@ -374,7 +375,7 @@ public enum Packet
 	/// Arbitrary amount of data follows.
 	/// </summary>
 
-	ForwardToPlayerBuffered,
+	ForwardToPlayerSaved, // 44, 0x2C
 
 	//===================================================================================
 
@@ -450,5 +451,28 @@ public enum Packet
 	/// </summary>
 
 	SyncPlayerData,
+
+	/// <summary>
+	/// Echo the packet to the specified player.
+	/// string: Player name.
+	/// uint32: Object ID (24 bits), RFC ID (8 bits).
+	/// Arbitrary amount of data follows.
+	/// </summary>
+
+	ForwardByName,
+
+	/// <summary>
+	/// Server notification sent when the target requested by ForwardByName was not found.
+	/// string: Player name.
+	/// </summary>
+
+	ForwardTargetNotFound,
+
+	/// <summary>
+	/// Print a message on the server. Used to make verbose output possible.
+	/// string: text to log.
+	/// </summary>
+
+	ServerLog,
 }
 }

@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 namespace TNet
@@ -12,12 +12,13 @@ namespace TNet
 public class Player
 {
 	static protected int mPlayerCounter = 0;
+	static protected object mLock = new int();
 
 	/// <summary>
 	/// Protocol version.
 	/// </summary>
 
-	public const int version = 11;
+	public const int version = 12;
 
 	/// <summary>
 	/// All players have a unique identifier given by the server.
@@ -57,5 +58,11 @@ public class Player
 
 	public Player () { }
 	public Player (string playerName) { name = playerName; }
+
+	/// <summary>
+	/// Call after shutting down the server.
+	/// </summary>
+
+	static public void ResetPlayerCounter () { mPlayerCounter = 0; }
 }
 }

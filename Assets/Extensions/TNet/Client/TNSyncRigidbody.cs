@@ -1,9 +1,7 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
-
-//#define TNDEBUG
 
 using UnityEngine;
 using TNet;
@@ -25,7 +23,7 @@ public class TNSyncRigidbody : TNBehaviour
 	/// The actual number of updates sent may be higher (if new players connect) or lower (if the rigidbody is still).
 	/// </summary>
 
-	public int updatesPerSecond = 10;
+	public float updatesPerSecond = 10f;
 
 	/// <summary>
 	/// Whether to send through UDP or TCP. If it's important, TCP will be used. If not, UDP.
@@ -34,9 +32,15 @@ public class TNSyncRigidbody : TNBehaviour
 
 	public bool isImportant = false;
 
+	/// <summary>
+	/// Set this to 'false' to stop sending updates.
+	/// </summary>
+
+	[System.NonSerialized] public bool isActive = true;
+
 	Transform mTrans;
 	Rigidbody mRb;
-	float mNext;
+	float mNext = 0f;
 	bool mWasSleeping = false;
 
 	Vector3 mLastPos;
@@ -55,7 +59,7 @@ public class TNSyncRigidbody : TNBehaviour
 	/// Update the timer, offsetting the time by the update frequency.
 	/// </summary>
 
-	void UpdateInterval () { mNext = Time.time + (updatesPerSecond > 0 ? (1f / updatesPerSecond) : 0f); }
+	void UpdateInterval () { mNext = Random.Range(0.85f, 1.15f) * (updatesPerSecond > 0f ? (1f / updatesPerSecond) : 0f); }
 
 	/// <summary>
 	/// Only the host should be sending out updates. Everyone else should be simply observing the changes.
@@ -63,18 +67,15 @@ public class TNSyncRigidbody : TNBehaviour
 
 	void FixedUpdate ()
 	{
-		if (updatesPerSecond > 0 && mNext < Time.time && tno.isMine && TNManager.isInChannel)
+		if (updatesPerSecond < 0.001f) return;
+
+		if (isActive && tno.isMine && TNManager.isInChannel)
 		{
 			bool isSleeping = mRb.IsSleeping();
+			if (isSleeping && mWasSleeping) return;
 
-			if (isSleeping && mWasSleeping)
-			{
-#if TNDEBUG
-				renderer.material.color = Color.blue;
-#endif
-				return;
-			}
-
+			mNext -= Time.deltaTime;
+			if (mNext > 0f) return;
 			UpdateInterval();
 
 			Vector3 pos = mTrans.position;
@@ -84,9 +85,7 @@ public class TNSyncRigidbody : TNBehaviour
 			{
 				mLastPos = pos;
 				mLastRot = rot;
-#if TNDEBUG
-				renderer.material.color = Color.red;
-#endif
+
 				// Send the update. Note that we're using an RFC ID here instead of the function name.
 				// Using an ID speeds up the function lookup time and reduces the size of the packet.
 				// Since the target is "OthersSaved", even players that join later will receive this update.
@@ -111,13 +110,16 @@ public class TNSyncRigidbody : TNBehaviour
 	[RFC(1)]
 	void OnSync (Vector3 pos, Vector3 rot, Vector3 vel, Vector3 ang)
 	{
-#if TNDEBUG
-		renderer.material.color = Color.green;
-#endif
 		mTrans.position = pos;
 		mTrans.rotation = Quaternion.Euler(rot);
-		mRb.velocity = vel;
-		mRb.angularVelocity = ang;
+		//mRb.MovePosition(pos);
+		//mRb.MoveRotation(Quaternion.Euler(rot));
+
+		if (!mRb.isKinematic)
+		{
+			mRb.velocity = vel;
+			mRb.angularVelocity = ang;
+		}
 		UpdateInterval();
 	}
 
@@ -125,7 +127,7 @@ public class TNSyncRigidbody : TNBehaviour
 	/// It's a good idea to send an update when a collision occurs.
 	/// </summary>
 
-	void OnCollisionEnter () { if (TNManager.isHosting) Sync(); }
+	void OnCollisionEnter () { if (tno.isMine) Sync(); }
 
 	/// <summary>
 	/// Send out an update to everyone on the network.
@@ -133,15 +135,12 @@ public class TNSyncRigidbody : TNBehaviour
 
 	public void Sync ()
 	{
-		if (TNManager.isInChannel)
+		if (isActive && TNManager.isInChannel)
 		{
 			UpdateInterval();
 			mWasSleeping = false;
 			mLastPos = mTrans.position;
 			mLastRot = mTrans.rotation.eulerAngles;
-#if TNDEBUG
-			renderer.material.color = Color.red;
-#endif
 			tno.Send(1, Target.OthersSaved, mLastPos, mLastRot, mRb.velocity, mRb.angularVelocity);
 		}
 	}

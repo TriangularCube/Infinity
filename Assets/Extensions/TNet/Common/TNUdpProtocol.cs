@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System;
@@ -24,7 +24,11 @@ public class UdpProtocol
 	/// It's important to set this prior to calling StartUDP or the change won't have any effect.
 	/// </summary>
 
+#if UNITY_IPHONE
+	static public bool useMulticasting = false;
+#else
 	static public bool useMulticasting = true;
+#endif
 
 	/// <summary>
 	/// When you have multiple network interfaces, it's often important to be able to specify
@@ -38,19 +42,19 @@ public class UdpProtocol
 	// Port used to listen and socket used to send and receive
 	int mPort = -1;
 	Socket mSocket;
-	bool mMulticast = true;
 	//List<UdpClient> mClients = new List<UdpClient>();
 
+#if !UNITY_WEBPLAYER
 	// Buffer used for receiving incoming data
 	byte[] mTemp = new byte[8192];
 
 	// End point of where the data is coming from
 	EndPoint mEndPoint;
+	bool mMulticast = true;
 
 	// Default end point -- mEndPoint is reset to this value after every receive operation.
 	static EndPoint mDefaultEndPoint;
 
-#if !UNITY_WEBPLAYER
 	// Cached broadcast end-point
 	static IPAddress multicastIP = IPAddress.Parse("224.168.100.17");
 	IPEndPoint mMulticastEndPoint = new IPEndPoint(multicastIP, 0);
@@ -104,17 +108,21 @@ public class UdpProtocol
 		mSocket.MulticastLoopback = true;
 		mMulticast = useMulticasting;
 
-		if (useMulticasting)
+		try
 		{
-			List<IPAddress> ips = Tools.localAddresses;
-
-			foreach (IPAddress ip in ips)
+			if (useMulticasting)
 			{
-				MulticastOption opt = new MulticastOption(multicastIP, ip);
-				mSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, opt);
+				List<IPAddress> ips = Tools.localAddresses;
+
+				foreach (IPAddress ip in ips)
+				{
+					MulticastOption opt = new MulticastOption(multicastIP, ip);
+					mSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, opt);
+				}
 			}
+			else mSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
 		}
-		else mSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Broadcast, 1);
+		catch (System.Exception) { }
 #endif
 		// Port zero means we will be able to send, but not receive
 		if (mPort == 0) return true;
@@ -122,7 +130,11 @@ public class UdpProtocol
 		try
 		{
 			// Use the default network interface if one wasn't explicitly chosen
+ #if (UNITY_IPHONE && !UNITY_EDITOR) //|| UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+			IPAddress networkInterface = useMulticasting ? multicastIP : (defaultNetworkInterface ?? IPAddress.Any);
+ #else
 			IPAddress networkInterface = defaultNetworkInterface ?? IPAddress.Any;
+ #endif
 			mEndPoint = new IPEndPoint(networkInterface, 0);
 			mDefaultEndPoint = new IPEndPoint(networkInterface, 0);
 
@@ -138,7 +150,7 @@ public class UdpProtocol
 			return false;
 		}
 #elif DEBUG
-		catch (System.Exception ex) { Console.WriteLine("Udp.Start: " + ex.Message); Stop(); return false; }
+		catch (System.Exception ex) { Tools.Print("Udp.Start: " + ex.Message); Stop(); return false; }
 #else
 		catch (System.Exception) { Stop(); return false; }
 #endif
@@ -164,6 +176,7 @@ public class UdpProtocol
 		Buffer.Recycle(mOut);
 	}
 
+#if !UNITY_WEBPLAYER
 	/// <summary>
 	/// Receive incoming data.
 	/// </summary>
@@ -200,9 +213,18 @@ public class UdpProtocol
 		if (mSocket != null)
 		{
 			mEndPoint = mDefaultEndPoint;
-			mSocket.BeginReceiveFrom(mTemp, 0, mTemp.Length, SocketFlags.None, ref mEndPoint, OnReceive, null);
+
+			try
+			{
+				mSocket.BeginReceiveFrom(mTemp, 0, mTemp.Length, SocketFlags.None, ref mEndPoint, OnReceive, null);
+			}
+			catch (System.Exception ex)
+			{
+				Error(new IPEndPoint(Tools.localAddress, 0), ex.Message);
+			}
 		}
 	}
+#endif
 
 	/// <summary>
 	/// Extract the first incoming packet.
@@ -331,9 +353,9 @@ public class UdpProtocol
 		{
 			bytes = 1;
 #if STANDALONE
-			Console.WriteLine(ex.Message);
+			Tools.Print(ex.Message);
 #else
-			UnityEngine.Debug.Log("[TNet] " + ex.Message);
+			UnityEngine.Debug.Log("[TNet] OnSend: " + ex.Message);
 #endif
 		}
 

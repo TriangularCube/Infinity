@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System.IO;
@@ -10,91 +10,6 @@ using System.Net;
 using System.Reflection;
 using UnityTools = TNet.UnityTools;
 
-static public class BinaryExtensions
-{
-	static System.Collections.Generic.Dictionary<byte, object[]> mTemp =
-		new System.Collections.Generic.Dictionary<byte, object[]>();
-
-	/// <summary>
-	/// Get a temporary array of specified size.
-	/// </summary>
-
-	static object[] GetTempBuffer (int count)
-	{
-		object[] temp;
-
-		if (!mTemp.TryGetValue((byte)count, out temp))
-		{
-			temp = new object[count];
-			mTemp[(byte)count] = temp;
-		}
-		return temp;
-	}
-
-	/// <summary>
-	/// Write the array of objects into the specified writer.
-	/// </summary>
-
-	static public void WriteArray (this BinaryWriter bw, params object[] objs)
-	{
-		bw.WriteInt(objs.Length);
-		if (objs.Length == 0) return;
-
-		for (int b = 0, bmax = objs.Length; b < bmax; ++b)
-			bw.WriteObject(objs[b]);
-	}
-
-	/// <summary>
-	/// Read the object array from the specified reader.
-	/// </summary>
-
-	static public object[] ReadArray (this BinaryReader reader)
-	{
-		int count = reader.ReadInt();
-		if (count == 0) return null;
-
-		object[] temp = GetTempBuffer(count);
-
-		for (int i = 0; i < count; ++i)
-			temp[i] = reader.ReadObject();
-
-		return temp;
-	}
-
-	/// <summary>
-	/// Read the object array from the specified reader. The first value will be set to the specified object.
-	/// </summary>
-
-	static public object[] ReadArray (this BinaryReader reader, object obj)
-	{
-		int count = reader.ReadInt() + 1;
-
-		object[] temp = GetTempBuffer(count);
-
-		temp[0] = obj;
-		for (int i = 1; i < count; ++i)
-			temp[i] = reader.ReadObject();
-
-		return temp;
-	}
-
-	/// <summary>
-	/// Combine the specified object and array into one array in an efficient manner.
-	/// </summary>
-
-	static public object[] CombineArrays (object obj, params object[] objs)
-	{
-		int count = objs.Length;
-		object[] temp = GetTempBuffer(count + 1);
-
-		temp[0] = obj;
-		for (int i = 0; i < count; ++i)
-			temp[i + 1] = objs[i];
-
-		return temp;
-	}
-}
-
 /// <summary>
 /// Tasharen Network Manager tailored for Unity.
 /// </summary>
@@ -102,6 +17,12 @@ static public class BinaryExtensions
 [AddComponentMenu("TNet/Network Manager")]
 public class TNManager : MonoBehaviour
 {
+	/// <summary>
+	/// Notification that will be called when SyncPlayerData() gets called, even in offline mode (for consistency).
+	/// </summary>
+
+	static public GameClient.OnPlayerSync onPlayerSync;
+
 	/// <summary>
 	/// If set to 'true', the list of custom creation functions will be rebuilt the next time it's accessed.
 	/// </summary>
@@ -119,7 +40,7 @@ public class TNManager : MonoBehaviour
 
 	// Instance pointer
 	static TNManager mInstance;
-	static int mObjectOwner = 1;
+	static int mObjectOwner = -1;
 
 	/// <summary>
 	/// List of objects that can be instantiated by the network.
@@ -128,7 +49,9 @@ public class TNManager : MonoBehaviour
 	public GameObject[] objects;
 
 	// Network client
-	GameClient mClient = new GameClient();
+	[System.NonSerialized] GameClient mClient = new GameClient();
+	[System.NonSerialized] bool mAsyncLoad = false;
+	[System.NonSerialized] bool mJoining = false;
 
 	/// <summary>
 	/// TNet Client used for communication.
@@ -141,6 +64,19 @@ public class TNManager : MonoBehaviour
 	/// </summary>
 
 	static public bool isConnected { get { return mInstance != null && mInstance.mClient.isConnected; } }
+
+	/// <summary>
+	/// Whether TNet is currently joining a channel. This gets set to 'true' in JoinChannel,
+	/// then 'false' just before OnNetworkJoinChannel was gets out.
+	/// </summary>
+
+	static public bool isJoiningChannel
+	{
+		get
+		{
+			return (mInstance != null && (mInstance.mJoining || mInstance.mAsyncLoad || mInstance.mClient.isSwitchingScenes));
+		}
+	}
 
 	/// <summary>
 	/// Whether we are currently trying to establish a new connection.
@@ -158,7 +94,8 @@ public class TNManager : MonoBehaviour
 	/// Whether the player is currently in a channel.
 	/// </summary>
 
-	static public bool isInChannel { get { return mInstance != null && mInstance.mClient.isConnected && mInstance.mClient.isInChannel; } }
+	static public bool isInChannel { get { return !isJoiningChannel && (mInstance == null ||
+		mInstance.mClient == null || (mInstance.mClient.isConnected && mInstance.mClient.isInChannel)); } }
 
 	/// <summary>
 	/// You can pause TNManager's message processing if you like.
@@ -207,14 +144,21 @@ public class TNManager : MonoBehaviour
 	/// Check this in a script's Awake() attached to an network-instantiated object.
 	/// </summary>
 
-	static public int objectOwnerID { get { return mObjectOwner; } }
+	static public int objectOwnerID { get { return mObjectOwner == -1 ? hostID : mObjectOwner; } }
 
 	/// <summary>
 	/// Call this function in the script's Awake() to determine if this object
 	/// was created as a result of the player's TNManager.Create() call.
+	/// In most cases you should check tno.isMine instead.
 	/// </summary>
 
-	static public bool isThisMyObject { get { return mObjectOwner == playerID; } }
+	static public bool isThisMyObject { get { return objectOwnerID == playerID; } }
+
+	/// <summary>
+	/// Current time on the server in milliseconds.
+	/// </summary>
+
+	static public long serverTime { get { return (mInstance != null) ? mInstance.mClient.serverTime : (System.DateTime.UtcNow.Ticks / 10000); } }
 
 	/// <summary>
 	/// Address from which the packet was received. Only available during packet processing callbacks.
@@ -223,6 +167,12 @@ public class TNManager : MonoBehaviour
 	/// </summary>
 
 	static public IPEndPoint packetSource { get { return (mInstance != null) ? mInstance.mClient.packetSource : null; } }
+
+	/// <summary>
+	/// TCP end point, available only if we're actually connected to the server.
+	/// </summary>
+
+	static public IPEndPoint tcpEndPoint { get { return (mInstance != null) ? mInstance.mClient.tcpEndPoint : null; } }
 
 	/// <summary>
 	/// Custom data associated with the channel.
@@ -319,12 +269,6 @@ public class TNManager : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Sync the player's data with the server.
-	/// </summary>
-
-	static public void SyncPlayerData () { if (isConnected) mInstance.mClient.SyncPlayerData(); }
-
-	/// <summary>
 	/// List of players in the same channel as the client.
 	/// </summary>
 
@@ -417,10 +361,14 @@ public class TNManager : MonoBehaviour
 
 	static public void Connect (IPEndPoint externalIP, IPEndPoint internalIP)
 	{
-		instance.mClient.Disconnect();
-		instance.mClient.playerName = mPlayer.name;
-		instance.mClient.playerData = mPlayer.data;
-		instance.mClient.Connect(externalIP, internalIP);
+		if (!instance.mClient.isTryingToConnect)
+		{
+			instance.mClient.Disconnect();
+			instance.mClient.playerName = mPlayer.name;
+			instance.mClient.playerData = mPlayer.data;
+			instance.mClient.Connect(externalIP, internalIP);
+		}
+		else Debug.LogWarning("Already connecting...");
 	}
 
 	/// <summary>
@@ -429,18 +377,22 @@ public class TNManager : MonoBehaviour
 
 	static public void Connect (string address, int port)
 	{
-		IPEndPoint ip = TNet.Tools.ResolveEndPoint(address, port);
+		if (!instance.mClient.isTryingToConnect)
+		{
+			IPEndPoint ip = TNet.Tools.ResolveEndPoint(address, port);
 
-		if (ip == null)
-		{
-			instance.OnConnect(false, "Unable to resolve [" + address + "]");
+			if (ip == null)
+			{
+				instance.OnConnect(false, "Unable to resolve [" + address + "]");
+			}
+			else
+			{
+				instance.mClient.playerName = mPlayer.name;
+				instance.mClient.playerData = mPlayer.data;
+				instance.mClient.Connect(ip, null);
+			}
 		}
-		else
-		{
-			instance.mClient.playerName = mPlayer.name;
-			instance.mClient.playerData = mPlayer.data;
-			instance.mClient.Connect(ip, null);
-		}
+		else Debug.LogWarning("Already connecting...");
 	}
 
 	/// <summary>
@@ -470,7 +422,15 @@ public class TNManager : MonoBehaviour
 
 	static public void JoinChannel (int channelID, string levelName)
 	{
-		if (mInstance != null) mInstance.mClient.JoinChannel(channelID, levelName, false, 65535, null);
+		if (mInstance != null && TNManager.isConnected)
+		{
+			if (!mInstance.mJoining)
+			{
+				mInstance.mJoining = true;
+				mInstance.mClient.JoinChannel(channelID, levelName, false, 65535, null);
+			}
+			else Debug.LogWarning("Already joining, ignored");
+		}
 		else Application.LoadLevel(levelName);
 	}
 
@@ -485,7 +445,15 @@ public class TNManager : MonoBehaviour
 
 	static public void JoinChannel (int channelID, string levelName, bool persistent, int playerLimit, string password)
 	{
-		if (mInstance != null) mInstance.mClient.JoinChannel(channelID, levelName, persistent, playerLimit, password);
+		if (mInstance != null && TNManager.isConnected)
+		{
+			if (!mInstance.mJoining)
+			{
+				mInstance.mJoining = true;
+				mInstance.mClient.JoinChannel(channelID, levelName, persistent, playerLimit, password);
+			}
+			else Debug.LogWarning("Already joining, ignored");
+		}
 		else Application.LoadLevel(levelName);
 	}
 
@@ -499,7 +467,15 @@ public class TNManager : MonoBehaviour
 
 	static public void JoinRandomChannel (string levelName, bool persistent, int playerLimit, string password)
 	{
-		if (mInstance != null) mInstance.mClient.JoinChannel(-2, levelName, persistent, playerLimit, password);
+		if (mInstance != null && TNManager.isConnected)
+		{
+			if (!mInstance.mJoining)
+			{
+				mInstance.mJoining = true;
+				mInstance.mClient.JoinChannel(-2, levelName, persistent, playerLimit, password);
+			}
+			else Debug.LogWarning("Already joining, ignored");
+		}
 	}
 
 	/// <summary>
@@ -512,7 +488,15 @@ public class TNManager : MonoBehaviour
 
 	static public void CreateChannel (string levelName, bool persistent, int playerLimit, string password)
 	{
-		if (mInstance != null) mInstance.mClient.JoinChannel(-1, levelName, persistent, playerLimit, password);
+		if (mInstance != null && TNManager.isConnected)
+		{
+			if (!mInstance.mJoining)
+			{
+				mInstance.mJoining = true;
+				mInstance.mClient.JoinChannel(-1, levelName, persistent, playerLimit, password);
+			}
+			else Debug.LogWarning("Already joining, ignored");
+		}
 		else Application.LoadLevel(levelName);
 	}
 
@@ -541,7 +525,10 @@ public class TNManager : MonoBehaviour
 
 	static public void LoadLevel (string levelName)
 	{
-		if (isConnected) mInstance.mClient.LoadLevel(levelName);
+		if (isConnected)
+		{
+			mInstance.mClient.LoadLevel(levelName);
+		}
 		else Application.LoadLevel(levelName);
 	}
 
@@ -585,6 +572,29 @@ public class TNManager : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Delete the specified file on the server.
+	/// </summary>
+
+	static public void DeleteFile (string filename)
+	{
+		if (isConnected)
+		{
+			mInstance.mClient.DeleteFile(filename);
+		}
+		else
+		{
+			try
+			{
+				Tools.DeleteFile(filename);
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogError(ex.Message + " (" + filename + ")");
+			}
+		}
+	}
+
+	/// <summary>
 	/// Change the hosting player.
 	/// </summary>
 
@@ -602,6 +612,16 @@ public class TNManager : MonoBehaviour
 	static public void SetTimeout (int seconds)
 	{
 		if (mInstance != null) mInstance.mClient.SetTimeout(seconds);
+	}
+
+	/// <summary>
+	/// Sync the player's data with the server.
+	/// </summary>
+
+	static public void SyncPlayerData ()
+	{
+		if (isConnected) mInstance.mClient.SyncPlayerData();
+		if (onPlayerSync != null) onPlayerSync(player);
 	}
 
 	/// <summary>
@@ -662,7 +682,6 @@ public class TNManager : MonoBehaviour
 				if (index != -1)
 				{
 					BinaryWriter writer = mInstance.mClient.BeginSend(Packet.RequestCreate);
-
 					writer.Write((ushort)index);
 					writer.Write(GetFlag(go, persistent));
 					writer.Write((byte)rccID);
@@ -696,6 +715,9 @@ public class TNManager : MonoBehaviour
 		{
 			if (isConnected)
 			{
+				if (mInstance != null && mInstance.mClient.isSwitchingScenes)
+					Debug.LogWarning("Trying to create an object while switching scenes. Call will be ignored.");
+
 				BinaryWriter writer = mInstance.mClient.BeginSend(Packet.RequestCreate);
 				byte flag = GetFlag(go, persistent);
 				writer.Write((ushort)65535);
@@ -846,63 +868,110 @@ public class TNManager : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Destroy the specified game object.
+	/// Write a server log entry.
 	/// </summary>
 
-	static public void Destroy (GameObject go)
+	static public void Log (string text)
 	{
+#if UNITY_EDITOR
+		if (!TNServerInstance.isActive) Debug.Log(text);
+#endif
 		if (isConnected)
 		{
-			TNObject obj = go.GetComponent<TNObject>();
-
-			if (obj != null)
-			{
-				BinaryWriter writer = mInstance.mClient.BeginSend(Packet.RequestDestroy);
-				writer.Write(obj.uid);
-				mInstance.mClient.EndSend();
-				return;
-			}
+			TNManager.BeginSend(Packet.ServerLog).Write(text);
+			TNManager.EndSend();
 		}
-		GameObject.Destroy(go);
 	}
 
 	/// <summary>
 	/// Begin sending a new packet to the server.
 	/// </summary>
 
-	static public BinaryWriter BeginSend (Packet type) { return mInstance.mClient.BeginSend(type); }
+	static public BinaryWriter BeginSend (Packet type) { return instance.mClient.BeginSend(type); }
 
 	/// <summary>
 	/// Begin sending a new packet to the server.
 	/// </summary>
 
-	static public BinaryWriter BeginSend (byte packetID) { return mInstance.mClient.BeginSend(packetID); }
+	static public BinaryWriter BeginSend (byte packetID) { return instance.mClient.BeginSend(packetID); }
 
 	/// <summary>
 	/// Send the outgoing buffer.
 	/// </summary>
 
-	static public void EndSend () { mInstance.mClient.EndSend(true); }
+	static public void EndSend ()
+	{
+		if (!isJoiningChannel)
+		{
+			mInstance.mClient.EndSend(true);
+		}
+		else
+		{
+			mInstance.mClient.CancelSend();
+#if UNITY_EDITOR
+			Debug.LogWarning("Trying to send a packet while joining a channel. Ignored.");
+#endif
+		}
+	}
 
 	/// <summary>
 	/// Send the outgoing buffer.
 	/// </summary>
 
-	static public void EndSend (bool reliable) { mInstance.mClient.EndSend(reliable); }
+	static public void EndSend (bool reliable)
+	{
+		if (!isJoiningChannel)
+		{
+			mInstance.mClient.EndSend(reliable);
+		}
+		else
+		{
+			mInstance.mClient.CancelSend();
+#if UNITY_EDITOR
+			Debug.LogWarning("Trying to send a packet while joining a channel. Ignored.");
+#endif
+		}
+	}
 
 	/// <summary>
 	/// Broadcast the packet to everyone on the LAN.
 	/// </summary>
 
-	static public void EndSend (int port) { mInstance.mClient.EndSend(port); }
+	static public void EndSend (int port)
+	{
+		if (!isJoiningChannel)
+		{
+			mInstance.mClient.EndSend(port);
+		}
+		else
+		{
+			mInstance.mClient.CancelSend();
+#if UNITY_EDITOR
+			Debug.LogWarning("Trying to send a packet while joining a channel. Ignored.");
+#endif
+		}
+	}
 
 	/// <summary>
 	/// Broadcast the packet to the specified endpoint via UDP.
 	/// </summary>
 
-	static public void EndSend (IPEndPoint target) { mInstance.mClient.EndSend(target); }
+	static public void EndSend (IPEndPoint target)
+	{
+		if (!isJoiningChannel)
+		{
+			mInstance.mClient.EndSend(target);
+		}
+		else
+		{
+			mInstance.mClient.CancelSend();
+#if UNITY_EDITOR
+			Debug.LogWarning("Trying to send a packet while joining a channel. Ignored.");
+#endif
+		}
+	}
 
-	#region MonoBehaviour and helper functions -- it's unlikely that you will need to modify these
+#region MonoBehaviour and helper functions -- it's unlikely that you will need to modify these
 
 	/// <summary>
 	/// Ensure that there is only one instance of this class present.
@@ -920,18 +989,19 @@ public class TNManager : MonoBehaviour
 			rebuildMethodList = true;
 			DontDestroyOnLoad(gameObject);
 
-			mClient.onError				+= OnError;
-			mClient.onConnect			+= OnConnect;
-			mClient.onDisconnect		+= OnDisconnect;
-			mClient.onJoinChannel		+= OnJoinChannel;
-			mClient.onLeftChannel		+= OnLeftChannel;
-			mClient.onLoadLevel			+= OnLoadLevel;
-			mClient.onPlayerJoined		+= OnPlayerJoined;
-			mClient.onPlayerLeft		+= OnPlayerLeft;
-			mClient.onRenamePlayer		+= OnRenamePlayer;
-			mClient.onCreate			+= OnCreateObject;
-			mClient.onDestroy			+= OnDestroyObject;
-			mClient.onForwardedPacket	+= OnForwardedPacket;
+			mClient.onError				= OnError;
+			mClient.onConnect			= OnConnect;
+			mClient.onDisconnect		= OnDisconnect;
+			mClient.onJoinChannel		= OnJoinChannel;
+			mClient.onLeftChannel		= OnLeftChannel;
+			mClient.onLoadLevel			= OnLoadLevel;
+			mClient.onPlayerJoined		= OnPlayerJoined;
+			mClient.onPlayerLeft		= OnPlayerLeft;
+			mClient.onPlayerSync		= OnPlayerSync;
+			mClient.onRenamePlayer		= OnRenamePlayer;
+			mClient.onCreate			= OnCreateObject;
+			mClient.onDestroy			= OnDestroyObject;
+			mClient.onForwardedPacket	= OnForwardedPacket;
 
 #if UNITY_EDITOR
 			List<IPAddress> ips = TNet.Tools.localAddresses;
@@ -947,7 +1017,7 @@ public class TNManager : MonoBehaviour
 				}
 				Debug.Log(text);
 			}
-			else Debug.LogError("IP address cannot be determined!", this);
+			else Debug.LogError("[TNet] IP address cannot be determined!", this);
 #endif
 		}
 	}
@@ -977,7 +1047,7 @@ public class TNManager : MonoBehaviour
 			for (int i = 0, imax = mInstance.objects.Length; i < imax; ++i)
 				if (mInstance.objects[i] == go) return i;
 
-			Debug.LogError("The game object was not found in the TNManager's list of objects. Did you forget to add it?", go);
+			Debug.LogError("[TNet] The game object was not found in the TNManager's list of objects. Did you forget to add it?", go);
 		}
 		return -1;
 	}
@@ -988,11 +1058,17 @@ public class TNManager : MonoBehaviour
 
 	static GameObject LoadGameObject (string path)
 	{
+		if (string.IsNullOrEmpty(path))
+		{
+			Debug.LogError("[TNet] Null path passed to TNManager.LoadGameObject!");
+			return null;
+		}
+
 		GameObject go = Resources.Load(path, typeof(GameObject)) as GameObject;
 
 		if (go == null)
 		{
-			Debug.LogError("Attempting to create a game object that can't be found in the Resources folder: " + path);
+			Debug.LogError("[TNet] Attempting to create a game object that can't be found in the Resources folder: " + path);
 		}
 		return go;
 	}
@@ -1051,9 +1127,10 @@ public class TNManager : MonoBehaviour
 			}
 			else
 			{
-				Debug.LogWarning("The instantiated object has no TNObject component. Don't request an ObjectID when creating it.", go);
+				Debug.LogWarning("[TNet] The instantiated object has no TNObject component. Don't request an ObjectID when creating it.", go);
 			}
 		}
+		mObjectOwner = -1;
 	}
 
 	/// <summary>
@@ -1078,12 +1155,18 @@ public class TNManager : MonoBehaviour
 				object[] objs = reader.ReadArray(prefab);
 				object retVal;
 
-				UnityTools.ExecuteFirst(GetRCCs(), (byte)type, out retVal, objs);
+				if (!UnityTools.ExecuteFirst(GetRCCs(), type, out retVal, objs))
+				{
+					Debug.LogError("[TNet] Failed to call RCC #" + type + ".\nDid you forget to register it in Awake() via TNManager.AddRCCs?");
+					UnityTools.Clear(objs);
+					return null;
+				}
+
 				UnityTools.Clear(objs);
 
 				if (retVal == null)
 				{
-					Debug.LogError("Instantiating \"" + prefab.name + "\" returned null. Did you forget to return the game object from your RCC?");
+					Debug.LogError("[TNet] Instantiating \"" + prefab.name + "\" via RCC #" + type + " returned null.\nDid you forget to return the game object from your RCC?");
 				}
 				return retVal as GameObject;
 			}
@@ -1098,7 +1181,12 @@ public class TNManager : MonoBehaviour
 	void OnDestroyObject (uint objID)
 	{
 		TNObject obj = TNObject.Find(objID);
-		if (obj) GameObject.Destroy(obj.gameObject);
+
+		if (obj)
+		{
+			if (obj.onDestroy != null) obj.onDestroy();
+			Object.Destroy(obj.gameObject);
+		}
 	}
 
 	/// <summary>
@@ -1113,22 +1201,29 @@ public class TNManager : MonoBehaviour
 
 		if (funcID == 0)
 		{
-			TNObject.FindAndExecute(objID, reader.ReadString(), reader.ReadArray());
+			string funcName = "";
+
+			try
+			{
+				funcName = reader.ReadString();
+				TNObject.FindAndExecute(objID, funcName, reader.ReadArray());
+			}
+			catch (System.Exception ex)
+			{
+				Debug.LogError(objID + " " + funcID + " " + funcName + "\n" + ex.Message + "\n" + ex.StackTrace);
+			}
 		}
-		else
-		{
-			TNObject.FindAndExecute(objID, funcID, reader.ReadArray());
-		}
+		else TNObject.FindAndExecute(objID, funcID, reader.ReadArray());
 	}
 
 	/// <summary>
 	/// Process incoming packets in the update function.
 	/// </summary>
 
-	void Update () { mClient.ProcessPackets(); }
-	#endregion
+	void Update () { if (!mAsyncLoad) mClient.ProcessPackets(); }
 
-	#region Callbacks -- Modify these if you don't like the broadcast approach
+#endregion
+#region Callbacks -- Modify these if you don't like the broadcast approach
 
 	/// <summary>
 	/// Error notification.
@@ -1146,13 +1241,23 @@ public class TNManager : MonoBehaviour
 	/// Notification that happens when the client gets disconnected from the server.
 	/// </summary>
 
-	void OnDisconnect () { UnityTools.Broadcast("OnNetworkDisconnect"); }
+	void OnDisconnect ()
+	{
+		mAsyncLoad = false;
+		mJoining = false;
+		UnityTools.Broadcast("OnNetworkDisconnect");
+	}
 
 	/// <summary>
 	/// Notification sent when attempting to join a channel, indicating a success or failure.
 	/// </summary>
 
-	void OnJoinChannel (bool success, string message) { UnityTools.Broadcast("OnNetworkJoinChannel", success, message); }
+	void OnJoinChannel (bool success, string message)
+	{
+		mAsyncLoad = false;
+		mJoining = false;
+		UnityTools.Broadcast("OnNetworkJoinChannel", success, message);
+	}
 
 	/// <summary>
 	/// Notification sent when leaving a channel.
@@ -1168,8 +1273,33 @@ public class TNManager : MonoBehaviour
 	void OnLoadLevel (string levelName)
 	{
 		if (!string.IsNullOrEmpty(levelName))
-			Application.LoadLevel(levelName);
+		{
+			mAsyncLoad = true;
+			StartCoroutine("LoadLevelCoroutine", levelName);
+		}
 	}
+
+	System.Collections.IEnumerator LoadLevelCoroutine (string levelName)
+	{
+		yield return null;
+		loadLevelOperation = Application.LoadLevelAsync(levelName);
+		loadLevelOperation.allowSceneActivation = false;
+
+		while (loadLevelOperation.progress < 0.9f)
+			yield return null;
+
+		loadLevelOperation.allowSceneActivation = true;
+		yield return loadLevelOperation;
+
+		loadLevelOperation = null;
+		mAsyncLoad = false;
+	}
+
+	/// <summary>
+	/// When a level is being loaded, this value will contain the async coroutine for the LoadLevel operation.
+	/// </summary>
+
+	static public AsyncOperation loadLevelOperation = null;
 
 	/// <summary>
 	/// Notification of a new player joining the channel.
@@ -1184,13 +1314,15 @@ public class TNManager : MonoBehaviour
 	void OnPlayerLeft (Player p) { UnityTools.Broadcast("OnNetworkPlayerLeave", p); }
 
 	/// <summary>
+	/// Notification of player's data changing.
+	/// </summary>
+
+	void OnPlayerSync (Player p) { if (onPlayerSync != null) onPlayerSync(p); }
+
+	/// <summary>
 	/// Notification of a player being renamed.
 	/// </summary>
 
-	void OnRenamePlayer (Player p, string previous)
-	{
-		mPlayer.name = p.name;
-		UnityTools.Broadcast("OnNetworkPlayerRenamed", p, previous);
-	}
-	#endregion
+	void OnRenamePlayer (Player p, string previous) { UnityTools.Broadcast("OnNetworkPlayerRenamed", p, previous); }
+#endregion
 }

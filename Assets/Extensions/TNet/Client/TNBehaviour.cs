@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using UnityEngine;
@@ -11,11 +11,11 @@ using TNet;
 /// </summary>
 
 [RequireComponent(typeof(TNObject))]
-public abstract class TNBehaviour : PimpedMonoBehaviour
+public abstract class TNBehaviour : MonoBehaviour
 {
-	protected TNObject mTNO;
+	[System.NonSerialized] TNObject mTNO;
 
-	public virtual TNObject tno
+	public TNObject tno
 	{
 		get
 		{
@@ -28,7 +28,6 @@ public abstract class TNBehaviour : PimpedMonoBehaviour
 	{
 		if (Application.isPlaying)
 		{
-            //Debug.Log( tno );
 			tno.rebuildMethodList = true;
 		}
 	}
@@ -37,5 +36,5 @@ public abstract class TNBehaviour : PimpedMonoBehaviour
 	/// Destroy this game object.
 	/// </summary>
 
-	public void DestroySelf () { TNManager.Destroy(gameObject); }
+	public virtual void DestroySelf () { tno.DestroySelf(); }
 }

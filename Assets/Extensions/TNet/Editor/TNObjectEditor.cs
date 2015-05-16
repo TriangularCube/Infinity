@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using UnityEngine;
@@ -18,8 +18,9 @@ public class TNObjectEditor : Editor
 		{
 			EditorGUI.BeginDisabledGroup(true);
 			EditorGUILayout.LabelField("ID", obj.uid.ToString());
-			EditorGUILayout.LabelField("Player Owner", obj.ownerID.ToString());
-			EditorGUILayout.Toggle("Is Mine?", obj.isMine);
+			EditorGUILayout.LabelField("Owner", obj.isMine ? "Me" : obj.ownerID.ToString());
+			EditorGUILayout.LabelField("Host", TNManager.isHosting ? "Me" : TNManager.hostID.ToString());
+			if (obj.parent != null) EditorGUILayout.ObjectField("Parent", obj.parent, typeof(TNObject), true);
 			EditorGUI.EndDisabledGroup();
 		}
 		else
@@ -29,6 +30,9 @@ public class TNObjectEditor : Editor
 			SerializedProperty sp = serializedObject.FindProperty("id");
 			EditorGUILayout.PropertyField(sp, new GUIContent("ID"));
 			serializedObject.ApplyModifiedProperties();
+
+			PrefabType type = PrefabUtility.GetPrefabType(obj.gameObject);
+			if (type == PrefabType.Prefab) return;
 
 			if (obj.uid == 0)
 			{
@@ -40,8 +44,7 @@ public class TNObjectEditor : Editor
 
 				foreach (TNObject o in tnos)
 				{
-					if (o == obj) continue;
-					if (o.hasParent) continue;
+					if (o == obj || o.parent != null) continue;
 
 					if (o.uid == obj.uid)
 					{

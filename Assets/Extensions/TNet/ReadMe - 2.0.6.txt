@@ -1,7 +1,7 @@
 -----------------------------------------------------
         TNet: Tasharen Networking Framework
-    Copyright © 2012-2014 Tasharen Entertainment
-                  Version 1.9.7
+    Copyright © 2012-2015 Tasharen Entertainment
+                  Version 2.0.5
        http://www.tasharen.com/?page_id=4518
 -----------------------------------------------------
 
@@ -71,7 +71,89 @@ http://www.tasharen.com/?page_id=4518
  Version History
 -----------------------------------------------------
 
-1.9.7:
+2.0.6
+- NEW: Added a new integer type that isn't stored as a plain integer in memory (guard against CheatEngine).
+- FIX: Calling Disconnect() will now always ensure that the OnNetworkLeaveChannel gets called before OnNetworkDisconnect.
+- FIX: Optimizations related to memory allocation, greatly reducing TNet's impact on GC.
+
+2.0.5
+- NEW: TNet's level loading is now asynchronous.
+- NEW: Added SortByPlayers() and SortAlphabetic() functions to the TNServerList.
+- NEW: Added support for LZMA-based DataNode compression. It's used in Windward and requires the public LZMA library.
+- FIX: File saving should now work on Android properly.
+- FIX: TCP lobby link now sends "keep alive" messages to ensure that the stale servers get removed properly.
+- FIX: Variety of minor tweaks and improvements merged from Windward's development branch.
+- FIX: UDP multicasting will now be off by default on iOS devices.
+- FIX: Float parsing from text format should now work with floats specified as "1,23", not just "1.23".
+- FIX: Disconnect() call will now properly shut down a connection attempt in progress.
+
+2.0.4
+- NEW: Added timestamps and player IDs to the server log messages.
+- NEW: Added a new packet that can be used to send messages to be printed directly to the server's log.
+- NEW: TNet's ReadFile and similar functions can no longer access files outside the executable's folder and Documents.
+- FIX: Added some extra code to ensure that stale servers get removed from the Lobby Server's list.
+- FIX: UPnP should now work better.
+- FIX: Fixed string[] serialization (apparently there is a strange edge case in C#)
+- FIX: Strings sent via RFC parameters can now be empty.
+- FIX: Renamed players should no longer affect other clients.
+- FIX: TNManager.isHosting should now check for the connected state as well.
+- FIX: Game servers should now respond to UDP pings correctly.
+- FIX: You can no longer receive NaNs through TNet. They will now automatically get set to zero.
+- FIX: Removed warnings from web player compilation.
+- FIX: TNet should now handle packets that have been sent only partially.
+
+2.0.3
+- NEW: Added an option to TNServerInstance.Start to not open the port via UPnP (for private servers).
+- NEW: TNServer.exe can now be run as a background process and will save periodically.
+- NEW: Added int[] and float[] serialization.
+- FIX: Added a try/catch to multicasting membership subscription as it apparently doesn't work on some computers.
+
+2.0.2
+- NEW: Added tno.Send via player ID. No need to FindPlayer anymore.
+- NEW: Added a #define to TNSerializer you can use to ignore errors.
+- NEW: TNet will now automatically remove the read-only flag when using Tools.WriteFile.
+- FIX: TNSyncRigidbody will no longer try to set velocity if the rigidbody is kinematic.
+- FIX: Added some extra code to ensure that sockets get cleaned up properly.
+- FIX: Got rid of the != Component comparison, fixing the CompareBaseObjectsInternal error.
+- FIX: Added 'long' type serialization for DataNode.
+- FIX: TNAutoSync's updates per second value is now a float, matching TNSyncRigidbody.
+- FIX: WP8 compile fixes.
+
+2.0.1
+- NEW: TNet can save files in the user's My Documents folder if you like.
+- FIX: Fixed an issue with RFCs not being stored correctly in some cases.
+- FIX: TNManager.Destroy will now also mark objects as destroyed, so RFCs sent between the destroy request and the response will be ignored.
+- FIX: TNet will now automatically block outgoing messages between JoinChannel/LoadLevel and level loaded/channel joined notifications.
+- FIX: Fixed System.Collections.Generic.List<> serialization.
+
+2.0.0
+- NEW: Added the ability to send messages players by name rather than ID (think private chat messages).
+- NEW: Saved/loaded files should now be kept in a dictionary for faster lookup.
+- FIX: TNSerializer's WriteInt didn't work for negative values.
+- FIX: Custom RCCs didn't seem to work quite right on the stand-alone server.
+- FIX: More tweaks regarding object ownership transfer.
+
+1.9.9
+- NEW: TNManager.serverTime (in milliseconds)
+- NEW: Added automatic serialization support for long, ulong, long[] and ulong[] types.
+- NEW: TNObjects now have a DestroySelf function which TNBehaviours call that ensures the object's destruction.
+- FIX: tno.isMine was not set properly for new players after the original owner left.
+- DEL: Removed the setter from TNObject.ownerID, as it's handled properly on the server now.
+
+1.9.8
+- NEW: TNBehaviour's DestroySelf() function is now virtual.
+- NEW: TNManager.onPlayerSync and TNManager.SyncPlayerData().
+- NEW: String arrays are now serialized more efficiently within the DataNode.
+- NEW: TNSyncRigidbody's updatesPerSecond is now a float so you can have 1 update per X seconds.
+- NEW: TNManager.isJoiningChannel, set to 'true' between JoinChannel and OnNetworkJoinChannel.
+- NEW: TNet's server instance can now be single-threaded for easier debugging in Unity.
+- NEW: You can now pass TNObjects as RFC parameters.
+- FIX: It's now possible to save the server properly even while it's running.
+- FIX: TNet will no longer save non-persistent game objects when saved to disk.
+- FIX: Int values can now be auto-converted to floats.
+- FIX: Quite a few DataNode serialization changes/fixes.
+
+1.9.7
 - NEW: TNet is now fully Unity 5-compliant.
 - NEW: SendRFC sent to the player's self will now result in immediate execution (think Target.Host).
 - NEW: Added better/more informative error messages when RFCs or RCCs fail.
@@ -82,7 +164,7 @@ http://www.tasharen.com/?page_id=4518
 - FIX: OnNetworkDisconnect will now be called when the connection is shut down in a non-graceful manner.
 - FIX: DataNode should have been clearing the child list after resolving custom data types.
 
-1.9.6:
+1.9.6
 - NEW: TNet will now use UDP multicasting instead of broadcasting by default.
 - NEW: Added convenience methods to retrieve player data in DataNode form.
 - NEW: Faster way of getting the external IP address.
@@ -95,7 +177,7 @@ http://www.tasharen.com/?page_id=4518
 - FIX: Fixed the ability to host a local TCP-based lobby server alongside the game server.
 - FIX: Added Ping packet handling to the lobby servers.
 
-1.9.5:
+1.9.5
 - NEW: TNManager.SaveFile, TNManager.LoadFile, TNManager.Ping.
 - NEW: TNManager.playerData, synchronized across the network. SyncPlayerData() to sync it if modified via TNManager.playerDataNode.
 - NEW: Added DataNode.Read(byte[] data, bool binary) for creating a data node tree from raw data.
@@ -105,11 +187,11 @@ http://www.tasharen.com/?page_id=4518
 - FIX: Variety of serialization-related fixes and additions.
 - FIX: Better error handling when connecting and better error messages.
 
-1.9.1:
+1.9.1
 - FIX: Error about TNObjects with ID of 0 will now only show up when playing the game.
 - FIX: If an RFC cannot be executed, the error message will explain why.
 
-1.9.0:
+1.9.0
 - NEW: TNManager no longer needs to be present in the scene for you to use TNet.
 - NEW: You can now send just about any type of data across the network via RFCs, not just specific types.
 - NEW: Added custom serialization functionality to send custom classes via RFCs more efficiently.
@@ -120,7 +202,7 @@ http://www.tasharen.com/?page_id=4518
 - NEW: TNet will now show the inner exception when an RFC fails.
 - FIX: Better handling of mis-matched protocol IDs.
 
-1.8.5:
+1.8.5
 - NEW: It's now possible to add RCCs via TNManager.AddRCCs function that are not under TNManager.
 - NEW: TNSyncRigidbody now has the "isImportant" flag just like TNAutoSync.
 - FIX: TNManager.isActive set to false no longer prevents ping requests from being sent out.
@@ -128,64 +210,64 @@ http://www.tasharen.com/?page_id=4518
 - FIX: TNet.Tools.localAddress will now use GetHostAddresses instead of GetHostEntry.
 - FIX: Unity 4.5 and 4.6 compile fixes.
 
-1.8.4:
+1.8.4
 - FIX: Host player will now assume ownership of TNObjects with no owner when joining a persistent channel.
 
-1.8.3:
+1.8.3
 - FIX: Eliminated obsolete warnings in the latest version of Unity.
 
-1.8.2:
+1.8.2
 - NEW: Added Target.Broadcast for when you want to send an RFC call to everyone connected to the server (ex: world chat).
 
-1.8.1:
+1.8.1
 - FIX: Executing remote function calls while offline should now work as expected.
 - FIX: Default TNManager.Create function for pos/rot/vel/angVel should now work correctly again.
 
-1.8.0:
+1.8.0
 - NEW: Redesigned the object creation code. It's now fully extensible.
 - NEW: It's now possible to do TNManager.Create using a string name of an object in the Resources folder.
 - FIX: TNBehaviours being enabled now force TNObjects to rebuild the list of RFCs.
 
-1.7.3:
+1.7.3
 - NEW: Added the ability to specify player timeout on a per-player basis.
 - FIX: SyncRigidbody was a bit out of date.
 - FIX: Updated the server executable.
 
-1.7.2:
+1.7.2
 - NEW: It's now possible to have nested TNObjects on prefabs.
 - FIX: Now only open channels will be returned by RequestChannelList.
 - FIX: TNObject's delayed function calls weren't being used. Now they are.
 - FIX: Fixed an issue with web player connectivity.
 
-1.7.1:
+1.7.1
 - FIX: iOS Local Address resolving fix.
 - FIX: Connection fallback for certain routers.
 - FIX: NAT Loopback failure work-around.
 - FIX: TNManager.player's name will now always match TNManager.playerName.
 
-1.7.0:
+1.7.0
 - NEW: Added TNObject.ownerID.
 - FIX: Joining a channel now defaults to non-persistent.
 - FIX: TNServerInstance.StartRemote now has correct return parameters.
 - FIX: Non-windows platforms should now be able to properly join LAN servers on LANs that have no public IP access.
 
-1.6.9:
+1.6.9
 - NEW: It's now possible to set the external IP discovery URL.
 - NEW: It's now possible to perform the IP discovery asynchronously when desired.
 - FIX: Starting the server should no longer break UPnP discovery.
 - FIX: A few exception-related fixes.
 
-1.6.8:
+1.6.8
 - NEW: TCP lobby client can now handle file save/load requests.
 - FIX: Flat out disabled UDP in the Unity web player, since every UDP request requires the policy file.
 - FIX: Fixed an issue with how UDP packets were sent.
 - FIX: Fixed an issue with how UPnP would cause Unity to hang for a few seconds when the server would be stopped.
 
-1.6.6:
+1.6.6
 - NEW: Restructured the server app to make it possible to use either TCP and UDP for the lobby.
 - FIX: Variety of tweaks and fixes resulted from my development of Star Dots.
 
-1.6.5:
+1.6.5
 - NEW: TNManager.channelID, in case you want to know what channel you're in.
 - NEW: Added the ability to specify a custom string with each channel that can be used to add information about the channel.
 - NEW: You will now get an error message in Unity when trying to execute an RFC function that doesn't exist.
@@ -195,11 +277,11 @@ http://www.tasharen.com/?page_id=4518
 - FIX: Many cases of "if connected, send data" were replaced with "if in channel, send data", which is more correct.
 - FIX: Assortment of other minor fixes.
 
-1.6.0:
+1.6.0
 - NEW: Added a script that can instantiate an object when the player enters the scene (think: player avatar).
 - NEW: It's now possible to create temporary game objects: they will be destroyed when the player that created them leaves.
 
-1.5.0:
+1.5.0
 - NEW: Added Universal Plug & Play functionality to easily open ports on the gateway/router.
 - NEW: TNet Server app now supports port parameters and can also start the discovery server.
 - NEW: Added TNObject.isMine flag that will only be 'true' on the client that instantiated it (or the host if that player leaves).
@@ -209,7 +291,7 @@ http://www.tasharen.com/?page_id=4518
 - FIX: TNet will no longer silently stop using UDP on the web player. UDP in the web player is simply no longer supported.
 - MOD: Moved localAddress and IsLocalAddress() functions into Tools and made them static.
 
-1.3.2:
+1.3.2
 - NEW: Server list now contains the number of players on the server.
 - FIX: Some minor tweaks.
 

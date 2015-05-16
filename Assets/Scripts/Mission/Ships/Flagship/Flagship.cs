@@ -119,11 +119,11 @@ public class Flagship : Ship {
 
 	#region Launching Terminal 
     public void RequestLaunchTerminal( uint termID ) {
-        tno.Send( 4, Target.Host, termID, TNManager.player );
+        tno.Send( 4, Target.Host, termID, TNManager.player.id );
     }
 
 	[RFC(4)]
-    public virtual void AttemptToLaunchTerminal( uint terminalID, Netplayer player ) {
+    public virtual void AttemptToLaunchTerminal( uint terminalID, int player ) {
 
 
         //Debug.Log( TNObject.Find( terminalID ) );
@@ -139,33 +139,34 @@ public class Flagship : Ship {
 			return;
 			
 		}
-		
+
+        Debug.Log( terminalID + ", " + player );
 		tno.Send ( 5, Target.All, terminalID, player );
 
 	}
 	
 	[RFC(5)]
-	protected virtual void LaunchTerminal( uint terminalID, Netplayer player ){
+	protected virtual void LaunchTerminal( uint terminalID, int player ){
 
-        Debug.Log( "Here" );
+        //Debug.Log( "Here" );
 		
 		//Find the Terminal...again
 		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
 		
 		//If this is us
-		if (player == TNManager.player) {
+		if (player == TNManager.player.id) {
 			//Reset all controls
 			ResetControls();
 
             directionIndicator.gameObject.SetActive( false );
 		}
 		
-		RemovePilot (player);
+		RemovePilot ( TNManager.GetPlayer( player ) );
 		
 		//Remove the Terminal
         dockedTerminals.Remove( terminal );
 		
-		terminal.OnLaunch( player, "" );//HACK, TODO
+		terminal.OnLaunch( TNManager.GetPlayer( player ), "" );//HACK, TODO
 		
 	}
 	#endregion

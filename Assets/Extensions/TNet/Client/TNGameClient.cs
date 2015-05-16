@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System;
@@ -152,12 +152,6 @@ public class GameClient
 
 	public bool isActive = true;
 
-	/// <summary>
-	/// ID of the channel we're in.
-	/// </summary>
-
-	public int channelID { get { return mChannelID; } }
-
 	// Same list of players, but in a dictionary format for quick lookup
 	Dictionary<int, Player> mDictionary = new Dictionary<int, Player>();
 
@@ -177,7 +171,8 @@ public class GameClient
 	int mChannelID = 0;
 
 	// Current time, time when the last ping was sent out, and time when connection was started
-	long mTime = 0;
+	long mTimeDifference = 0;
+	long mMyTime = 0;
 	long mPingTime = 0;
 
 	// Last ping, and whether we can ping again
@@ -196,7 +191,22 @@ public class GameClient
 	IPEndPoint mPacketSource;
 
 	// Temporary, not important
-	static Buffer mBuffer;
+	Buffer mBuffer;
+
+	// Packets should not be sent in between of level-switching operations.
+	bool mCanSend = true;
+
+	/// <summary>
+	/// ID of the channel we're in.
+	/// </summary>
+
+	public int channelID { get { return mChannelID; } }
+
+	/// <summary>
+	/// Current time on the server.
+	/// </summary>
+
+	public long serverTime { get { return mTimeDifference + (System.DateTime.UtcNow.Ticks / 10000); } }
 
 	/// <summary>
 	/// ID of the host.
@@ -217,16 +227,28 @@ public class GameClient
 	public bool isTryingToConnect { get { return mTcp.isTryingToConnect; } }
 
 	/// <summary>
+	/// Whether we are currently in the process of switching scenes.
+	/// </summary>
+
+	public bool isSwitchingScenes { get { return !mCanSend; } }
+
+	/// <summary>
 	/// Whether this player is hosting the game.
 	/// </summary>
 
-	public bool isHosting { get { return !mIsInChannel || mHost == mTcp.id; } }
+	public bool isHosting { get { return !mIsInChannel || !mTcp.isConnected || mHost == mTcp.id; } }
 
 	/// <summary>
 	/// Whether the client is currently in a channel.
 	/// </summary>
 
-	public bool isInChannel { get { return mIsInChannel; } }
+	public bool isInChannel { get { return mIsInChannel && mTcp.isConnected; } }
+
+	/// <summary>
+	/// TCP end point, available only if we're actually connected to a server.
+	/// </summary>
+
+	public IPEndPoint tcpEndPoint { get { return mTcp.isConnected ? mTcp.tcpEndPoint : null; } }
 
 	/// <summary>
 	/// Port used to listen for incoming UDP packets. Set via StartUDP().
@@ -425,6 +447,20 @@ public class GameClient
 	}
 
 	/// <summary>
+	/// Cancel the send operation.
+	/// </summary>
+
+	public void CancelSend ()
+	{
+		if (mBuffer != null)
+		{
+			mBuffer.EndPacket();
+			mBuffer.Recycle();
+			mBuffer = null;
+		}
+	}
+
+	/// <summary>
 	/// Send the outgoing buffer.
 	/// </summary>
 
@@ -433,7 +469,7 @@ public class GameClient
 		if (mBuffer != null)
 		{
 			mBuffer.EndPacket();
-			mTcp.SendTcpPacket(mBuffer);
+			if (mCanSend) mTcp.SendTcpPacket(mBuffer);
 			mBuffer.Recycle();
 			mBuffer = null;
 		}
@@ -446,15 +482,19 @@ public class GameClient
 	public void EndSend (bool reliable)
 	{
 		mBuffer.EndPacket();
-#if UNITY_WEBPLAYER
-		mTcp.SendTcpPacket(mBuffer);
-#else
-		if (reliable || !mUdpIsUsable || mServerUdpEndPoint == null || !mUdp.isActive)
+
+		if (mCanSend)
 		{
+#if UNITY_WEBPLAYER
 			mTcp.SendTcpPacket(mBuffer);
-		}
-		else mUdp.Send(mBuffer, mServerUdpEndPoint);
+#else
+			if (reliable || !mUdpIsUsable || mServerUdpEndPoint == null || !mUdp.isActive)
+			{
+				mTcp.SendTcpPacket(mBuffer);
+			}
+			else mUdp.Send(mBuffer, mServerUdpEndPoint);
 #endif
+		}
 		mBuffer.Recycle();
 		mBuffer = null;
 	}
@@ -467,7 +507,7 @@ public class GameClient
 	{
 		mBuffer.EndPacket();
 #if !UNITY_WEBPLAYER
-		mUdp.Broadcast(mBuffer, port);
+		if (mCanSend) mUdp.Broadcast(mBuffer, port);
 #endif
 		mBuffer.Recycle();
 		mBuffer = null;
@@ -481,7 +521,7 @@ public class GameClient
 	{
 		mBuffer.EndPacket();
 #if !UNITY_WEBPLAYER
-		mUdp.Send(mBuffer, target);
+		if (mCanSend) mUdp.Send(mBuffer, target);
 #endif
 		mBuffer.Recycle();
 		mBuffer = null;
@@ -501,7 +541,15 @@ public class GameClient
 	/// Disconnect from the server.
 	/// </summary>
 
-	public void Disconnect () { mTcp.Disconnect(); }
+	public void Disconnect ()
+	{
+		if (isTryingToConnect)
+		{
+			mCanSend = true;
+			mIsInChannel = false;
+		}
+		mTcp.Disconnect();
+	}
 
 	/// <summary>
 	/// Start listening to incoming UDP packets on the specified port.
@@ -563,6 +611,12 @@ public class GameClient
 			writer.Write(persistent);
 			writer.Write((ushort)playerLimit);
 			EndSend();
+
+			// Prevent all further packets from going out until the join channel response arrives.
+			// This prevents the situation where packets are sent out between LoadLevel / JoinChannel
+			// requests and the arrival of the OnJoinChannel/OnLoadLevel responses, which cause RFCs
+			// from the previous scene to be executed in the new one.
+			mCanSend = false;
 		}
 	}
 
@@ -616,6 +670,7 @@ public class GameClient
 		{
 			BeginSend(Packet.RequestLoadLevel).Write(levelName);
 			EndSend();
+			mCanSend = false;
 		}
 	}
 
@@ -655,7 +710,7 @@ public class GameClient
 	public void Ping (IPEndPoint udpEndPoint, OnPing callback)
 	{
 		onPing = callback;
-		mPingTime = DateTime.Now.Ticks / 10000;
+		mPingTime = DateTime.UtcNow.Ticks / 10000;
 		BeginSend(Packet.RequestPing);
 		EndSend(udpEndPoint);
 	}
@@ -678,10 +733,29 @@ public class GameClient
 
 	public void SaveFile (string filename, byte[] data)
 	{
-		BinaryWriter writer = BeginSend(Packet.RequestSaveFile);
+		if (data != null)
+		{
+			BinaryWriter writer = BeginSend(Packet.RequestSaveFile);
+			writer.Write(filename);
+			writer.Write(data.Length);
+			writer.Write(data);
+		}
+		else
+		{
+			BinaryWriter writer = BeginSend(Packet.RequestDeleteFile);
+			writer.Write(filename);
+		}
+		EndSend();
+	}
+
+	/// <summary>
+	/// Delete the specified file on the server.
+	/// </summary>
+
+	public void DeleteFile (string filename)
+	{
+		BinaryWriter writer = BeginSend(Packet.RequestDeleteFile);
 		writer.Write(filename);
-		writer.Write(data.Length);
-		writer.Write(data);
 		EndSend();
 	}
 
@@ -691,13 +765,13 @@ public class GameClient
 
 	public void ProcessPackets ()
 	{
-		mTime = DateTime.Now.Ticks / 10000;
+		mMyTime = DateTime.UtcNow.Ticks / 10000;
 
 		// Request pings every so often, letting the server know we're still here.
-		if (mTcp.isConnected && mCanPing && mPingTime + 4000 < mTime)
+		if (mTcp.isConnected && mCanPing && mCanSend && mPingTime + 4000 < mMyTime)
 		{
 			mCanPing = false;
-			mPingTime = mTime;
+			mPingTime = mMyTime;
 			BeginSend(Packet.RequestPing);
 			EndSend();
 		}
@@ -740,6 +814,8 @@ public class GameClient
 		{
 			if (mTcp.VerifyResponseID(response, reader))
 			{
+				mTimeDifference = reader.ReadInt64() - (System.DateTime.UtcNow.Ticks / 10000);
+
 #if !UNITY_WEBPLAYER
 				if (mUdp.isActive)
 				{
@@ -788,6 +864,13 @@ public class GameClient
 				if (onForwardedPacket != null) onForwardedPacket(reader);
 				break;
 			}
+			case Packet.ForwardByName:
+			{
+				// Skip the player name
+				reader.ReadString();
+				if (onForwardedPacket != null) onForwardedPacket(reader);
+				break;
+			}
 			case Packet.SyncPlayerData:
 			{
 				Player target = GetPlayer(reader.ReadInt32());
@@ -801,7 +884,7 @@ public class GameClient
 			}
 			case Packet.ResponsePing:
 			{
-				int ping = (int)(mTime - mPingTime);
+				int ping = (int)(mMyTime - mPingTime);
 
 				if (ip != null)
 				{
@@ -842,7 +925,10 @@ public class GameClient
 			}
 			case Packet.ResponseJoiningChannel:
 			{
-				mIsInChannel = true;
+				mIsInChannel = false;
+#if UNITY_EDITOR
+				if (mCanSend) UnityEngine.Debug.LogError("'mCanSend' flag is in the wrong state");
+#endif
 				mDictionary.Clear();
 				players.Clear();
 
@@ -864,14 +950,19 @@ public class GameClient
 			{
 				// Purposely return after loading a level, ensuring that all future callbacks happen after loading
 				if (onLoadLevel != null) onLoadLevel(reader.ReadString());
+				mCanSend = mIsInChannel;
 				return false;
 			}
 			case Packet.ResponsePlayerLeft:
 			{
 				Player p = GetPlayer(reader.ReadInt32());
-				if (p != null) mDictionary.Remove(p.id);
-				players.Remove(p);
-				if (onPlayerLeft != null) onPlayerLeft(p);
+
+				if (p != null)
+				{
+					mDictionary.Remove(p.id);
+					players.Remove(p);
+					if (onPlayerLeft != null) onPlayerLeft(p);
+				}
 				break;
 			}
 			case Packet.ResponsePlayerJoined:
@@ -899,6 +990,7 @@ public class GameClient
 			}
 			case Packet.ResponseJoinChannel:
 			{
+				mCanSend = true;
 				mIsInChannel = reader.ReadBoolean();
 				if (onJoinChannel != null) onJoinChannel(mIsInChannel, mIsInChannel ? null : reader.ReadString());
 				break;
@@ -911,7 +1003,9 @@ public class GameClient
 				mDictionary.Clear();
 				players.Clear();
 				if (onLeftChannel != null) onLeftChannel();
-				break;
+
+				// Purposely exit after receiving a "left channel" notification so that other packets get handled in the next frame.
+				return false;
 			}
 			case Packet.ResponseRenamePlayer:
 			{
@@ -956,12 +1050,14 @@ public class GameClient
 			case Packet.Disconnect:
 			{
 				mData = "";
-				if (isInChannel && onLeftChannel != null) onLeftChannel();
+				if (mIsInChannel && onLeftChannel != null) onLeftChannel();
 				players.Clear();
 				mDictionary.Clear();
 				mTcp.Close(false);
 				mLoadFiles.Clear();
+				mIsInChannel = false;
 				if (onDisconnect != null) onDisconnect();
+				mCanSend = true;
 				break;
 			}
 			case Packet.ResponseLoadFile:

@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using TNet;
@@ -47,7 +47,7 @@ public class TNAutoSyncInspector : Editor
 		GUI.backgroundColor = Color.white;
 
 		GUILayout.Space(4f);
-		int updates = EditorGUILayout.IntField("Updates Per Second", sync.updatesPerSecond);
+		float updates = EditorGUILayout.FloatField("Updates Per Second", sync.updatesPerSecond);
 		bool persistent = EditorGUILayout.Toggle("Saved On Server", sync.isSavedOnServer);
 		bool important = EditorGUILayout.Toggle("Important", sync.isImportant);
 		bool owner = EditorGUILayout.Toggle("Only Owner Can Sync", sync.onlyOwnerCanSync);

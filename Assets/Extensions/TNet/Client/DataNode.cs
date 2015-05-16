@@ -1,9 +1,13 @@
-//----------------------------------------------
-//            NGUI: Next-Gen UI kit
-// Copyright © 2011-2014 Tasharen Entertainment
-//----------------------------------------------
+//---------------------------------------------
+//            Tasharen Network
+// Copyright © 2012-2015 Tasharen Entertainment
+//---------------------------------------------
 
-#if UNITY_EDITOR || (!UNITY_FLASH && !NETFX_CORE && !UNITY_WP8)
+#if WINDWARD
+#define LZMA
+#endif
+
+#if UNITY_EDITOR || (!UNITY_FLASH && !NETFX_CORE && !UNITY_WP8 && !UNITY_WP_8_1)
 #define REFLECTION_SUPPORT
 #endif
 
@@ -54,6 +58,24 @@ public interface IDataNodeSerializable
 [Serializable]
 public class DataNode
 {
+#if LZMA
+	public enum SaveType
+	{
+		Text,
+		Binary,
+		Compressed,
+	}
+
+	// Must remain 4 bytes long
+	static byte[] mLZMA = new byte[] { (byte)'C', (byte)'D', (byte)'0', (byte)'1' };
+#else
+	public enum SaveType
+	{
+		Text,
+		Binary,
+	}
+#endif
+
 	// Actual saved value
 	object mValue = null;
 
@@ -137,6 +159,17 @@ public class DataNode
 	}
 
 	/// <summary>
+	/// Retrieve the value cast into the appropriate type.
+	/// </summary>
+
+	public T Get<T> (T defaultVal)
+	{
+		if (value is T) return (T)mValue;
+		object retVal = Get(typeof(T));
+		return (mValue != null) ? (T)retVal : defaultVal;
+	}
+
+	/// <summary>
 	/// Convenience function to add a new child node.
 	/// </summary>
 
@@ -165,6 +198,20 @@ public class DataNode
 	public DataNode AddChild (string name, object value)
 	{
 		DataNode node = AddChild();
+		node.name = name;
+		node.value = (value is Enum) ? value.ToString() : value;
+		return node;
+	}
+
+	/// <summary>
+	/// Add a new child node after checking to see if it already exists. If it does, the existing value is returned.
+	/// </summary>
+
+	public DataNode AddMissingChild (string name, object value)
+	{
+		DataNode node = GetChild(name);
+		if (node != null) return node;
+		node = AddChild();
 		node.name = name;
 		node.value = (value is Enum) ? value.ToString() : value;
 		return node;
@@ -267,81 +314,176 @@ public class DataNode
 	/// Write the node hierarchy to the specified filename.
 	/// </summary>
 
-	public void Write (string path) { Write(path, false); }
-
-	/// <summary>
-	/// Read the node hierarchy from the specified file.
-	/// </summary>
-
-	static public DataNode Read (string path) { return Read(path, false); }
+	[System.Obsolete("Use DataNode.Write(path, SaveType)")]
+	public void Write (string path, bool binary) { Write(path, binary ? SaveType.Binary : SaveType.Text); }
 
 	/// <summary>
 	/// Write the node hierarchy to the specified filename.
 	/// </summary>
 
-	public void Write (string path, bool binary)
+	public void Write (string path, SaveType type = SaveType.Text)
 	{
-		if (binary)
+		MemoryStream stream = new MemoryStream();
+
+		if (type == SaveType.Binary)
 		{
-			FileStream stream = File.Create(path);
 			BinaryWriter writer = new BinaryWriter(stream);
 			writer.WriteObject(this);
+			Tools.WriteFile(path, stream, false);
 			writer.Close();
 		}
+#if LZMA
+		else if (type == SaveType.Compressed)
+		{
+			BinaryWriter writer = new BinaryWriter(stream);
+			writer.WriteObject(this);
+
+			stream.Position = 0;
+			MemoryStream comp = LZMA.Compress(stream, mLZMA);
+
+			if (comp != null)
+			{
+				Tools.WriteFile(path, comp, false);
+				comp.Close();
+			}
+			else Tools.WriteFile(path, stream, false);
+			writer.Close();
+		}
+#endif
 		else
 		{
-			StreamWriter writer = new StreamWriter(path, false);
+			StreamWriter writer = new StreamWriter(stream);
 			Write(writer, 0);
+			Tools.WriteFile(path, stream, false);
 			writer.Close();
 		}
 	}
 
 	/// <summary>
 	/// Read the node hierarchy from the specified file.
+	/// Kept for backwards compatibility. In most cases you will want to use the generic Read(path) function instead.
 	/// </summary>
 
-	static public DataNode Read (string path, bool binary)
+	[System.Obsolete("The 'binary' parameter is no longer needed. Use DataNode.Read(path) instead.")]
+	static public DataNode Read (string path, bool binary) { return Read(path); }
+
+	/// <summary>
+	/// Read the node hierarchy from the specified file.
+	/// </summary>
+
+	static public DataNode Read (string path)
 	{
-		if (binary)
+		FileStream stream = File.OpenRead(path);
+		int length = (int)stream.Seek(0, SeekOrigin.End);
+
+		if (length < 4)
 		{
-			FileStream stream = File.OpenRead(path);
-			BinaryReader reader = new BinaryReader(stream);
-			DataNode node = reader.ReadObject<DataNode>();
-			reader.Close();
-			return node;
+			stream.Close();
+			return null;
 		}
-		else
-		{
-			StreamReader reader = new StreamReader(path);
-			DataNode node = Read(reader);
-			reader.Close();
-			return node;
-		}
+		else stream.Seek(0, SeekOrigin.Begin);
+
+		byte[] bytes = new byte[length];
+		stream.Read(bytes, 0, length);
+		stream.Close();
+		return Read(bytes);
 	}
 
 	/// <summary>
 	/// Read the node hierarchy from the specified buffer.
 	/// </summary>
 
-	static public DataNode Read (byte[] bytes, bool binary)
+	static public DataNode Read (byte[] data)
 	{
-		if (bytes == null || bytes.Length == 0) return null;
-		MemoryStream stream = new MemoryStream(bytes);
+		if (data == null || data.Length < 4) return null;
 
-		if (binary)
+		SaveType type = SaveType.Text;
+#if LZMA
+		if (data[0] == mLZMA[0] && data[1] == mLZMA[1] && data[2] == mLZMA[2] && data[3] == mLZMA[3])
 		{
-			BinaryReader reader = new BinaryReader(stream);
-			DataNode node = reader.ReadObject<DataNode>();
-			reader.Close();
-			return node;
+			type = SaveType.Compressed;
 		}
 		else
+#endif
 		{
+			for (int i = 0; i < 4; ++i)
+			{
+				byte ch = data[i];
+				if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9')) continue;
+				type = SaveType.Binary;
+				break;
+			}
+		}
+		return Read(data, type);
+	}
+
+	/// <summary>
+	/// Read the node hierarchy from the specified buffer. Kept for backwards compatibility.
+	/// In most cases you will want to use the Read(bytes) function instead.
+	/// </summary>
+
+	[System.Obsolete("The 'binary' parameter is no longer used. Use DataNode.Read(bytes) instead")]
+	static public DataNode Read (byte[] bytes, bool binary) { return Read(bytes); }
+
+	/// <summary>
+	/// Read the node hierarchy from the specified buffer.
+	/// </summary>
+
+	static public DataNode Read (byte[] bytes, SaveType type)
+	{
+		if (bytes == null || bytes.Length < 4) return null;
+
+		if (type == SaveType.Text)
+		{
+			MemoryStream stream = new MemoryStream(bytes);
 			StreamReader reader = new StreamReader(stream);
 			DataNode node = Read(reader);
 			reader.Close();
 			return node;
 		}
+#if LZMA
+		else if (type == SaveType.Compressed)
+		{
+			bool skipPrefix = true;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				if (bytes[i] != mLZMA[i])
+				{
+					skipPrefix = false;
+					break;
+				}
+			}
+
+			bytes = LZMA.Decompress(bytes, skipPrefix ? 4 : 0);
+		}
+#endif
+		{
+			MemoryStream stream = new MemoryStream(bytes);
+			BinaryReader reader = new BinaryReader(stream);
+			DataNode node = reader.ReadObject<DataNode>();
+			reader.Close();
+			return node;
+		}
+	}
+
+	/// <summary>
+	/// Just here for consistency.
+	/// </summary>
+
+	public void Write (BinaryWriter writer, bool compressed = false)
+	{
+#if LZMA
+		if (compressed)
+		{
+			LZMA lzma = new LZMA();
+			lzma.BeginWriting().WriteObject(this);
+			for (int i = 0; i < 4; ++i) writer.Write(mLZMA[i]);
+			writer.Write(lzma.Compress());
+		}
+		else
+#endif
+			writer.WriteObject(this);
 	}
 
 	/// <summary>
@@ -361,6 +503,24 @@ public class DataNode
 		DataNode node = new DataNode();
 		node.Read(reader, line, ref offset);
 		return node;
+	}
+
+	/// <summary>
+	/// Merge the current data with the specified.
+	/// </summary>
+
+	public void Merge (DataNode other)
+	{
+		if (other != null)
+		{
+			value = other.value;
+
+			for (int i = 0; i < other.children.size; ++i)
+			{
+				DataNode child = other.children[i];
+				GetChild(child.name, true).Merge(child);
+			}
+		}
 	}
 
 	/// <summary>
@@ -408,9 +568,12 @@ public class DataNode
 
 	static void Write (StreamWriter writer, int tab, string name, object value, bool writeType)
 	{
-		if (!string.IsNullOrEmpty(name))
+		if (string.IsNullOrEmpty(name) && value == null) return;
+
+		WriteTabs(writer, tab);
+
+		if (name != null)
 		{
-			WriteTabs(writer, tab);
 			writer.Write(Escape(name));
 
 			if (value == null)
@@ -418,41 +581,129 @@ public class DataNode
 				writer.Write('\n');
 				return;
 			}
+		}
 
-			Type type = value.GetType();
+		Type type = value.GetType();
 
-			if (type == typeof(string))
+		if (type == typeof(string))
+		{
+			if (name != null) writer.Write(" = \"");
+			writer.Write(Escape((string)value));
+			if (name != null) writer.Write('"');
+			writer.Write('\n');
+		}
+		else if (type == typeof(bool))
+		{
+			if (name != null) writer.Write(" = ");
+			writer.Write((bool)value ? "true" : "false");
+			writer.Write('\n');
+		}
+		else if (type == typeof(float))
+		{
+			if (name != null) writer.Write(" = ");
+			writer.Write(((float)value).ToString(CultureInfo.InvariantCulture));
+			writer.Write('\n');
+		}
+		else if (type == typeof(Int32) || type == typeof(UInt32) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort))
+		{
+			if (name != null) writer.Write(" = ");
+			writer.Write(value.ToString());
+			writer.Write('\n');
+		}
+		else if (type == typeof(char))
+		{
+			if (name != null) writer.Write(" = ");
+			writer.Write(((int)value).ToString());
+			writer.Write('\n');
+		}
+		else if (type == typeof(long))
+		{
+			if (name != null) writer.Write(" = ");
+			writer.Write(value.ToString());
+			writer.Write("L\n");
+		}
+		else if (type == typeof(ObsInt))
+		{
+			ObsInt o = (ObsInt)value;
+			if (name != null) writer.Write(" = ");
+			writer.Write("ObsInt(");
+			writer.Write((int)o);
+			writer.Write(")\n");
+		}
+		else if (type == typeof(Vector2))
+		{
+			Vector2 v = (Vector2)value;
+			writer.Write(name != null ? " = (" : "(");
+			writer.Write(v.x.ToString(CultureInfo.InvariantCulture));
+			writer.Write(", ");
+			writer.Write(v.y.ToString(CultureInfo.InvariantCulture));
+			writer.Write(")\n");
+		}
+		else if (type == typeof(Vector3))
+		{
+			Vector3 v = (Vector3)value;
+			writer.Write(name != null ? " = (" : "(");
+			writer.Write(v.x.ToString(CultureInfo.InvariantCulture));
+			writer.Write(", ");
+			writer.Write(v.y.ToString(CultureInfo.InvariantCulture));
+			writer.Write(", ");
+			writer.Write(v.z.ToString(CultureInfo.InvariantCulture));
+			writer.Write(")\n");
+		}
+		else if (type == typeof(Color))
+		{
+			Color c = (Color)value;
+			writer.Write(name != null ? " = (" : "(");
+			writer.Write(c.r.ToString(CultureInfo.InvariantCulture));
+			writer.Write(", ");
+			writer.Write(c.g.ToString(CultureInfo.InvariantCulture));
+			writer.Write(", ");
+			writer.Write(c.b.ToString(CultureInfo.InvariantCulture));
+			writer.Write(", ");
+			writer.Write(c.a.ToString(CultureInfo.InvariantCulture));
+			writer.Write(")\n");
+		}
+		else if (type == typeof(Color32))
+		{
+			Color32 c = (Color32)value;
+			writer.Write(name != null ? " = 0x" : "0x");
+
+			if (c.a == 255)
 			{
-				writer.Write(" = \"");
-				writer.Write((string)value);
-				writer.Write('"');
-				writer.Write('\n');
+				int i = (c.r << 16) | (c.g << 8) | c.b;
+				writer.Write(i.ToString("X6"));
 			}
-			else if (type == typeof(bool))
+			else
 			{
-				writer.Write(" = ");
-				writer.Write((bool)value ? "true" : "false");
-				writer.Write('\n');
+				int i = (c.r << 24) | (c.g << 16) | (c.b << 8) | c.a;
+				writer.Write(i.ToString("X8"));
 			}
-			else if (type == typeof(Int32) || type == typeof(float) || type == typeof(UInt32) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort))
+			writer.Write('\n');
+		}
+		else
+		{
+			if (type == typeof(Vector4))
 			{
-				writer.Write(" = ");
-				writer.Write(value.ToString());
-				writer.Write('\n');
-			}
-			else if (type == typeof(Vector2))
-			{
-				Vector2 v = (Vector2)value;
-				writer.Write(" = (");
+				Vector4 v = (Vector4)value;
+				if (name != null) writer.Write(" = ");
+				writer.Write(Serialization.TypeToName(type));
+				writer.Write('(');
 				writer.Write(v.x.ToString(CultureInfo.InvariantCulture));
 				writer.Write(", ");
 				writer.Write(v.y.ToString(CultureInfo.InvariantCulture));
+				writer.Write(", ");
+				writer.Write(v.z.ToString(CultureInfo.InvariantCulture));
+				writer.Write(", ");
+				writer.Write(v.w.ToString(CultureInfo.InvariantCulture));
 				writer.Write(")\n");
 			}
-			else if (type == typeof(Vector3))
+			else if (type == typeof(Quaternion))
 			{
-				Vector3 v = (Vector3)value;
-				writer.Write(" = (");
+				Quaternion q = (Quaternion)value;
+				Vector3 v = q.eulerAngles;
+				if (name != null) writer.Write(" = ");
+				writer.Write(Serialization.TypeToName(type));
+				writer.Write('(');
 				writer.Write(v.x.ToString(CultureInfo.InvariantCulture));
 				writer.Write(", ");
 				writer.Write(v.y.ToString(CultureInfo.InvariantCulture));
@@ -460,159 +711,97 @@ public class DataNode
 				writer.Write(v.z.ToString(CultureInfo.InvariantCulture));
 				writer.Write(")\n");
 			}
-			else if (type == typeof(Color))
+			else if (type == typeof(Rect))
 			{
-				Color c = (Color)value;
-				writer.Write(" = (");
-				writer.Write(c.r.ToString(CultureInfo.InvariantCulture));
+				Rect r = (Rect)value;
+				if (name != null) writer.Write(" = ");
+				writer.Write(Serialization.TypeToName(type));
+				writer.Write('(');
+				writer.Write(r.x.ToString(CultureInfo.InvariantCulture));
 				writer.Write(", ");
-				writer.Write(c.g.ToString(CultureInfo.InvariantCulture));
+				writer.Write(r.y.ToString(CultureInfo.InvariantCulture));
 				writer.Write(", ");
-				writer.Write(c.b.ToString(CultureInfo.InvariantCulture));
+				writer.Write(r.width.ToString(CultureInfo.InvariantCulture));
 				writer.Write(", ");
-				writer.Write(c.a.ToString(CultureInfo.InvariantCulture));
+				writer.Write(r.height.ToString(CultureInfo.InvariantCulture));
 				writer.Write(")\n");
 			}
-			else if (type == typeof(Color32))
+			else if (value is TList)
 			{
-				Color32 c = (Color32)value;
-				writer.Write(" = 0x");
+				TList list = value as TList;
 
-				if (c.a == 255)
+				if (name != null) writer.Write(" = ");
+				writer.Write(Serialization.TypeToName(type));
+				writer.Write('\n');
+
+				if (list.Count > 0)
 				{
-					int i = (c.r << 16) | (c.g << 8) | c.b;
-					writer.Write(i.ToString("X6"));
+					for (int i = 0, imax = list.Count; i < imax; ++i)
+						Write(writer, tab + 1, null, list.Get(i), false);
 				}
-				else
+			}
+			else if (value is System.Collections.IList)
+			{
+				System.Collections.IList list = value as System.Collections.IList;
+
+				if (name != null) writer.Write(" = ");
+				writer.Write(Serialization.TypeToName(type));
+				writer.Write('\n');
+
+				if (list.Count > 0)
 				{
-					int i = (c.r << 24) | (c.g << 16) | (c.b << 8) | c.a;
-					writer.Write(i.ToString("X8"));
+					for (int i = 0, imax = list.Count; i < imax; ++i)
+						Write(writer, tab + 1, null, list[i], false);
 				}
+			}
+			else if (value is IDataNodeSerializable)
+			{
+				IDataNodeSerializable ser = value as IDataNodeSerializable;
+				DataNode node = new DataNode();
+				ser.Serialize(node);
+
+				if (name != null) writer.Write(" = ");
+				writer.Write(Serialization.TypeToName(type));
+				writer.Write('\n');
+
+				for (int i = 0; i < node.children.size; ++i)
+				{
+					DataNode child = node.children[i];
+					child.Write(writer, tab + 1);
+				}
+			}
+			else if (value is GameObject)
+			{
+				Debug.LogError("It's not possible to serialize game objects.");
+				writer.Write('\n');
+			}
+			else if ((value as Component) != null)
+			{
+				Debug.LogError("It's not possible to serialize components (" + value.GetType() + ")", value as Component);
 				writer.Write('\n');
 			}
 			else
 			{
-				if (type == typeof(Vector4))
+				if (writeType)
 				{
-					Vector4 v = (Vector4)value;
-					writer.Write(" = ");
+					if (name != null) writer.Write(" = ");
 					writer.Write(Serialization.TypeToName(type));
-					writer.Write('(');
-					writer.Write(v.x.ToString(CultureInfo.InvariantCulture));
-					writer.Write(", ");
-					writer.Write(v.y.ToString(CultureInfo.InvariantCulture));
-					writer.Write(", ");
-					writer.Write(v.z.ToString(CultureInfo.InvariantCulture));
-					writer.Write(", ");
-					writer.Write(v.w.ToString(CultureInfo.InvariantCulture));
-					writer.Write(")\n");
 				}
-				else if (type == typeof(Quaternion))
-				{
-					Quaternion q = (Quaternion)value;
-					Vector3 v = q.eulerAngles;
-					writer.Write(" = ");
-					writer.Write(Serialization.TypeToName(type));
-					writer.Write('(');
-					writer.Write(v.x.ToString(CultureInfo.InvariantCulture));
-					writer.Write(", ");
-					writer.Write(v.y.ToString(CultureInfo.InvariantCulture));
-					writer.Write(", ");
-					writer.Write(v.z.ToString(CultureInfo.InvariantCulture));
-					writer.Write(")\n");
-				}
-				else if (type == typeof(Rect))
-				{
-					Rect r = (Rect)value;
-					writer.Write(" = ");
-					writer.Write(Serialization.TypeToName(type));
-					writer.Write('(');
-					writer.Write(r.x.ToString(CultureInfo.InvariantCulture));
-					writer.Write(", ");
-					writer.Write(r.y.ToString(CultureInfo.InvariantCulture));
-					writer.Write(", ");
-					writer.Write(r.width.ToString(CultureInfo.InvariantCulture));
-					writer.Write(", ");
-					writer.Write(r.height.ToString(CultureInfo.InvariantCulture));
-					writer.Write(")\n");
-				}
-				else if (value is TList)
-				{
-					TList list = value as TList;
-
-					writer.Write(" = ");
-					writer.Write(Serialization.TypeToName(type));
-					writer.Write('\n');
-
-					if (list.Count > 0)
-					{
-						for (int i = 0, imax = list.Count; i < imax; ++i)
-							Write(writer, tab + 1, "Add", list.Get(i), false);
-					}
-				}
-				else if (value is System.Collections.IList)
-				{
-					System.Collections.IList list = value as System.Collections.IList;
-
-					writer.Write(" = ");
-					writer.Write(Serialization.TypeToName(type));
-					writer.Write('\n');
-
-					if (list.Count > 0)
-					{
-						for (int i = 0, imax = list.Count; i < imax; ++i)
-							Write(writer, tab + 1, "Add", list[i], false);
-					}
-				}
-				else if (value is IDataNodeSerializable)
-				{
-					IDataNodeSerializable ser = value as IDataNodeSerializable;
-					DataNode node = new DataNode();
-					ser.Serialize(node);
-
-					writer.Write(" = ");
-					writer.Write(Serialization.TypeToName(type));
-					writer.Write('\n');
-
-					for (int i = 0; i < node.children.size; ++i)
-					{
-						DataNode child = node.children[i];
-						child.Write(writer, tab + 1);
-					}
-				}
-				else if (value is GameObject)
-				{
-					Debug.LogError("It's not possible to save game objects.");
-					writer.Write('\n');
-				}
-				else if ((value as Component) != null)
-				{
-					Debug.LogError("It's not possible to save components.");
-					writer.Write('\n');
-				}
-				else
-				{
-					if (writeType)
-					{
-						writer.Write(" = ");
-						writer.Write(Serialization.TypeToName(type));
-					}
-					writer.Write('\n');
+				writer.Write('\n');
 
 #if REFLECTION_SUPPORT
-					List<FieldInfo> fields = type.GetSerializableFields();
+				List<FieldInfo> fields = type.GetSerializableFields();
 
-					if (fields.size > 0)
+				if (fields.size > 0)
+				{
+					for (int i = 0; i < fields.size; ++i)
 					{
-						for (int i = 0; i < fields.size; ++i)
-						{
-							FieldInfo field = fields[i];
-							object val = field.GetValue(value);
-							if (val != null) Write(writer, tab + 1, field.Name, val, true);
-						}
+						FieldInfo field = fields[i];
+						object val = field.GetValue(value);
+						if (val != null) Write(writer, tab + 1, field.Name, val, true);
 					}
-#endif
 				}
+#endif
 			}
 		}
 	}
@@ -674,7 +863,17 @@ public class DataNode
 		if (string.IsNullOrEmpty(line))
 			return SetValue(line, type, null);
 
-		if (line.Length > 2)
+		if (line.Length > 1 && line[line.Length - 1] == 'L')
+		{
+			long lv;
+
+			if (long.TryParse(line.Substring(0, line.Length - 1), out lv))
+			{
+				mValue = lv;
+				return true;
+			}
+		}
+		else if (line.Length > 2)
 		{
 			// If the line starts with a quote, it must also end with a quote
 			if (line[0] == '"' && line[line.Length - 1] == '"')
@@ -724,7 +923,7 @@ public class DataNode
 				{
 					float f;
 
-					if (float.TryParse(line, out f))
+					if (float.TryParse(line, NumberStyles.Float, CultureInfo.InvariantCulture, out f))
 					{
 						mValue = f;
 						return true;
@@ -781,7 +980,7 @@ public class DataNode
 		}
 		else if (type == typeof(string))
 		{
-			mValue = text;
+			mValue = Unescape(text);
 		}
 		else if (type == typeof(bool))
 		{
@@ -822,6 +1021,12 @@ public class DataNode
 		{
 			double b;
 			if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out b)) mValue = b;
+		}
+		else if (type == typeof(ObsInt))
+		{
+			int val = 0;
+			if (int.TryParse(text, out val))
+				mValue = new ObsInt(val);
 		}
 		else if (type == typeof(Vector2))
 		{
@@ -928,7 +1133,7 @@ public class DataNode
 			if (mValue == null)
 			{
 				Debug.LogError("Unable to create a " + type);
-				return false;
+				return true;
 			}
 
 			if (isTList)
@@ -938,18 +1143,25 @@ public class DataNode
 
 				if (elemType != null)
 				{
-					for (int i = 0; i < children.size; )
+					for (int i = 0; i < children.size; ++i)
 					{
 						DataNode child = children[i];
 
-						if (child.name == "Add")
+						if (child.value == null)
+						{
+							child.mValue = child.name;
+							child.mResolved = false;
+							child.ResolveValue(elemType);
+							list.Add(child.mValue);
+						}
+						else if (child.name == "Add")
 						{
 							child.ResolveValue(elemType);
 							list.Add(child.mValue);
-							children.RemoveAt(i);
 						}
-						else ++i;
+						else Debug.LogWarning("Unexpected node in an array: " + child.name);
 					}
+					return false;
 				}
 				else Debug.LogError("Unable to determine the element type of " + type);
 			}
@@ -963,35 +1175,38 @@ public class DataNode
 
 				if (elemType != null)
 				{
-					for (int i = 0, index = 0; i < children.size; ++index)
+					for (int i = 0; i < children.size; ++i)
 					{
 						DataNode child = children[i];
 
-						if (child.name == "Add")
+						if (child.value == null)
+						{
+							child.mValue = child.name;
+							child.mResolved = false;
+							child.ResolveValue(elemType);
+							if (fixedSize) list[i] = child.mValue;
+							else list.Add(child.mValue);
+						}
+						else if (child.name == "Add")
 						{
 							child.ResolveValue(elemType);
-							if (fixedSize) list[index] = child.mValue;
+							if (fixedSize) list[i] = child.mValue;
 							else list.Add(child.mValue);
-							children.RemoveAt(i);
 						}
-						else ++i;
+						else Debug.LogWarning("Unexpected node in an array: " + child.name);
 					}
+					return false;
 				}
 				else Debug.LogError("Unable to determine the element type of " + type);
 			}
 			else if (type.IsClass)
 			{
-				for (int i = 0; i < children.size; )
+				for (int i = 0; i < children.size; ++i)
 				{
 					DataNode child = children[i];
-
-					if (mValue.SetSerializableField(child.name, child.value))
-					{
-						child.mValue = null;
-						children.RemoveAt(i);
-					}
-					else ++i;
+					mValue.SetSerializableField(child.name, child.value);
 				}
+				return false;
 			}
 			else Debug.LogError("Unhandled type: " + type);
 		}

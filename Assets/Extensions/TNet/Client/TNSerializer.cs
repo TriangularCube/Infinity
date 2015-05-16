@@ -1,11 +1,13 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
-#if UNITY_EDITOR || (!UNITY_FLASH && !NETFX_CORE && !UNITY_WP8)
+#if UNITY_EDITOR || (!UNITY_FLASH && !NETFX_CORE && !UNITY_WP8 && !UNITY_WP_8_1)
 #define REFLECTION_SUPPORT
 #endif
+
+//#define IGNORE_ERRORS
 
 using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -41,6 +43,45 @@ public interface IBinarySerializable
 }
 
 /// <summary>
+/// Obfuscated type integer. Usable just like any integer, but when it's in memory it's not recognizable.
+/// Useful for avoiding CheatEngine lookups.
+/// </summary>
+
+public struct ObsInt
+{
+	public int obscured;
+	public int revealed { get { return Restore(obscured); } set { obscured = Obfuscate(value); } }
+
+	public ObsInt (int val) { obscured = Obfuscate(val); }
+
+	static public implicit operator int (ObsInt o) { return Restore(o.obscured); }
+	//static public implicit operator ObsInt (int i) { return new ObsInt(i); }
+
+	public override string ToString () { return Restore(obscured).ToString(); }
+
+	const int mask1 = 0x00550055;
+	const int d1 = 7;
+	const int mask2 = 0x0000cccc;
+	const int d2 = 14;
+
+	static int Obfuscate (int x)
+	{
+		int t = (x ^ (x >> d1)) & mask1;
+		int u = x ^ t ^ (t << d1);
+		t = (u ^ (u >> d2)) & mask2;
+		return u ^ t ^ (t << d2);
+	}
+
+	static int Restore (int y)
+	{
+		int t = (y ^ (y >> d2)) & mask2;
+		int u = y ^ t ^ (t << d2);
+		t = (u ^ (u >> d1)) & mask1;
+		return u ^ t ^ (t << d1);
+	}
+}
+
+/// <summary>
 /// This class contains various serialization extension methods that make it easy to serialize
 /// any object into binary form that's smaller in size than what you would get by simply using
 /// the Binary Formatter. If you want more efficient serialization, implement IBinarySerializable.
@@ -52,11 +93,12 @@ public interface IBinarySerializable
 
 public static class Serialization
 {
+#if REFLECTION_SUPPORT
 	/// <summary>
 	/// Binary formatter, cached for convenience and performance (so it can be reused).
 	/// </summary>
-
 	static public BinaryFormatter formatter = new BinaryFormatter();
+#endif
 
 	static Dictionary<string, Type> mNameToType = new Dictionary<string, Type>();
 	static Dictionary<Type, string> mTypeToName = new Dictionary<Type, string>();
@@ -78,6 +120,10 @@ public static class Serialization
 			else if (name == "Rect") type = typeof(Rect);
 			else if (name == "Color") type = typeof(Color);
 			else if (name == "Color32") type = typeof(Color32);
+			else if (name == "string[]") type = typeof(string[]);
+			else if (name == "int[]") type = typeof(int[]);
+			else if (name == "float[]") type = typeof(float[]);
+			else if (name == "ObsInt") type = typeof(ObsInt);
 			else if (name.StartsWith("IList"))
 			{
 				if (name.Length > 7 && name[5] == '<' && name[name.Length - 1] == '>')
@@ -124,6 +170,10 @@ public static class Serialization
 			else if (type == typeof(Rect)) name = "Rect";
 			else if (type == typeof(Color)) name = "Color";
 			else if (type == typeof(Color32)) name = "Color32";
+			else if (type == typeof(ObsInt)) name = "ObsInt";
+			else if (type == typeof(string[])) name = "string[]";
+			else if (type == typeof(int[])) name = "int[]";
+			else if (type == typeof(float[])) name = "float[]";
 			else
 			{
 				if (type.Implements(typeof(IList)))
@@ -154,6 +204,7 @@ public static class Serialization
 		if (value == null) return null;
 
 		Type valueType = value.GetType();
+		if (valueType == desiredType) return value;
 		if (desiredType.IsAssignableFrom(valueType)) return value;
 
 		if (valueType == typeof(int))
@@ -162,6 +213,9 @@ public static class Serialization
 			if (desiredType == typeof(byte)) return (byte)(int)value;
 			if (desiredType == typeof(short)) return (short)(int)value;
 			if (desiredType == typeof(ushort)) return (ushort)(int)value;
+			if (desiredType == typeof(float)) return (float)(int)value;
+			if (desiredType == typeof(long)) return (long)(int)value;
+			if (desiredType == typeof(ObsInt)) return new ObsInt((int)value);
 		}
 		else if (valueType == typeof(float))
 		{
@@ -170,6 +224,14 @@ public static class Serialization
 			if (desiredType == typeof(short)) return (short)Mathf.RoundToInt((float)value);
 			if (desiredType == typeof(ushort)) return (ushort)Mathf.RoundToInt((float)value);
 			if (desiredType == typeof(int)) return Mathf.RoundToInt((float)value);
+		}
+		else if (valueType == typeof(long))
+		{
+			if (desiredType == typeof(int)) return (int)(long)value;
+		}
+		else if (valueType == typeof(ObsInt))
+		{
+			if (desiredType == typeof(int)) return (int)(ObsInt)value;
 		}
 		else if (valueType == typeof(Color32))
 		{
@@ -222,21 +284,23 @@ public static class Serialization
 
 				if (!string.IsNullOrEmpty(strVal))
 				{
-					string[] enumNames = Enum.GetNames(desiredType);
-					for (int i = 0; i < enumNames.Length; ++i)
-						if (enumNames[i] == strVal)
-							return Enum.GetValues(desiredType).GetValue(i);
+					try
+					{
+						return System.Enum.Parse(desiredType, strVal);
+					}
+					catch (Exception) { }
+
+					//string[] enumNames = Enum.GetNames(desiredType);
+					//for (int i = 0; i < enumNames.Length; ++i)
+					//    if (enumNames[i] == strVal)
+					//        return Enum.GetValues(desiredType).GetValue(i);
 				}
 			}
 		}
 #endif
-		Debug.LogError("Unable to convert " + value.GetType() + " to " + desiredType);
+		Debug.LogError("Unable to convert " + valueType + " to " + desiredType);
 		return null;
 	}
-
-#if REFLECTION_SUPPORT
-	// Cached for speed
-	static Dictionary<Type, List<FieldInfo>> mFieldDict = new Dictionary<Type, List<FieldInfo>>();
 
 	/// <summary>
 	/// Retrieve the generic element type from the templated type.
@@ -280,6 +344,10 @@ public static class Serialization
 			return type.Create();
 		}
 	}
+
+#if REFLECTION_SUPPORT
+	// Cached for speed
+	static Dictionary<Type, List<FieldInfo>> mFieldDict = new Dictionary<Type, List<FieldInfo>>();
 
 	/// <summary>
 	/// Collect all serializable fields on the class of specified type.
@@ -378,16 +446,6 @@ public static class Serialization
 	}
 #else
 	/// <summary>
-	/// Create a new instance of the specified object.
-	/// </summary>
-
-	static public object Create (this Type type)
-	{
-		Debug.LogError("Can't create a " + type + " (reflection is not supported on this platform)");
-		return null;
-	}
-
-	/// <summary>
 	/// Set the specified field's value using reflection.
 	/// </summary>
 
@@ -397,14 +455,14 @@ public static class Serialization
 		return false;
 	}
 #endif
-	#region Write
+#region Write
 	/// <summary>
 	/// Write an integer value using the smallest number of bytes possible.
 	/// </summary>
 
 	static public void WriteInt (this BinaryWriter bw, int val)
 	{
-		if (val < 255)
+		if (val < 255 && val > -1)
 		{
 			bw.Write((byte)val);
 		}
@@ -490,12 +548,19 @@ public static class Serialization
 
 	static public void Write (this BinaryWriter writer, DataNode node)
 	{
-		writer.Write(node.name);
-		writer.WriteObject(node.value);
-		writer.WriteInt(node.children.size);
+		if (node == null || string.IsNullOrEmpty(node.name))
+		{
+			writer.Write("");
+		}
+		else
+		{
+			writer.Write(node.name);
+			writer.WriteObject(node.value);
+			writer.WriteInt(node.children.size);
 
-		for (int i = 0, imax = node.children.size; i < imax; ++i)
-			writer.Write(node.children[i]);
+			for (int i = 0, imax = node.children.size; i < imax; ++i)
+				writer.Write(node.children[i]);
+		}
 	}
 
 	/// <summary>
@@ -521,6 +586,10 @@ public static class Serialization
 		if (type == typeof(DataNode)) return 14;
 		if (type == typeof(double)) return 15;
 		if (type == typeof(short)) return 16;
+		if (type == typeof(TNObject)) return 17;
+		if (type == typeof(long)) return 18;
+		if (type == typeof(ulong)) return 19;
+		if (type == typeof(ObsInt)) return 20;
 
 		if (type == typeof(bool[])) return 101;
 		if (type == typeof(byte[])) return 102;
@@ -537,6 +606,10 @@ public static class Serialization
 		if (type == typeof(Color[])) return 113;
 		if (type == typeof(double[])) return 115;
 		if (type == typeof(short[])) return 116;
+		if (type == typeof(TNObject[])) return 117;
+		if (type == typeof(long[])) return 118;
+		if (type == typeof(ulong[])) return 119;
+		if (type == typeof(ObsInt[])) return 120;
 
 #if REFLECTION_SUPPORT
 		return 254;
@@ -569,6 +642,10 @@ public static class Serialization
 			case 14: return typeof(DataNode);
 			case 15: return typeof(double);
 			case 16: return typeof(short);
+			case 17: return typeof(TNObject);
+			case 18: return typeof(long);
+			case 19: return typeof(ulong);
+			case 20: return typeof(ObsInt);
 
 			case 101: return typeof(bool[]);
 			case 102: return typeof(byte[]);
@@ -585,6 +662,10 @@ public static class Serialization
 			case 113: return typeof(Color[]);
 			case 115: return typeof(double[]);
 			case 116: return typeof(short[]);
+			case 117: return typeof(TNObject[]);
+			case 118: return typeof(long[]);
+			case 119: return typeof(ulong[]);
+			case 120: return typeof(ObsInt[]);
 		}
 		return null;
 	}
@@ -653,7 +734,7 @@ public static class Serialization
 
 		// If this is a custom type, there is more work to be done
 		if (prefix > 250)
-		{
+ 		{
 #if UNITY_EDITOR
 			if (obj is GameObject)
 			{
@@ -663,7 +744,7 @@ public static class Serialization
 				return;
 			}
 
-			if ((obj as Component) != null)
+			if (obj is Component)
 			{
 				Debug.LogError("It's not possible to send components as parameters because Unity has no consistent way to identify them.");
 				bw.Write((byte)0);
@@ -709,9 +790,9 @@ public static class Serialization
 						return;
 					}
 				}
-#endif
 				if (!typeIsKnown) bw.Write((byte)255);
 				formatter.Serialize(bw.BaseStream, obj);
+#endif
 				return;
 			}
 
@@ -749,7 +830,7 @@ public static class Serialization
 						}
 
 						if (!typeIsKnown) bw.Write(fixedSize ? (byte)100 : (byte)99);
-						bw.Write(type);
+						bw.Write(fixedSize ? type : elemType);
 						bw.Write((byte)(sameType ? 1 : 0));
 						bw.WriteInt(list.Count);
 
@@ -757,9 +838,9 @@ public static class Serialization
 						return;
 					}
 				}
-#endif
 				if (!typeIsKnown) bw.Write((byte)255);
 				formatter.Serialize(bw.BaseStream, obj);
+#endif
 				return;
 			}
 		}
@@ -785,6 +866,10 @@ public static class Serialization
 			case 14: bw.Write((DataNode)obj); break;
 			case 15: bw.Write((double)obj); break;
 			case 16: bw.Write((short)obj); break;
+			case 17: bw.Write((uint)(obj as TNObject).uid); break;
+			case 18: bw.Write((long)obj); break;
+			case 19: bw.Write((ulong)obj); break;
+			case 20: bw.Write(((ObsInt)obj).obscured); break;
 			case 101:
 			{
 				bool[] arr = (bool[])obj;
@@ -831,7 +916,7 @@ public static class Serialization
 			{
 				string[] arr = (string[])obj;
 				bw.WriteInt(arr.Length);
-				for (int i = 0, imax = arr.Length; i < imax; ++i) bw.Write(arr[i]);
+				for (int i = 0, imax = arr.Length; i < imax; ++i) bw.Write(arr[i] ?? "");
 				break;
 			}
 			case 108:
@@ -890,9 +975,38 @@ public static class Serialization
 				for (int i = 0, imax = arr.Length; i < imax; ++i) bw.Write(arr[i]);
 				break;
 			}
-#if REFLECTION_SUPPORT
+			case 117:
+			{
+				TNObject[] arr = (TNObject[])obj;
+				bw.WriteInt(arr.Length);
+				for (int i = 0, imax = arr.Length; i < imax; ++i)
+					bw.Write((uint)arr[i].uid);
+				break;
+			}
+			case 118:
+			{
+				long[] arr = (long[])obj;
+				bw.WriteInt(arr.Length);
+				for (int i = 0, imax = arr.Length; i < imax; ++i) bw.Write(arr[i]);
+				break;
+			}
+			case 119:
+			{
+				ulong[] arr = (ulong[])obj;
+				bw.WriteInt(arr.Length);
+				for (int i = 0, imax = arr.Length; i < imax; ++i) bw.Write(arr[i]);
+				break;
+			}
+			case 120:
+			{
+				ObsInt[] arr = (ObsInt[])obj;
+				bw.WriteInt(arr.Length);
+				for (int i = 0, imax = arr.Length; i < imax; ++i) bw.Write(arr[i].obscured);
+				break;
+			}
 			case 254: // Serialization using Reflection
 			{
+#if REFLECTION_SUPPORT
 				FilterFields(obj);
 				bw.WriteInt(mFieldNames.size);
 
@@ -901,12 +1015,18 @@ public static class Serialization
 					bw.Write(mFieldNames[i]);
 					bw.WriteObject(mFieldValues[i]);
 				}
+#else
+				Debug.LogError("Reflection-based serialization is not supported on this platform.");
+#endif
 				break;
 			}
-#endif
 			case 255: // Serialization using a Binary Formatter
 			{
+#if REFLECTION_SUPPORT
 				formatter.Serialize(bw.BaseStream, obj);
+#else
+				Debug.LogError("Reflection-based serialization is not supported on this platform.");
+#endif
 				break;
 			}
 			default:
@@ -917,6 +1037,7 @@ public static class Serialization
 		}
 	}
 
+#if REFLECTION_SUPPORT
 	static List<string> mFieldNames = new List<string>();
 	static List<object> mFieldValues = new List<object>();
 
@@ -944,6 +1065,7 @@ public static class Serialization
 			}
 		}
 	}
+#endif
 
 	/// <summary>
 	/// Helper extension that returns 'true' if the type implements the specified interface.
@@ -975,7 +1097,11 @@ public static class Serialization
 
 	static public Vector2 ReadVector2 (this BinaryReader reader)
 	{
-		return new Vector2(reader.ReadSingle(), reader.ReadSingle());
+		float x = reader.ReadSingle();
+		float y = reader.ReadSingle();
+		if (float.IsNaN(x)) x = 0f;
+		if (float.IsNaN(y)) y = 0f;
+		return new Vector2(x, y);
 	}
 
 	/// <summary>
@@ -984,7 +1110,13 @@ public static class Serialization
 
 	static public Vector3 ReadVector3 (this BinaryReader reader)
 	{
-		return new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+		float x = reader.ReadSingle();
+		float y = reader.ReadSingle();
+		float z = reader.ReadSingle();
+		if (float.IsNaN(x)) x = 0f;
+		if (float.IsNaN(y)) y = 0f;
+		if (float.IsNaN(z)) z = 0f;
+		return new Vector3(x, y, z);
 	}
 
 	/// <summary>
@@ -993,7 +1125,15 @@ public static class Serialization
 
 	static public Vector4 ReadVector4 (this BinaryReader reader)
 	{
-		return new Vector4(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+		float x = reader.ReadSingle();
+		float y = reader.ReadSingle();
+		float z = reader.ReadSingle();
+		float w = reader.ReadSingle();
+		if (float.IsNaN(x)) x = 0f;
+		if (float.IsNaN(y)) y = 0f;
+		if (float.IsNaN(z)) z = 0f;
+		if (float.IsNaN(w)) w = 0f;
+		return new Vector4(x, y, z, w);
 	}
 
 	/// <summary>
@@ -1002,7 +1142,15 @@ public static class Serialization
 
 	static public Quaternion ReadQuaternion (this BinaryReader reader)
 	{
-		return new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+		float x = reader.ReadSingle();
+		float y = reader.ReadSingle();
+		float z = reader.ReadSingle();
+		float w = reader.ReadSingle();
+		if (float.IsNaN(x)) x = 0f;
+		if (float.IsNaN(y)) y = 0f;
+		if (float.IsNaN(z)) z = 0f;
+		if (float.IsNaN(w)) w = 0f;
+		return new Quaternion(x, y, z, w);
 	}
 
 	/// <summary>
@@ -1020,7 +1168,15 @@ public static class Serialization
 
 	static public Color ReadColor (this BinaryReader reader)
 	{
-		return new Color(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+		float x = reader.ReadSingle();
+		float y = reader.ReadSingle();
+		float z = reader.ReadSingle();
+		float w = reader.ReadSingle();
+		if (float.IsNaN(x)) x = 0f;
+		if (float.IsNaN(y)) y = 0f;
+		if (float.IsNaN(z)) z = 0f;
+		if (float.IsNaN(w)) w = 0f;
+		return new Color(x, y, z, w);
 	}
 
 	/// <summary>
@@ -1029,12 +1185,28 @@ public static class Serialization
 
 	static public DataNode ReadDataNode (this BinaryReader reader)
 	{
+		string str = reader.ReadString();
+		if (string.IsNullOrEmpty(str)) return null;
+
 		DataNode node = new DataNode();
-		node.name = reader.ReadString();
+		node.name = str;
+
+#if IGNORE_ERRORS
+		try
+		{
+#endif
 		node.value = reader.ReadObject();
 		int count = reader.ReadInt();
+
 		for (int i = 0; i < count; ++i)
-			node.children.Add(reader.ReadDataNode());
+		{
+			DataNode dn = reader.ReadDataNode();
+			if (dn != null) node.children.Add(dn);
+		}
+#if IGNORE_ERRORS
+		}
+		catch (Exception) {}
+#endif
 		return node;
 	}
 
@@ -1090,6 +1262,10 @@ public static class Serialization
 		if (!typeIsKnown) type = reader.ReadType(out prefix);
 		if (type.Implements(typeof(IBinarySerializable))) prefix = 253;
 
+#if IGNORE_ERRORS
+		try
+		{
+#endif
 		switch (prefix)
 		{
 			case 0: return null;
@@ -1098,7 +1274,12 @@ public static class Serialization
 			case 3: return reader.ReadUInt16();
 			case 4: return reader.ReadInt32();
 			case 5: return reader.ReadUInt32();
-			case 6: return reader.ReadSingle();
+			case 6:
+			{
+				float f = reader.ReadSingle();
+				if (float.IsNaN(f)) f = 0f;
+				return f;
+			}
 			case 7: return reader.ReadString();
 			case 8: return reader.ReadVector2();
 			case 9: return reader.ReadVector3();
@@ -1109,6 +1290,15 @@ public static class Serialization
 			case 14: return reader.ReadDataNode();
 			case 15: return reader.ReadDouble();
 			case 16: return reader.ReadInt16();
+			case 17: return TNObject.Find(reader.ReadUInt32());
+			case 18: return reader.ReadInt64();
+			case 19: return reader.ReadUInt64();
+			case 20:
+			{
+				ObsInt obs;
+				obs.obscured = reader.ReadInt32();
+				return obs;
+			}
 			case 98: // TNet.List
 			{
 				type = reader.ReadType(out prefix);
@@ -1126,10 +1316,10 @@ public static class Serialization
 					Type arrType = typeof(TNet.List<>).MakeGenericType(type);
 					arr = (TList)Activator.CreateInstance(arrType);
 #else
-					Debug.LogError("Reflection is not supported on this platform");
+					Debug.LogError("Reflection-based serialization is not supported on this platform");
 #endif
 				}
-				
+
 				for (int i = 0; i < elements; ++i)
 				{
 					object val = reader.ReadObject(null, prefix, type, sameType);
@@ -1154,7 +1344,7 @@ public static class Serialization
 					Type arrType = typeof(System.Collections.Generic.List<>).MakeGenericType(type);
 					arr = (IList)Activator.CreateInstance(arrType);
 #else
-					Debug.LogError("Reflection is not supported on this platform");
+					Debug.LogError("Reflection-based serialization is not supported on this platform");
 #endif
 				}
 
@@ -1171,7 +1361,20 @@ public static class Serialization
 				type = reader.ReadType(out prefix);
 				bool sameType = (reader.ReadByte() == 1);
 				int elements = reader.ReadInt();
-				IList arr = (IList)type.Create(elements);
+
+				IList arr = null;
+				object created = null;
+
+				try
+				{
+					created = type.Create(elements);
+					arr = (IList)created;
+				}
+				catch (Exception ex)
+				{
+					Debug.LogError(ex.Message + "\n" + "Expected: " + type + "[" + elements + "]\n" +
+						"Created: " + (created != null ? created.GetType().ToString() : "<null>"));
+				}
 
 				if (arr != null)
 				{
@@ -1287,7 +1490,36 @@ public static class Serialization
 			{
 				int elements = reader.ReadInt();
 				short[] arr = new short[elements];
-				for (int b = 0; b < elements; ++b) arr[b] = reader.ReadInt16();
+				for (int b = 0; b < elements; ++b)
+					arr[b] = reader.ReadInt16();
+				return arr;
+			}
+			case 117:
+			{
+				int elements = reader.ReadInt();
+				TNObject[] arr = new TNObject[elements];
+				for (int b = 0; b < elements; ++b) arr[b] = TNObject.Find(reader.ReadUInt32());
+				return arr;
+			}
+			case 118:
+			{
+				int elements = reader.ReadInt();
+				long[] arr = new long[elements];
+				for (int b = 0; b < elements; ++b) arr[b] = reader.ReadInt64();
+				return arr;
+			}
+			case 119:
+			{
+				int elements = reader.ReadInt();
+				ulong[] arr = new ulong[elements];
+				for (int b = 0; b < elements; ++b) arr[b] = reader.ReadUInt64();
+				return arr;
+			}
+			case 120:
+			{
+				int elements = reader.ReadInt();
+				ObsInt[] arr = new ObsInt[elements];
+				for (int b = 0; b < elements; ++b) arr[b].obscured = reader.ReadInt32();
 				return arr;
 			}
 			case 253:
@@ -1298,15 +1530,12 @@ public static class Serialization
 			}
 			case 254: // Serialization using Reflection
 			{
+#if REFLECTION_SUPPORT
 				// Create the object
 				if (obj == null)
 				{
-#if REFLECTION_SUPPORT
 					obj = type.Create();
 					if (obj == null) Debug.LogError("Unable to create an instance of " + type);
-#else
-					Debug.LogError("Reflection is not supported on this platform");
-#endif
 				}
 
 				if (obj != null)
@@ -1337,18 +1566,34 @@ public static class Serialization
 					}
 				}
 				return obj;
+#else
+				Debug.LogError("Reflection-based serialization is not supported on this platform");
+				return null;
+#endif
 			}
 			case 255: // Serialization using a Binary Formatter
 			{
+#if REFLECTION_SUPPORT
 				return formatter.Deserialize(reader.BaseStream);
+#else
+				Debug.LogError("Reflection-based serialization is not supported on this platform.");
+				return null;
+#endif
 			}
 			default:
 			{
-				Debug.LogError("Unknown prefix: " + prefix);
-				break;
+				Debug.LogError("Unknown prefix: " + prefix + " at position " + reader.BaseStream.Position);
+				return null;
 			}
 		}
+#if IGNORE_ERRORS
+		}
+		catch (Exception ex)
+		{
+			Debug.LogError(ex.Message + " at position " + reader.BaseStream.Position);
+		}
 		return null;
+#endif
 	}
 
 #endregion

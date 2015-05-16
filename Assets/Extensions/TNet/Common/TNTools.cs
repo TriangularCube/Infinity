@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System.Net;
@@ -59,9 +59,27 @@ static public class Tools
 	/// Generate a random port from 10,000 to 60,000.
 	/// </summary>
 
-	static public int randomPort { get { return 10000 + (int)(System.DateTime.Now.Ticks % 50000); } }
+	static public int randomPort { get { return 10000 + (int)(System.DateTime.UtcNow.Ticks % 50000); } }
 
-#if !UNITY_WEBPLAYER
+	/// <summary>
+	/// Path to the persistent data path.
+	/// </summary>
+
+	static public string persistentDataPath
+	{
+		get
+		{
+#if UNITY_ANDROID || UNITY_IPHONE || UNITY_WEBPLAYER || UNITY_WINRT || UNITY_FLASH
+			string s = UnityEngine.Application.persistentDataPath;
+#else
+			string s = System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
+#endif
+			s = s.Replace("\\", "/");
+			return s;
+		}
+	}
+
+#if !UNITY_WEBPLAYER && !UNITY_WINRT
 	static List<NetworkInterface> mInterfaces = null;
 
 	/// <summary>
@@ -103,20 +121,22 @@ static public class Tools
 			if (mAddresses == null)
 			{
 				mAddresses = new List<IPAddress>();
-#if !UNITY_WEBPLAYER
+#if !UNITY_WEBPLAYER && !UNITY_WINRT
 				try
 				{
 					List<NetworkInterface> list = networkInterfaces;
 
-					for (int i = 0; i < list.size; ++i)
+					for (int i = list.size; i > 0; )
 					{
-						NetworkInterface ni = list[i];
+						NetworkInterface ni = list[--i];
 						if (ni == null) continue;
 
 						IPInterfaceProperties props = ni.GetIPProperties();
 						if (props == null) continue;
+						//if (ni.NetworkInterfaceType == NetworkInterfaceType.Unknown) continue;
 
 						UnicastIPAddressInformationCollection uniAddresses = props.UnicastAddresses;
+						if (uniAddresses == null) continue;
 
 						foreach (UnicastIPAddressInformation uni in uniAddresses)
 						{
@@ -136,15 +156,23 @@ static public class Tools
 				}
 				catch (System.Exception) {}
 #endif
-#if !UNITY_IPHONE
+#if !UNITY_IPHONE && !UNITY_EDITOR_OSX && !UNITY_STANDALONE_OSX && !UNITY_WINRT
 				// Fallback method. This won't work on the iPhone, but seems to be needed on some platforms
 				// where GetIPProperties either fails, or Unicast.Addres access throws an exception.
-				IPAddress[] ips = Dns.GetHostAddresses(Dns.GetHostName());
+				string hn = Dns.GetHostName();
 
-				foreach (IPAddress ad in ips)
+				if (!string.IsNullOrEmpty(hn))
 				{
-					if (IsValidAddress(ad) && !mAddresses.Contains(ad))
-						mAddresses.Add(ad);
+					IPAddress[] ips = Dns.GetHostAddresses(hn);
+
+					if (ips != null)
+					{
+						foreach (IPAddress ad in ips)
+						{
+							if (IsValidAddress(ad) && !mAddresses.Contains(ad))
+								mAddresses.Add(ad);
+						}
+					}
 				}
 #endif
 				// If everything else fails, simply use the loopback address
@@ -164,7 +192,7 @@ static public class Tools
 		{
 			if (mLocalAddress == null)
 			{
-				mLocalAddress = IPAddress.None;
+				mLocalAddress = IPAddress.Loopback;
 				List<IPAddress> list = localAddresses;
 
 				if (list.size > 0)
@@ -201,7 +229,7 @@ static public class Tools
 #if UNITY_EDITOR
 			UnityEngine.Debug.LogWarning("[TNet] " + value + " is not one of the local IP addresses. Strange things may happen.");
 #else
-			System.Console.WriteLine("[TNet] " + value + " is not one of the local IP addresses. Strange things may happen.");
+			Tools.Print(value + " is not one of the local IP addresses. Strange things may happen.");
 #endif
 		}
 	}
@@ -222,7 +250,7 @@ static public class Tools
 	}
 
 	public delegate void OnResolvedIPs (IPAddress local, IPAddress ext);
-	
+
 	/// <summary>
 	/// Since calling "localAddress" and "externalAddress" would lock up the application, it's better to do it asynchronously.
 	/// </summary>
@@ -306,6 +334,7 @@ static public class Tools
 
 	static bool ResolveExternalIP (string url)
 	{
+#if !UNITY_WINRT
 		if (string.IsNullOrEmpty(url)) return false;
 
 		try
@@ -328,6 +357,7 @@ static public class Tools
 			}
 		}
 		catch (System.Exception) { }
+#endif
 		return false;
 	}
 
@@ -351,15 +381,29 @@ static public class Tools
 
 	static public IPAddress ResolveAddress (string address)
 	{
+		address = address.Trim();
 		if (string.IsNullOrEmpty(address))
 			return null;
 
 		if (address == "localhost") return IPAddress.Loopback;
 
 		IPAddress ip;
+
+		if (address.Contains(":"))
+		{
+			string[] parts = address.Split(':');
+			
+			if (parts.Length == 2)
+			{
+				if (IPAddress.TryParse(parts[0], out ip))
+					return ip;
+			}
+		}
+
 		if (IPAddress.TryParse(address, out ip))
 			return ip;
 
+#if !UNITY_WINRT
 		try
 		{
 			IPAddress[] ips = Dns.GetHostAddresses(address);
@@ -368,13 +412,14 @@ static public class Tools
 				if (!IPAddress.IsLoopback(ips[i]))
 					return ips[i];
 		}
-#if UNITY_EDITOR
+ #if UNITY_EDITOR
 		catch (System.Exception ex)
 		{
 			UnityEngine.Debug.LogWarning(ex.Message + " (" + address + ")");
 		}
-#else
+ #else
 		catch (System.Exception) {}
+ #endif
 #endif
 		return null;
 	}
@@ -510,11 +555,14 @@ static public class Tools
 	/// Retrieve the list of filenames from the specified directory.
 	/// </summary>
 
-	static public string[] GetFiles (string directory)
+	static public string[] GetFiles (string directory, bool inMyDocuments = false)
 	{
-#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8
+#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8 && !UNITY_WP_8_1
+		if (!IsAllowedToAccess(directory)) return null;
+
 		try
 		{
+			if (inMyDocuments) directory = GetDocumentsPath(directory);
 			if (!Directory.Exists(directory)) return null;
 			return Directory.GetFiles(directory);
 		}
@@ -524,27 +572,211 @@ static public class Tools
 	}
 
 	/// <summary>
+	/// Find the specified file in the chosen directory or one of its subfolders.
+	/// </summary>
+
+	static public string FindFile (string directory, string fileName)
+	{
+#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8 && !UNITY_WP_8_1
+		if (!IsAllowedToAccess(directory)) return null;
+		string[] files = Directory.GetFiles(directory, fileName);
+		return (files.Length == 0) ? null : files[0];
+#else
+		return null;
+#endif
+	}
+
+	/// <summary>
+	/// Find all files matching the specified pattern, such as "*.txt".
+	/// </summary>
+
+	static public string[] FindFiles (string directory, string pattern)
+	{
+#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8 && !UNITY_WP_8_1
+		if (!IsAllowedToAccess(directory)) return null;
+		string[] files = Directory.GetFiles(directory, pattern, SearchOption.AllDirectories);
+		return (files.Length == 0) ? null : files;
+#else
+		return null;
+#endif
+	}
+
+	/// <summary>
+	/// Whether the application should be allowed to access the specified path.
+	/// The path must be inside the same folder or in the Documents folder.
+	/// </summary>
+
+	static public bool IsAllowedToAccess (string path)
+	{
+#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8 && !UNITY_WP_8_1
+		// Relative paths are not allowed
+		if (path.Contains("..")) return false;
+
+		// Get the full path
+		string fullPath = System.IO.Path.GetFullPath(path).Replace("\\", "/");
+
+		// Path is inside the current folder
+		string current = System.Environment.CurrentDirectory.Replace("\\", "/");
+		if (fullPath.Contains(current)) return true;
+
+		// Path is inside My Documents
+		string docs = persistentDataPath;
+
+		if (!string.IsNullOrEmpty(applicationDirectory))
+		{
+			docs = Path.Combine(docs, applicationDirectory);
+			docs = docs.Replace("\\", "/");
+		}
+		if (fullPath.Contains(docs)) return true;
+
+		// No other paths are allowed
+#endif
+		return false;
+	}
+
+	/// <summary>
+	/// Gets the path to a file in My Documents or OSX equivalent.
+	/// </summary>
+
+	static public string GetDocumentsPath (string path = null)
+	{
+#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8 && !UNITY_WP_8_1
+		string docs = persistentDataPath;
+		if (!string.IsNullOrEmpty(applicationDirectory))
+			docs = Path.Combine(docs, applicationDirectory).Replace("\\", "/");
+		path = string.IsNullOrEmpty(path) ? docs : Path.Combine(docs, path);
+		path = path.Replace("\\", "/");
+#endif
+		return path;
+	}
+
+	/// <summary>
+	/// Application directory to use in My Documents. Generally should be the name of your game.
+	/// </summary>
+
+	static public string applicationDirectory = null;
+
+	/// <summary>
 	/// Write the specified file, creating all the subdirectories in the process.
 	/// </summary>
 
-	static public bool WriteFile (string fileName, byte[] data)
+	static public bool WriteFile (string path, byte[] data, bool inMyDocuments = false)
 	{
-#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8
+#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8 && !UNITY_WP_8_1
+		if (inMyDocuments) path = GetDocumentsPath(path);
+
 		if (data == null || data.Length == 0)
 		{
-			return DeleteFile(fileName);
+			return DeleteFile(path);
 		}
 		else
 		{
+			path = path.Replace("\\", "/");
+
+			if (!IsAllowedToAccess(path))
+			{
+#if !STANDALONE
+				UnityEngine.Debug.LogWarning("Unable to write to " + path);
+#endif
+				return false;
+			}
+
 			try
 			{
-				string dir = Path.GetDirectoryName(fileName);
-				if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
-				File.WriteAllBytes(fileName, data);
-				return true;
+				string dir = Path.GetDirectoryName(path);
+
+				if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+					Directory.CreateDirectory(dir);
+
+				if (File.Exists(path))
+				{
+					FileAttributes att = File.GetAttributes(path);
+
+					if ((att & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+					{
+						att = (att & ~FileAttributes.ReadOnly);
+						File.SetAttributes(path, att);
+					}
+				}
+
+				File.WriteAllBytes(path, data);
+				if (File.Exists(path)) return true;
+ #if !STANDALONE
+				UnityEngine.Debug.LogWarning("Unable to write to " + path);
+ #endif
 			}
+ #if STANDALONE
 			catch (System.Exception) { }
+ #else
+			catch (System.Exception ex) { UnityEngine.Debug.LogError(ex.Message); }
+ #endif
 		}
+#elif !STANDALONE
+		UnityEngine.Debug.LogWarning("Unable to write to " + path);
+#endif
+		return false;
+	}
+
+	/// <summary>
+	/// Write the specified file, creating all the subdirectories in the process.
+	/// </summary>
+
+	static public bool WriteFile (string path, MemoryStream data, bool inMyDocuments = false)
+	{
+#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8 && !UNITY_WP_8_1
+		if (inMyDocuments) path = GetDocumentsPath(path);
+
+		if (data == null || data.Length == 0)
+		{
+			return DeleteFile(path);
+		}
+		else
+		{
+			path = path.Replace("\\", "/");
+
+			if (!IsAllowedToAccess(path))
+			{
+#if !STANDALONE
+				UnityEngine.Debug.LogWarning("Unable to write to " + path);
+#endif
+				return false;
+			}
+
+			try
+			{
+				string dir = Path.GetDirectoryName(path);
+
+				if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+					Directory.CreateDirectory(dir);
+
+				if (File.Exists(path))
+				{
+					FileAttributes att = File.GetAttributes(path);
+
+					if ((att & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+					{
+						att = (att & ~FileAttributes.ReadOnly);
+						File.SetAttributes(path, att);
+					}
+				}
+
+				FileStream fs = new FileStream(path, FileMode.Create);
+				data.Seek(0, SeekOrigin.Begin);
+				data.WriteTo(fs);
+				fs.Close();
+				if (File.Exists(path)) return true;
+#if !STANDALONE
+				UnityEngine.Debug.LogWarning("Unable to write to " + path);
+#endif
+			}
+#if STANDALONE
+			catch (System.Exception) { }
+#else
+			catch (System.Exception ex) { UnityEngine.Debug.LogError(ex.Message); }
+#endif
+		}
+#elif !STANDALONE
+		UnityEngine.Debug.LogWarning("Unable to write to " + path);
 #endif
 		return false;
 	}
@@ -553,15 +785,20 @@ static public class Tools
 	/// Read the specified file, returning all bytes read.
 	/// </summary>
 
-	static public byte[] ReadFile (string fileName)
+	static public byte[] ReadFile (string path)
 	{
-#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8
+#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_WINRT
 		try
 		{
-			if (File.Exists(fileName))
-				return File.ReadAllBytes(fileName);
+			path = FindFile(path);
+			if (!string.IsNullOrEmpty(path))
+				return File.ReadAllBytes(path);
 		}
+ #if STANDALONE
 		catch (System.Exception) { }
+ #else
+		catch (System.Exception ex) { UnityEngine.Debug.LogError(ex.Message); }
+ #endif
 #endif
 		return null;
 	}
@@ -570,18 +807,54 @@ static public class Tools
 	/// Delete the specified file, if it exists.
 	/// </summary>
 
-	static public bool DeleteFile (string fileName)
+	static public bool DeleteFile (string path)
 	{
-#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8
+#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8 && !UNITY_WP_8_1
 		try
 		{
-			if (File.Exists(fileName))
-				File.Delete(fileName);
+			path = FindFile(path);
+			if (!string.IsNullOrEmpty(path) && File.Exists(path))
+				File.Delete(path);
 			return true;
 		}
 		catch (System.Exception) { }
 #endif
 		return false;
+	}
+
+	/// <summary>
+	/// Tries to find the specified file, checking the raw path, My Documents folder, and the application folder.
+	/// Returns the path if found, null if not found.
+	/// </summary>
+
+	static public string FindFile (string path)
+	{
+#if !UNITY_WEBPLAYER && !UNITY_FLASH && !UNITY_METRO && !UNITY_WP8 && !UNITY_WP_8_1
+		try
+		{
+			if (!IsAllowedToAccess(path)) return null;
+			if (string.IsNullOrEmpty(path)) return null;
+			if (File.Exists(path)) return path.Replace("\\", "/");
+			path = GetDocumentsPath(path);
+			if (File.Exists(path)) return path;
+		}
+		catch (System.Exception) { }
+#endif
+		return null;
+	}
+
+	/// <summary>
+	/// Convenience function -- prints the specified message, prefixed with a timestamp.
+	/// </summary>
+
+	static public void Print (string text)
+	{
+#if STANDALONE
+		if (string.IsNullOrEmpty(text)) System.Console.WriteLine("");
+		else System.Console.WriteLine("[" + System.DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + "] " + text);
+#elif UNITY_EDITOR
+		if (!string.IsNullOrEmpty(text)) UnityEngine.Debug.Log(text);
+#endif
 	}
 }
 }

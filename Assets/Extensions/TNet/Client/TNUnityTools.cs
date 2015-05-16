@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using UnityEngine;
@@ -37,7 +37,7 @@ static public class UnityTools
 			for (int b = 0; b < parameters.Length; ++b)
 			{
 				if (b != 0) received += ", ";
-				received += parameters[b].GetType().ToString();
+				received += (parameters[b] != null) ? parameters[b].GetType().ToString() : "<null>";
 			}
 		}
 
@@ -52,9 +52,19 @@ static public class UnityTools
 			}
 		}
 
-		string err = "Failed to call RFC ";
-		if (string.IsNullOrEmpty(funcName)) err += "#" + funcID + " on " + (ent.obj != null ? ent.obj.GetType().ToString() : "<null>");
-		else err += ent.obj.GetType() + "." + funcName;
+		string err = "[TNet] Failed to call ";
+		
+		if (ent.obj != null && ent.obj is TNBehaviour)
+		{
+			TNBehaviour tb = ent.obj as TNBehaviour;
+			err += "TNO #" + tb.tno.uid + " ";
+		}
+
+		if (string.IsNullOrEmpty(funcName))
+		{
+			err += "RFC #" + funcID + " on " + (ent.obj != null ? ent.obj.GetType().ToString() : "<null>");
+		}
+		else err += "RFC " + ent.obj.GetType() + "." + funcName;
 
 		if (ex.InnerException != null) err += ": " + ex.InnerException.Message + "\n";
 		else err += ": " + ex.Message + "\n";
@@ -68,7 +78,7 @@ static public class UnityTools
 		if (ex.InnerException != null) err += ex.InnerException.StackTrace + "\n";
 		else err += ex.StackTrace + "\n";
 
-		Debug.LogError(err);
+		Debug.LogError(err, ent.obj as Object);
 	}
 
 	/// <summary>
@@ -97,12 +107,12 @@ static public class UnityTools
 				}
 				catch (System.Exception ex)
 				{
+					if (ex.GetType() == typeof(System.NullReferenceException)) return false;
 					PrintException(ex, ent, funcID, "", parameters);
 					return false;
 				}
 			}
 		}
-		Debug.LogError("[TNet] Unable to find an function with ID of " + funcID);
 		return false;
 	}
 
@@ -123,21 +133,17 @@ static public class UnityTools
 
 				try
 				{
-					if (ent.parameters.Length == 1 && ent.parameters[0].ParameterType == typeof(object[]))
-					{
-						ent.func.Invoke(ent.obj, new object[] { parameters });
-					}
-					else ent.func.Invoke(ent.obj, parameters);
+					ent.func.Invoke(ent.obj, parameters);
 					return true;
 				}
 				catch (System.Exception ex)
 				{
-					PrintException(ex, ent, funcID, "", parameters);
-					return false;
+					if (ex.GetType() == typeof(System.NullReferenceException)) return false;
+				    PrintException(ex, ent, funcID, "", parameters);
+				    return false;
 				}
 			}
 		}
-		Debug.LogError("[TNet] Unable to find an function with ID of " + funcID);
 		return false;
 	}
 
@@ -162,20 +168,16 @@ static public class UnityTools
 
 				try
 				{
-					if (ent.parameters.Length == 1 && ent.parameters[0].ParameterType == typeof(object[]))
-					{
-						ent.func.Invoke(ent.obj, new object[] { parameters });
-					}
-					else ent.func.Invoke(ent.obj, parameters);
+					ent.func.Invoke(ent.obj, parameters);
 					return true;
 				}
 				catch (System.Exception ex)
 				{
+					if (ex.GetType() == typeof(System.NullReferenceException)) return false;
 					PrintException(ex, ent, 0, funcName, parameters);
 				}
 			}
 		}
-		Debug.LogError("[TNet] Unable to find a function called '" + funcName + "'");
 		return retVal;
 	}
 
@@ -203,7 +205,8 @@ static public class UnityTools
 				}
 				catch (System.Exception ex)
 				{
-					Debug.LogError(ex.Message + " (" + mb.GetType() + "." + methodName + ")", mb);
+					Debug.LogError(ex.InnerException.Message + " (" + mb.GetType() + "." + methodName + ")\n" +
+						ex.InnerException.StackTrace + "\n", mb);
 				}
 			}
 		}

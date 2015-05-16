@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System.Net;
@@ -26,7 +26,7 @@ public class LobbyServerLink
 	protected IPEndPoint mExternal;
 
 	// Thread-safe flag indicating that the server should shut down at the first available opportunity
-	protected bool mShutdown = false;
+	protected volatile bool mShutdown = false;
 
 	/// <summary>
 	/// Create a new local lobby server link. Expects a local server to work with.
@@ -72,7 +72,7 @@ public class LobbyServerLink
 
 			if (mExternal != null)
 			{
-				long time = DateTime.Now.Ticks / 10000;
+				long time = DateTime.UtcNow.Ticks / 10000;
 				mNextSend = time + 3000;
 				mLobby.AddServer(mGameServer.name, mGameServer.playerCount, mInternal, mExternal);
 			}
@@ -98,7 +98,7 @@ public class LobbyServerLink
 		{
 			while (!mShutdown)
 			{
-				long time = DateTime.Now.Ticks / 10000;
+				long time = DateTime.UtcNow.Ticks / 10000;
 
 				if (mNextSend < time && mGameServer != null)
 				{

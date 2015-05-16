@@ -1,12 +1,13 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using UnityEngine;
 using TNet;
 using System.Collections;
 using System.Reflection;
+using System.IO;
 
 /// <summary>
 /// This script makes it really easy to sync some value across all connected clients.
@@ -36,7 +37,7 @@ public class TNAutoSync : TNBehaviour
 	/// If to set it to zero, the value will only be synchronized when new players join.
 	/// </summary>
 
-	public int updatesPerSecond = 10;
+	public float updatesPerSecond = 10f;
 
 	/// <summary>
 	/// Whether the result will be saved on the server or not. In most cases it should remain as 'true'.
@@ -65,8 +66,36 @@ public class TNAutoSync : TNBehaviour
 		public object lastValue;
 	}
 
-	List<ExtendedEntry> mList = new List<ExtendedEntry>();
-	object[] mCached = null;
+	class Par : IBinarySerializable
+	{
+		public object[] vals;
+
+		public void Serialize (BinaryWriter writer)
+		{
+			if (vals != null)
+			{
+				int len = vals.Length;
+				writer.Write((byte)len);
+				for (int i = 0; i < len; ++i) writer.WriteObject(vals[i]);
+			}
+			else writer.Write((byte)0);
+		}
+
+		public void Deserialize (BinaryReader reader)
+		{
+			int len = reader.ReadByte();
+
+			if (len != 0)
+			{
+				if (vals == null || vals.Length != len) vals = new object[len];
+				for (int i = 0; i < len; ++i) vals[i] = reader.ReadObject();
+			}
+			else vals = null;
+		}
+	}
+
+	[System.NonSerialized] List<ExtendedEntry> mList = new List<ExtendedEntry>();
+	[System.NonSerialized] Par mCached = null;
 
 	/// <summary>
 	/// Locate the property that we should be synchronizing.
@@ -124,9 +153,9 @@ public class TNAutoSync : TNBehaviour
 				}
 			}
 
-			if (mList.size > 0)
+			if (mList.size > 0f)
 			{
-				if (updatesPerSecond > 0)
+				if (updatesPerSecond > 0f)
 					StartCoroutine(PeriodicSync());
 			}
 			else
@@ -145,7 +174,7 @@ public class TNAutoSync : TNBehaviour
 	{
 		for (; ; )
 		{
-			if (TNManager.isInChannel && updatesPerSecond > 0)
+			if (TNManager.isInChannel && updatesPerSecond > 0f)
 			{
 				if (mList.size != 0 && (!onlyOwnerCanSync || tno.isMine) && Cache()) Sync();
 				yield return new WaitForSeconds(1f / updatesPerSecond);
@@ -179,7 +208,7 @@ public class TNAutoSync : TNBehaviour
 		if (mCached == null)
 		{
 			initial = true;
-			mCached = new object[mList.size];
+			mCached = new Par() { vals = new object[mList.size] };
 		}
 
 		for (int i = 0; i < mList.size; ++i)
@@ -196,7 +225,7 @@ public class TNAutoSync : TNBehaviour
 			if (initial || changed)
 			{
 				ext.lastValue = val;
-				mCached[i] = val;
+				mCached.vals[i] = val;
 			}
 		}
 		return changed;
@@ -220,17 +249,23 @@ public class TNAutoSync : TNBehaviour
 	/// </summary>
 
 	[RFC(255)]
-	void OnSync (object[] val)
+	void OnSync (Par par)
 	{
 		if (enabled)
 		{
-			for (int i = 0; i < mList.size; ++i)
+			int len = (par.vals != null) ? par.vals.Length : 0;
+
+			if (mList.size == len)
 			{
-				ExtendedEntry ext = mList[i];
-				ext.lastValue = val[i];
-				if (ext.field != null) ext.field.SetValue(ext.target, ext.lastValue);
-				else ext.property.SetValue(ext.target, ext.lastValue, null);
+				for (int i = 0; i < len; ++i)
+				{
+					ExtendedEntry ext = mList[i];
+					ext.lastValue = par.vals[i];
+					if (ext.field != null) ext.field.SetValue(ext.target, ext.lastValue);
+					else ext.property.SetValue(ext.target, ext.lastValue, null);
+				}
 			}
+			else Debug.LogError("Mismatched number of parameters sent via TNAutoSync!");
 		}
 	}
 }

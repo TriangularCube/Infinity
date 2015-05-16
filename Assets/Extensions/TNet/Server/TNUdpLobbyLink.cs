@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System;
@@ -91,7 +91,7 @@ public class UdpLobbyServerLink : LobbyServerLink
 
 		for (; ; )
 		{
-			long time = DateTime.Now.Ticks / 10000;
+			long time = DateTime.UtcNow.Ticks / 10000;
 
 			if (mShutdown)
 			{

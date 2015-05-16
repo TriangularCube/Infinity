@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System;
@@ -20,14 +20,14 @@ public class Buffer
 {
 	static List<Buffer> mPool = new List<Buffer>();
 
-	MemoryStream mStream;
-	BinaryWriter mWriter;
-	BinaryReader mReader;
+	volatile MemoryStream mStream;
+	volatile BinaryWriter mWriter;
+	volatile BinaryReader mReader;
 
-	int mCounter = 0;
-	int mSize = 0;
-	bool mWriting = false;
-	bool mInPool = false;
+	volatile int mCounter = 0;
+	volatile int mSize = 0;
+	volatile bool mWriting = false;
+	volatile bool mInPool = false;
 
 	Buffer ()
 	{
@@ -38,8 +38,12 @@ public class Buffer
 
 	~Buffer ()
 	{
-		//Console.WriteLine("DISPOSED " + (Packet)PeekByte(4));
-		mStream.Dispose();
+		//Tools.Print("DISPOSED " + (Packet)PeekByte(4));
+		if (mStream != null)
+		{
+			mStream.Dispose();
+			mStream = null;
+		}
 	}
 
 	/// <summary>
@@ -116,26 +120,26 @@ public class Buffer
 	/// Release the buffer into the reusable pool.
 	/// </summary>
 
-	public bool Recycle () { return Recycle(true); }
-
-	/// <summary>
-	/// Release the buffer into the reusable pool.
-	/// </summary>
-
-	public bool Recycle (bool checkUsedFlag)
+	public bool Recycle ()
 	{
-		if (!mInPool && (!checkUsedFlag || MarkAsUnused()))
+		lock (this)
 		{
-			mInPool = true;
+			if (mInPool)
+			{
+				// I really want to know if this ever happens
+				//throw new Exception("Releasing a buffer that's already in the pool");
+				return false;
+			}
+			if (--mCounter > 0) return false;
 
 			lock (mPool)
 			{
+				mInPool = true;
 				Clear();
 				mPool.Add(this);
 			}
 			return true;
 		}
-		return false;
 	}
 
 	/// <summary>
@@ -209,23 +213,16 @@ public class Buffer
 	}
 
 	/// <summary>
+	/// Release all currently unused memory sitting in the memory pool.
+	/// </summary>
+
+	static public void ReleaseUnusedMemory () { lock (mPool) mPool.Release(); }
+
+	/// <summary>
 	/// Mark the buffer as being in use.
 	/// </summary>
 
-	public void MarkAsUsed () { Interlocked.Increment(ref mCounter); }
-
-	/// <summary>
-	/// Mark the buffer as no longer being in use. Return 'true' if no one is using the buffer.
-	/// </summary>
-
-	public bool MarkAsUnused ()
-	{
-		if (Interlocked.Decrement(ref mCounter) > 0) return false;
-		mSize = 0;
-		mStream.Seek(0, SeekOrigin.Begin);
-		mWriting = true;
-		return true;
-	}
+	public void MarkAsUsed () { lock (this) ++mCounter; }
 
 	/// <summary>
 	/// Clear the buffer.
@@ -233,10 +230,10 @@ public class Buffer
 
 	public void Clear ()
 	{
-		mCounter = 0;
 		mSize = 0;
-		if (mStream.Capacity > 1024) mStream.SetLength(256);
-		mStream.Seek(0, SeekOrigin.Begin);
+		mCounter = 0;
+		if (mStream.Capacity > 1024) mStream = null;
+		else mStream.Seek(0, SeekOrigin.Begin);
 		mWriting = true;
 	}
 
@@ -253,22 +250,23 @@ public class Buffer
 	}
 
 	/// <summary>
-	/// Dispose of the allocated memory.
-	/// </summary>
-
-	public void Dispose () { mStream.Dispose(); }
-
-	/// <summary>
 	/// Begin the writing process.
 	/// </summary>
 
 	public BinaryWriter BeginWriting (bool append)
 	{
-		if (!append || !mWriting)
+		if (mStream == null || !mStream.CanWrite)
+		{
+			mStream = new MemoryStream();
+			mReader = new BinaryReader(mStream);
+			mWriter = new BinaryWriter(mStream);
+		}
+		else if (!append || !mWriting)
 		{
 			mStream.Seek(0, SeekOrigin.Begin);
 			mSize = 0;
 		}
+
 		mWriting = true;
 		return mWriter;
 	}
@@ -279,7 +277,14 @@ public class Buffer
 
 	public BinaryWriter BeginWriting (int startOffset)
 	{
-		mStream.Seek(startOffset, SeekOrigin.Begin);
+		if (mStream == null || !mStream.CanWrite)
+		{
+			mStream = new MemoryStream();
+			mReader = new BinaryReader(mStream);
+			mWriter = new BinaryWriter(mStream);
+		}
+		else mStream.Seek(startOffset, SeekOrigin.Begin);
+
 		mWriting = true;
 		return mWriter;
 	}
@@ -336,7 +341,7 @@ public class Buffer
 	public int PeekByte (int offset)
 	{
 		long pos = mStream.Position;
-		if (offset + 1 > pos) return -1;
+		if (offset < 0 || offset + 1 > size) return -1;
 		mStream.Seek(offset, SeekOrigin.Begin);
 		int val = mReader.ReadByte();
 		mStream.Seek(pos, SeekOrigin.Begin);
@@ -350,11 +355,25 @@ public class Buffer
 	public int PeekInt (int offset)
 	{
 		long pos = mStream.Position;
-		if (offset + 4 > pos) return -1;
+		if (offset < 0 || offset + 4 > size) return -1;
 		mStream.Seek(offset, SeekOrigin.Begin);
 		int val = mReader.ReadInt32();
 		mStream.Seek(pos, SeekOrigin.Begin);
 		return val;
+	}
+
+	/// <summary>
+	/// Peek-read the specified number of bytes.
+	/// </summary>
+
+	public byte[] PeekBytes (int offset, int length)
+	{
+		long pos = mStream.Position;
+		if (offset < 0 || offset + length > pos) return null;
+		mStream.Seek(offset, SeekOrigin.Begin);
+		byte[] bytes = mReader.ReadBytes(length);
+		mStream.Seek(pos, SeekOrigin.Begin);
+		return bytes;
 	}
 
 	/// <summary>

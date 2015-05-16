@@ -1,6 +1,6 @@
 //---------------------------------------------
 //            Tasharen Network
-// Copyright © 2012-2014 Tasharen Entertainment
+// Copyright © 2012-2015 Tasharen Entertainment
 //---------------------------------------------
 
 using System;
@@ -90,10 +90,25 @@ public class TcpPlayer : TcpProtocol
 		for (int i = 0; i < channel.created.size; ++i)
 		{
 			Channel.CreatedObject obj = channel.created.buffer[i];
+
+			bool isPresent = false;
+
+			for (int b = 0; b < channel.players.size; ++b)
+			{
+				if (channel.players[b].id == obj.playerID)
+				{
+					isPresent = true;
+					break;
+				}
+			}
+
+			// If the previous owner is not present, transfer ownership to the host
+			if (!isPresent) obj.playerID = channel.host.id;
+
 			buffer.BeginPacket(Packet.ResponseCreate, offset);
 			writer.Write(obj.playerID);
+			writer.Write(obj.objectIndex);
 			writer.Write(obj.objectID);
-			writer.Write(obj.uniqueID);
 			writer.Write(obj.buffer.buffer, obj.buffer.position, obj.buffer.size);
 			offset = buffer.EndTcpPacketStartingAt(offset);
 		}
@@ -111,10 +126,9 @@ public class TcpPlayer : TcpProtocol
 		// Step 8: Send all buffered RFCs to the new player
 		for (int i = 0; i < channel.rfcs.size; ++i)
 		{
-			Buffer rfcBuff = channel.rfcs[i].buffer;
-			rfcBuff.BeginReading();
+			Channel.RFC rfc = channel.rfcs[i];
 			buffer.BeginWriting(offset);
-			writer.Write(rfcBuff.buffer, rfcBuff.position, rfcBuff.size);
+			writer.Write(rfc.buffer.buffer, 0, rfc.buffer.size);
 			offset = buffer.EndWriting();
 		}
 
