@@ -4,7 +4,7 @@ public enum MechLookMode { Locked, Free }
 //Default for now. To implement later
 public class PlayerProfile {
 
-    private string name;
+    public string name { get; private set; }
 
     #region Controls
     private ControlProfile controls;

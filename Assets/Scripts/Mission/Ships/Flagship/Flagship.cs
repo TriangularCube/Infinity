@@ -119,16 +119,19 @@ public class Flagship : Ship {
 
 	#region Launching Terminal 
     public void RequestLaunchTerminal( uint termID ) {
-        tno.Send( "AttemptToLaunchTerminal", Target.Host, termID, TNManager.player );
+        tno.Send( 4, Target.Host, termID, TNManager.player );
     }
 
-	[RFC]
-	public virtual void AttemptToLaunchTerminal( uint terminalID, Netplayer player ){
+	[RFC(4)]
+    public virtual void AttemptToLaunchTerminal( uint terminalID, Netplayer player ) {
 
-        Debug.Log( TNObject.Find( terminalID ) );
+
+        //Debug.Log( TNObject.Find( terminalID ) );
 		//Find the Terminal
 		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
-		
+
+
+
 		//If the terminal is no longer docked (as in, someone else requested it first), just do nothing
 		if ( terminal && !dockedTerminals.Contains( terminal ) ){
 			
@@ -137,11 +140,14 @@ public class Flagship : Ship {
 			
 		}
 		
-		tno.Send ("LaunchTerminal", Target.All, terminalID, player);
+		tno.Send ( 5, Target.All, terminalID, player );
+
 	}
 	
-	[RFC]
+	[RFC(5)]
 	protected virtual void LaunchTerminal( uint terminalID, Netplayer player ){
+
+        Debug.Log( "Here" );
 		
 		//Find the Terminal...again
 		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
@@ -186,7 +192,7 @@ public class Flagship : Ship {
 		//AssignObservation( pilot );
 		
 		//Debug
-		AssignNavigation( pilot );
+		AssignObservation( pilot );
 	}
 
 	protected void AssignObservation( Netplayer player ){

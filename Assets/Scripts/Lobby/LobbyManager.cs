@@ -6,8 +6,10 @@ using Netplayer = TNet.Player;
 
 public class LobbyManager : TNSingleton<LobbyManager> {
 
-    [SerializeField]
-    private UILabel hostIPLabel;
+#pragma warning disable 0649
+    [SerializeField, Group( "Host" )]
+    private UILabel hostIPLabel, hostName;
+#pragma warning restore 0649
 
     protected override void Awake() {
         base.Awake();
@@ -16,6 +18,8 @@ public class LobbyManager : TNSingleton<LobbyManager> {
         if( TNManager.isHosting ) {
             hostIPLabel.gameObject.SetActive( true );
             hostIPLabel.text = TNet.Tools.localAddress.ToString();
+
+            hostName.text = PlayerSettings.currentProfile.name;
         }
     }
 
@@ -38,15 +42,22 @@ public class LobbyManager : TNSingleton<LobbyManager> {
     private Dictionary<Netplayer, GameObject> playerList = new Dictionary<Netplayer, GameObject>();
 
     public void OnNetworkPlayerJoin( Netplayer newPlayer ) {
+        //TODO Get player data
         playerList.Add( newPlayer, NGUITools.AddChild( playerTable, playerPrefab ) );
         playerTable.GetComponent<UITable>().repositionNow = true;
     }
 
+    public void OnNetworkPlayerLeave( Netplayer leavingPlayer ) {
+        Destroy( playerList[leavingPlayer] );
+        playerList.Remove( leavingPlayer );
+    }
+
     //TODO Mission Select
     private Mission selectedMission = null;
+    //TODO Hook into Saved games and stuff
 
     public void SelectMission( Mission mission ) {
-        Debug.Log( "Mission " + mission.name + " selected" );
+        Debug.Log( "Mission " + mission.missionName + " selected" );
         if( !TNManager.isHosting ) return; //Do nothing if we're not hosting
         //Do Stuff
 

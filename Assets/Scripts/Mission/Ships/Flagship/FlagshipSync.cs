@@ -16,7 +16,7 @@ public class FlagshipSync : ShipStat {
     [RFC(1)]//Called from Host to Everyone
     public void ReceiveSyncFromHost( Vector3 position, Quaternion rotation ) {
         //TODO
-        throw new System.NotImplementedException();
+        //throw new System.NotImplementedException();
     }
 
     [RFC(2)] //Called from Navigation
