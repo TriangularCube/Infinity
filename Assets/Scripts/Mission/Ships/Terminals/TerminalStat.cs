@@ -69,14 +69,26 @@ public class TerminalStat : ShipStat {
     }
 
     [RFC(1)] //TODO Seriously incomplete
-    public void RecieveSync( Vector3 position, Quaternion facing, bool fire1, bool fire2, bool fire3 ) {
+    public void RecieveSync( Vector3 position, Quaternion facing, bool fire1, int ammo1, bool overheat1, bool fire2, int ammo2, bool overheat2, bool fire3, int ammo3, bool overheat3 ) {
 
         //TODO Implement out of order handling
         // TODO Do stuff with recieved sync data
 
         // TODO Facing and Flight Input
-
+        transform.rotation = facing;
+        transform.position = position;
         // TODO Fire Weapon
+        weapon1.fire = fire1;
+        weapon1.ammo = ammo1;
+        weapon1.overheat = overheat1;
+
+        weapon2.fire = fire2;
+        weapon2.ammo = ammo2;
+        weapon2.overheat = overheat2;
+
+        weapon3.fire = fire3;
+        weapon3.ammo = ammo3;
+        weapon3.overheat = overheat3;
 
     }
     #endregion Sync From Host to Clients

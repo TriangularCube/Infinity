@@ -8,7 +8,7 @@ public class Dock : MonoBehaviour {
 		
         
         if (!TNManager.isHosting) {
-			gameObject.SetActive( false );
+            GetComponent<Collider>().enabled = false;
 		}
         
 	}
