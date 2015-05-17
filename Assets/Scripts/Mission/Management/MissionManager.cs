@@ -38,6 +38,10 @@ public class MissionManager : MonoBehaviour {
             HUD.instance.mouseLocked = !HUD.instance.mouseLocked;
 		}
 
+        if( Input.GetKeyDown( KeyCode.U ) ) {
+            Debug.Log( TNManager.isHosting );
+        }
+
 	}
 
 }

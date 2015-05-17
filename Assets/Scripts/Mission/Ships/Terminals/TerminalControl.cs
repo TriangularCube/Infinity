@@ -57,13 +57,13 @@ public class TerminalControl : ShipControl {
 
     protected virtual void WeaponFire() {
         if( GetInput.Fire() ) {
-            if( weapon1.selected ) weapon1.fire = true;
-            if( weapon2.selected ) weapon2.fire = true;
-            if( weapon3.selected ) weapon3.fire = true;
+            if( weapon1.selected ) fireWeapon1ToSync = true;
+            if( weapon2.selected ) fireWeapon2ToSync = true;
+            if( weapon3.selected ) fireWeapon3ToSync = true;
         } else {
-            weapon1.fire = false;
-            weapon2.fire = false;
-            weapon3.fire = false;
+            fireWeapon1ToSync = false;
+            fireWeapon2ToSync = false;
+            fireWeapon3ToSync = false;
         }
     }
 

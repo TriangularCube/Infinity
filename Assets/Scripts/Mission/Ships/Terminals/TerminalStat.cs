@@ -73,9 +73,10 @@ public class TerminalStat : ShipStat {
 
         //TODO Implement out of order handling
         // TODO Do stuff with recieved sync data
+        //TODO Interpolation
 
         // TODO Facing and Flight Input
-        transform.rotation = facing;
+        targetLookDirection = facing;
         transform.position = position;
         // TODO Fire Weapon
         weapon1.fire = fire1;
