@@ -128,7 +128,7 @@ public class Flagship : Ship {
 
         //Debug.Log( TNObject.Find( terminalID ) );
 		//Find the Terminal
-		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
+		Terminal terminal = TNObject.Find( terminalID ).gameObject.GetComponent<Terminal>();
 
 
 
@@ -141,7 +141,6 @@ public class Flagship : Ship {
 		}
 
 		tno.Send ( 5, Target.All, terminalID, player );
-
 	}
 	
 	[RFC(5)]

@@ -1,0 +1,8 @@
+1	Sync from Host to Everyone Else
+
+2	Update Station Control from Navigation
+
+
+
+4	Attempt To Launch Terminal
+5	Launch a Terminal
