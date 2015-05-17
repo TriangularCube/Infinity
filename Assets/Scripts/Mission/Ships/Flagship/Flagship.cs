@@ -140,7 +140,6 @@ public class Flagship : Ship {
 			
 		}
 
-        Debug.Log( terminalID + ", " + player );
 		tno.Send ( 5, Target.All, terminalID, player );
 
 	}
@@ -148,7 +147,7 @@ public class Flagship : Ship {
 	[RFC(5)]
 	protected virtual void LaunchTerminal( uint terminalID, int player ){
 
-        //Debug.Log( "Here" );
+        Debug.Log( terminalID + ", " + player );
 		
 		//Find the Terminal...again
 		Terminal terminal = TNObject.Find (terminalID).gameObject.GetComponent<Terminal>();
