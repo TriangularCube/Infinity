@@ -140,7 +140,11 @@ public class Flagship : Ship {
 			
 		}
 
-		tno.Send ( 5, Target.All, terminalID, player );
+        //EDITOR TESTING
+        if( TNManager.isConnected )
+            tno.Send( 5, Target.All, terminalID, player );
+        else
+            LaunchTerminal( terminalID, player );
 	}
 	
 	[RFC(5)]
