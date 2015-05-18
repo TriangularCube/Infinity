@@ -18,7 +18,7 @@ public class ControlProfile {
     public KeyCode thrustZPositive = KeyCode.W, thrustZNegative = KeyCode.S;
 
     public BindType roll = BindType.BUTTON;
-    public KeyCode rollPositive = KeyCode.E, rollNegative = KeyCode.Q;
+    public KeyCode rollPositive = KeyCode.Q, rollNegative = KeyCode.E;
 
     public KeyCode breakButton = KeyCode.LeftShift;
     public KeyCode boost = KeyCode.Space;
